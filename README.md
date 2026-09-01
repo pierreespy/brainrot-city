@@ -148,6 +148,6 @@ rien à ce stade. On les évaluera en Milestone 8, après profiling.
 
 ## Travail à deux
 
-Le fichier **[`UPDATE.TXT`](./UPDATE.TXT)** liste les dernières modifications
+Le fichier **[`UPDATE.md`](./UPDATE.md)** liste les dernières modifications
 apportées au projet, de la plus récente à la plus ancienne. **À lire en premier**
 quand tu reprends le projet, et à compléter à chaque changement notable.
