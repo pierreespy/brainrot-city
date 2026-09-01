@@ -1,4 +1,11 @@
 node_modules/
+.expo/
 dist/
+web-build/
+*.log
 .DS_Store
 *.local
+
+# Natif (généré par expo prebuild / EAS)
+/ios
+/android

@@ -1,6 +1,10 @@
 /**
  * Scene.ts — le "décor technique" : ce qu'on voit, mais qui ne bouge pas.
- * Renderer, scène, lumières, sol.
+ * Scène, lumières, sol.
+ *
+ * Note d'architecture : cette classe ne CRÉE plus le renderer, elle le
+ * reçoit. C'est ce qui lui permet d'être identique sur iOS, Android et web —
+ * seule l'enveloppe (App.tsx) sait sur quelle plateforme on tourne.
  */
 
 import * as THREE from 'three';
@@ -11,29 +15,24 @@ export class GameScene {
   readonly camera: THREE.PerspectiveCamera;
   readonly renderer: THREE.WebGLRenderer;
 
-  private readonly canvas: HTMLCanvasElement;
-
-  constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
+  constructor(renderer: THREE.WebGLRenderer, width: number, height: number) {
+    this.renderer = renderer;
+    this.renderer.shadowMap.enabled = false; // Coûteux, inutile à ce stade.
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x12141c);
     // Le brouillard cache le bord du monde et allègera le rendu lointain.
     this.scene.fog = new THREE.Fog(0x12141c, 60, 160);
 
-    this.camera = new THREE.PerspectiveCamera(CONFIG.camera.fov, 1, 0.1, 400);
-
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    // Sur mobile, un devicePixelRatio de 3 triplerait le nombre de pixels à
-    // calculer pour un gain visuel minime. On plafonne à 2.
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = false; // Milestone 1 : pas d'ombres, c'est coûteux.
+    this.camera = new THREE.PerspectiveCamera(
+      CONFIG.camera.fov,
+      width / height,
+      0.1,
+      400,
+    );
 
     this.addLights();
     this.addGround();
-    this.resize();
-
-    window.addEventListener('resize', this.resize);
   }
 
   private addLights(): void {
@@ -63,22 +62,19 @@ export class GameScene {
     this.scene.add(grid);
   }
 
-  private readonly resize = (): void => {
-    const width = this.canvas.clientWidth;
-    const height = this.canvas.clientHeight;
+  /** Appelé quand l'écran change de taille (rotation du téléphone, resize web). */
+  resize(width: number, height: number): void {
     if (width === 0 || height === 0) return;
-
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
-  };
+  }
 
   render(): void {
     this.renderer.render(this.scene, this.camera);
   }
 
   dispose(): void {
-    window.removeEventListener('resize', this.resize);
     this.renderer.dispose();
   }
 }

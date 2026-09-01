@@ -3,8 +3,10 @@
 Jeu 3D de foule (inspiré du genre *crowd runner*) : tu contrôles un personnage,
 tu recrutes les passants au contact, ta foule grandit.
 
-> **État actuel : Milestone 1 terminée** — projet fonctionnel, scène 3D,
-> joueur contrôlable au clavier, caméra de suivi.
+**Application mobile Android et iOS**, destinée à une publication sur les stores.
+
+> **État actuel : Milestone 1 terminée** — app Expo fonctionnelle, scène 3D,
+> joueur contrôlable au joystick tactile, caméra de suivi.
 
 ---
 
@@ -12,98 +14,130 @@ tu recrutes les passants au contact, ta foule grandit.
 
 | Élément | Choix |
 |---|---|
+| Framework app | **Expo SDK 54** (React Native 0.81.5) |
 | Langage | **TypeScript** (typage strict) |
-| Rendu 3D | **Three.js** |
-| Build / serveur de dev | **Vite** |
-| Plateforme | **Navigateur** (desktop + mobile), portage app possible via Capacitor |
+| Rendu 3D | **Three.js** sur **`expo-gl`** |
+| Cibles | **iOS**, **Android**, et web (banc de test) |
+| Test sur téléphone | **Expo Go** (SDK 54) |
 
-**Pourquoi ce choix ?** Tout est du code texte (pas d'éditeur graphique), le
-cycle modifier → tester est quasi instantané, le jeu se partage par un simple
-lien, et surtout `THREE.InstancedMesh` permet d'afficher **des milliers de
-personnages en un seul appel GPU** — ce qui est exactement le besoin du jeu.
-Coût : zéro, licence : aucune.
+**Pourquoi ce choix ?** Expo permet de développer une vraie app iOS + Android
+depuis un seul code TypeScript, de la tester instantanément sur un téléphone via
+Expo Go (un QR code, pas de compilation), et de la publier sur les stores avec
+EAS Build. `expo-gl` fournit un contexte OpenGL natif dans lequel Three.js tourne
+normalement — et `THREE.InstancedMesh` permet d'afficher **des milliers de
+personnages en un seul appel GPU**, ce qui est exactement le besoin du jeu.
+
+`expo-gl` est un module natif **inclus dans Expo Go** : aucun build personnalisé
+n'est nécessaire pour développer.
 
 ---
 
 ## Installation
 
-Prérequis : [Node.js](https://nodejs.org) 18 ou plus.
+Prérequis : [Node.js](https://nodejs.org) 18 ou plus, et l'app **Expo Go** sur
+ton téléphone (SDK 54).
 
 ```bash
 npm install
 ```
 
-## Lancer le jeu
+## Lancer le jeu sur ton téléphone
 
 ```bash
-npm run dev
+npm start
 ```
 
-Puis ouvre **http://localhost:5173**.
+Un QR code s'affiche dans le terminal :
 
-Le rechargement est automatique : modifie un fichier, sauvegarde, le jeu se met
-à jour instantanément dans le navigateur.
+- **Android** — scanne-le depuis l'app Expo Go.
+- **iOS** — scanne-le avec l'appareil photo, il ouvrira Expo Go.
+
+Ton ordinateur et ton téléphone doivent être sur le **même réseau Wi-Fi**. Si ça
+ne passe pas (réseau d'entreprise, Wi-Fi public), lance `npx expo start --tunnel`.
 
 ## Commandes utiles
 
 | Commande | Rôle |
 |---|---|
-| `npm run dev` | Serveur de développement + rechargement à chaud |
-| `npm run build` | Vérifie les types **et** génère le build final dans `dist/` |
-| `npm run typecheck` | Vérifie les types sans construire (rapide) |
-| `npm run preview` | Teste le build de production en local |
+| `npm start` | Serveur de développement + QR code pour Expo Go |
+| `npm run android` | Ouvre directement sur un émulateur / téléphone Android |
+| `npm run ios` | Ouvre directement sur un simulateur iOS (macOS uniquement) |
+| `npm run web` | Ouvre le jeu dans un navigateur (banc de test) |
+| `npm run typecheck` | Vérifie les types TypeScript |
+| `npm run doctor` | Vérifie la cohérence des versions Expo |
 
 ## Contrôles
 
-| Touche | Action |
+| Plateforme | Contrôle |
 |---|---|
-| `Z` `Q` `S` `D` (AZERTY) | Se déplacer |
-| `W` `A` `S` `D` (QWERTY) | Se déplacer |
-| Flèches directionnelles | Se déplacer |
+| Téléphone | **Joystick tactile** — pose ton doigt dans la moitié basse de l'écran et glisse |
+| Web (banc de test) | Joystick à la souris, **ou** `ZQSD` / `WASD` / flèches |
 
-Les deux dispositions fonctionnent sans réglage : le code lit la *position
-physique* de la touche (`event.code`), pas le caractère imprimé dessus.
+Le joystick apparaît **là où tu poses le doigt** : pas besoin de viser une zone
+précise. Les deux dispositions de clavier fonctionnent sans réglage, car le code
+lit la *position physique* de la touche (`event.code`) et non le caractère
+imprimé dessus.
 
 ---
 
 ## Architecture
 
 ```
-src/
-├── main.ts              Point d'entrée : crée le jeu et le démarre
-├── config.ts            ⭐ TOUS les réglages (vitesses, tailles, couleurs)
+├── index.ts               Point d'entrée Expo
+├── App.tsx                ⭐ Enveloppe : le SEUL fichier qui connaît la plateforme
+├── app.json               Configuration de l'app (nom, icônes, orientation)
 │
-├── core/
-│   ├── Game.ts          ⭐ Chef d'orchestre : décrit une frame de jeu
-│   ├── Loop.ts          Boucle de jeu + delta time
-│   └── Scene.ts         Scène Three.js, lumières, sol, redimensionnement
-│
-├── entities/
-│   └── Player.ts        Position et déplacement du joueur
-│
-├── systems/
-│   ├── Input.ts         Clavier → direction voulue (abstraction)
-│   └── CameraRig.ts     Caméra qui suit le joueur en douceur
-│
-├── world/               (Milestone 2 : la ville)
-└── ui/                  (Milestone 6 : compteur, restart)
+└── src/
+    ├── config.ts          ⭐ TOUS les réglages (vitesses, tailles, joystick)
+    │
+    ├── core/
+    │   ├── Game.ts        ⭐ Chef d'orchestre : décrit une frame de jeu
+    │   ├── Loop.ts        Boucle de jeu + delta time
+    │   ├── Scene.ts       Scène Three.js, lumières, sol
+    │   └── createRenderer.ts  Pont technique entre expo-gl et Three.js
+    │
+    ├── entities/
+    │   └── Player.ts      Position et déplacement du joueur
+    │
+    ├── systems/
+    │   ├── CameraRig.ts   Caméra qui suit le joueur en douceur
+    │   └── input/
+    │       ├── InputSource.ts   Le contrat commun (une direction x/z)
+    │       ├── TouchInput.ts    Direction venue du joystick
+    │       ├── KeyboardInput.ts Direction venue du clavier (web)
+    │       └── InputManager.ts  Regroupe les sources disponibles
+    │
+    ├── ui/
+    │   └── Joystick.tsx   Le joystick virtuel (composant React Native)
+    │
+    └── world/             (Milestone 2 : la ville)
 ```
 
 ### Les deux fichiers à connaître
 
 - **`src/config.ts`** — tous les nombres réglables du jeu. C'est ici qu'on
-  expérimente (vitesse, taille du monde, hauteur de caméra) sans rien casser.
+  expérimente (vitesse, taille du monde, hauteur de caméra, rayon du joystick)
+  sans rien casser.
 - **`src/core/Game.ts`** — la méthode `update()` liste, dans l'ordre, tout ce
   qui se passe à chaque frame. Lire ces 15 lignes = comprendre le jeu entier.
+
+### Le principe central : le jeu ignore la plateforme
+
+Tout ce qui est dans `src/core`, `src/entities` et `src/systems` est du
+TypeScript **pur** : aucune référence à React Native, à iOS ou au web. Seuls
+`App.tsx`, `Joystick.tsx` et `createRenderer.ts` savent sur quoi on tourne.
+
+C'est ce qui permet de faire tourner exactement le même jeu sur téléphone (via
+Expo Go) et dans un navigateur — ce dernier servant de **banc de test
+automatisé** pour vérifier que la logique fonctionne à chaque milestone.
 
 ### Où vit quoi
 
 - **Les données** : en mémoire, dans des tableaux détenus par les *managers*.
   Pas de base de données, pas de fichiers de sauvegarde.
 - **La logique de jeu** : dans `Game.update()`, qui appelle les systèmes.
-- **L'interface** : en HTML/CSS classique par-dessus le canvas (`#ui-layer`
-  dans `index.html`), pas dans la scène 3D — plus simple et gratuit en
-  performance.
+- **L'interface** : en composants React Native posés par-dessus la surface 3D
+  (`App.tsx`) — plus simple et quasiment gratuit en performance.
 
 ---
 
@@ -119,12 +153,20 @@ n'utilise que X et Z. Cela simplifie tous les calculs (distances, collisions)
 et divise le coût par frame.
 
 **Tout est multiplié par `deltaTime`.** Le jeu avance à la même vitesse réelle
-sur un écran 60 Hz et sur un 144 Hz. Le delta est plafonné à 0,1 s pour éviter
-que le joueur ne se téléporte au retour d'un onglet en arrière-plan.
+sur un téléphone à 60 Hz et sur un écran à 120 Hz. Le delta est plafonné à
+0,1 s pour éviter que le joueur ne se téléporte au retour d'arrière-plan.
 
 **L'entrée est une abstraction.** Le jeu demande « quelle direction ? » et ne
-sait pas d'où vient la réponse. Ajouter un joystick tactile ou une manette ne
-touchera **que `Input.ts`**.
+sait pas d'où vient la réponse. Ajouter une manette plus tard ne touchera
+**qu'un seul dossier**, `src/systems/input/`.
+
+**Le renderer est injecté, pas créé par le jeu.** `GameScene` reçoit un
+`WebGLRenderer` déjà configuré. C'est ce qui rend le cœur du jeu identique sur
+les trois plateformes.
+
+**`createRenderer.ts` force `pixelRatio` à 1.** `expo-gl` fournit déjà des
+dimensions en pixels physiques ; laisser Three.js appliquer en plus le ratio de
+l'écran ferait rendre 2 à 3 fois trop de pixels sur un téléphone récent.
 
 **Pas d'ombres pour l'instant.** Le rendu d'ombres est coûteux et n'apporte
 rien à ce stade. On les évaluera en Milestone 8, après profiling.
@@ -136,6 +178,7 @@ rien à ce stade. On les évaluera en Milestone 8, après profiling.
 | # | Milestone | État |
 |---|---|---|
 | 1 | Projet + scène + déplacement du joueur | ✅ Terminée |
+| — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
 | 2 | Ville simple + caméra | ⬜ À venir |
 | 3 | NPC : spawn + déplacement (~100) | ⬜ |
 | 4 | Recrutement au contact | ⬜ |

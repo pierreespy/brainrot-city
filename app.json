@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Brainrot City",
+    "slug": "brainrot-city",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "backgroundColor": "#12141c",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#12141c"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.brainrotcity.game"
+    },
+    "android": {
+      "package": "com.brainrotcity.game",
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#12141c"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

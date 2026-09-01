@@ -8,7 +8,7 @@
 
 import * as THREE from 'three';
 import { CONFIG } from '../config';
-import type { MoveIntent } from '../systems/Input';
+import type { MoveIntent } from '../systems/input/InputSource';
 
 export class Player {
   /** Position au sol. Y n'existe pas : le jeu est en 2D vue de dessus. */

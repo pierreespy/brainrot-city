@@ -1,23 +1,21 @@
 /**
- * Input.ts — traduit "ce que fait le joueur" en une direction simple.
+ * KeyboardInput.ts — contrôle au clavier.
  *
- * IMPORTANT (architecture) : le reste du jeu ne sait PAS si tu joues au
- * clavier, au joystick tactile ou à la manette. Il demande juste "dans quelle
- * direction veut-on aller ?" et reçoit un vecteur entre -1 et 1.
- *
- * C'est pour ça que le portage mobile ne touchera QUE ce fichier.
+ * Utile sur la cible web, qui nous sert de banc de test : on peut y lancer
+ * le jeu automatiquement et vérifier que tout marche, sans téléphone.
+ * Sur iOS et Android, cette classe ne s'active tout simplement pas.
  */
 
-/** Direction voulue, normalisée. (0,0) = immobile. */
-export interface MoveIntent {
-  x: number;
-  z: number;
+import type { InputSource, MoveIntent } from './InputSource';
+import { clampToUnitCircle } from './InputSource';
+
+/** Vrai uniquement quand on tourne dans un navigateur. */
+export function isKeyboardAvailable(): boolean {
+  return typeof window !== 'undefined' && typeof window.addEventListener === 'function';
 }
 
-export class Input {
-  /** Ensemble des touches physiquement enfoncées à cet instant. */
+export class KeyboardInput implements InputSource {
   private readonly pressed = new Set<string>();
-  private readonly intent: MoveIntent = { x: 0, z: 0 };
 
   private readonly onKeyDown = (e: KeyboardEvent) => {
     this.pressed.add(e.code);
@@ -35,6 +33,7 @@ export class Input {
   };
 
   constructor() {
+    if (!isKeyboardAvailable()) return;
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
     window.addEventListener('blur', this.onBlur);
@@ -54,21 +53,11 @@ export class Input {
     if (this.pressed.has('KeyA') || this.pressed.has('KeyQ') || this.pressed.has('ArrowLeft')) x -= 1;
     if (this.pressed.has('KeyD') || this.pressed.has('ArrowRight')) x += 1;
 
-    // En diagonale, (1,1) a une longueur de 1.41 : on irait plus vite en
-    // biais qu'en ligne droite. On normalise pour que la vitesse soit égale
-    // dans toutes les directions.
-    const length = Math.hypot(x, z);
-    if (length > 0) {
-      x /= length;
-      z /= length;
-    }
-
-    this.intent.x = x;
-    this.intent.z = z;
-    return this.intent;
+    return clampToUnitCircle(x, z);
   }
 
   dispose(): void {
+    if (!isKeyboardAvailable()) return;
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     window.removeEventListener('blur', this.onBlur);

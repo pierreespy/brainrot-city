@@ -31,6 +31,20 @@ export const CONFIG = {
     offset: { x: 0, y: 26, z: 20 },
     /** Souplesse du suivi : 0 = collée, 1 = très molle. */
     smoothing: 0.12,
-    fov: 50,
+    /**
+     * Champ de vision. Plus élevé sur téléphone (écran étroit tenu à la
+     * verticale) pour qu'on voie assez de ville autour du joueur.
+     */
+    fov: 60,
+  },
+
+  joystick: {
+    /** Rayon du joystick en points. Au-delà, l'intensité est au maximum. */
+    radius: 60,
+    /**
+     * Sous ce déplacement du doigt (en points), on considère qu'on n'a pas
+     * bougé. Sans cette zone morte, le personnage tremblote sur place.
+     */
+    deadZone: 8,
   },
 } as const;
