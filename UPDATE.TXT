@@ -1,0 +1,77 @@
+================================================================================
+BRAINROT CITY - JOURNAL DES MODIFICATIONS
+================================================================================
+
+Les modifications les plus recentes sont EN HAUT.
+A lire en premier quand tu reprends le projet.
+
+Convention : a chaque changement notable, ajouter un bloc en haut du fichier
+avec la date, l'auteur, ce qui a change, les fichiers touches, et l'etat du
+projet (est-ce que ca tourne ?).
+
+--------------------------------------------------------------------------------
+2026-09-01 | Claude | MILESTONE 1 - Fondations du projet
+--------------------------------------------------------------------------------
+
+RESUME
+  Creation du projet de zero. Le depot etait vide.
+  On a desormais un jeu 3D qui se lance dans le navigateur avec un
+  personnage deplacable au clavier et une camera qui le suit.
+
+STACK CHOISIE (validee, ne change pas sans discussion)
+  TypeScript + Three.js + Vite, cible navigateur (desktop et mobile).
+  Raison principale : Three.js InstancedMesh permet d'afficher des milliers
+  de personnages en un seul appel GPU, ce qui est le coeur du jeu.
+
+CE QUI A ETE AJOUTE
+  - Configuration du projet : package.json, tsconfig.json (mode strict),
+    vite.config.ts, .gitignore
+  - index.html : canvas plein ecran + couche UI en HTML par-dessus
+  - public/favicon.svg : icone d'onglet
+  - src/config.ts : TOUS les reglages du jeu au meme endroit
+  - src/main.ts : point d'entree
+  - src/core/Scene.ts : scene Three.js, lumieres, sol, grille, resize
+  - src/core/Loop.ts : boucle de jeu et calcul du delta time
+  - src/core/Game.ts : chef d'orchestre, decrit une frame complete
+  - src/entities/Player.ts : position et deplacement du joueur
+  - src/systems/Input.ts : clavier -> direction voulue (abstraction)
+  - src/systems/CameraRig.ts : camera de suivi avec lissage
+  - README.md : stack, installation, architecture, decisions techniques
+  - UPDATE.TXT : ce fichier
+
+FICHIERS SUPPRIMES OU CASSES
+  Aucun. Le depot etait vide, il n'y avait rien a casser.
+
+CE QUI FONCTIONNE (verifie)
+  - npm install : OK
+  - npm run build (typecheck + build) : OK, aucune erreur
+  - Lancement dans Chromium : OK, aucune erreur console
+  - Deplacement : apres 1,2 s de touches D + Z, le joueur passe de
+    (0, 0) a (16.06, -16.04). Le deplacement fonctionne.
+  - Camera : suit bien le joueur (position camera X = position joueur X)
+  - game.restart() : replace correctement le joueur en (0, 0)
+
+CONTROLES
+  ZQSD (AZERTY) / WASD (QWERTY) / fleches directionnelles.
+  Les deux dispositions marchent car on lit event.code (position physique
+  de la touche) et non event.key (caractere imprime).
+
+POUR TESTER
+  npm install
+  npm run dev
+  puis ouvrir http://localhost:5173
+
+NOTES POUR LA SUITE
+  - src/world/ et src/ui/ sont des dossiers vides, prets pour les
+    milestones 2 et 6.
+  - Game.update() contient des commentaires marquant l'endroit exact ou
+    seront branches les NPC (M3), le recrutement (M4) et la foule (M5).
+  - La grille au sol est temporaire : elle sert a percevoir le deplacement
+    tant que la ville n'existe pas. Elle disparaitra en milestone 2.
+  - Les ombres sont desactivees volontairement (couteuses, inutiles a ce
+    stade). A reevaluer en milestone 8.
+
+PROCHAINE ETAPE
+  Milestone 2 : ville simple (batiments, routes) + reglage de la camera.
+
+================================================================================
