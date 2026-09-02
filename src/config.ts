@@ -6,10 +6,60 @@
  */
 
 export const CONFIG = {
-  /** Le monde est un carré centré sur (0, 0). Ici : de -60 à +60 sur X et Z. */
+  /**
+   * Le monde est un carré centré sur (0, 0). Ici : de -99 à +99 sur X et Z.
+   *
+   * ⚠️ Cette valeur est choisie comme un MULTIPLE EXACT du pas de la ville
+   * (`blockSize + roadWidth` = 33) : le bord du monde tombe alors au milieu
+   * d'une rue, jamais dans un immeuble, et la ville remplit tout le terrain.
+   */
   world: {
-    halfSize: 60,
-    groundColor: 0x2c3040,
+    halfSize: 99,
+    /** Couleur du sol = l'asphalte des rues (les trottoirs sont posés dessus). */
+    groundColor: 0x30354a,
+  },
+
+  /**
+   * La ville. Elle est faite de RUES et de PÂTÉS DE MAISONS alternés.
+   *
+   * Le motif se répète tous les `blockSize + roadWidth` : les rues sont
+   * centrées sur les multiples de ce pas, donc (0, 0) — où démarre le
+   * joueur — est toujours un carrefour.
+   */
+  city: {
+    /** Côté d'un pâté de maisons, entre deux rues. */
+    blockSize: 22,
+    /** Largeur d'une rue, d'un trottoir à l'autre. */
+    roadWidth: 11,
+    /** Le trottoir dépasse du pâté : c'est lui qu'on longe en courant. */
+    sidewalkHeight: 0.18,
+    sidewalkColor: 0x474e68,
+    /** Chaque pâté est découpé en `lotsPerBlock` × `lotsPerBlock` parcelles. */
+    lotsPerBlock: 2,
+    /**
+     * Profondeur de l'immeuble, en multiples de sa parcelle. Le bâtiment est
+     * plaqué sur la RUE et déborde vers l'intérieur du pâté : à 1 il occupe
+     * exactement sa parcelle, à 1.4 il mord sur la cour.
+     *
+     * ⚠️ Ne jamais descendre sous 1 : les immeubles laisseraient des trous
+     * entre eux et la ville deviendrait traversable en diagonale.
+     */
+    lotDepth: { min: 1, max: 1.45 },
+    /**
+     * Hauteur des immeubles. Volontairement BASSE : plus haut, les façades
+     * situées derrière le joueur passeraient devant la caméra et le
+     * cacheraient (constaté au banc de test). À relire avec `camera.offset`.
+     */
+    height: { min: 4, max: 10 },
+    /** Probabilité qu'une parcelle reste vide (place, terrain vague). */
+    emptyLotChance: 0.12,
+    /** Palette des façades — tirée au hasard, mais toujours la même partie. */
+    palette: [0x5f6890, 0x7079a3, 0x515a7f, 0x828bb4, 0x6a7398, 0x4d5578],
+    /**
+     * Graine du générateur aléatoire. Change ce nombre = autre ville.
+     * Fixe = la ville est identique à chaque lancement (et testable).
+     */
+    seed: 20260902,
   },
 
   player: {
@@ -27,8 +77,16 @@ export const CONFIG = {
   },
 
   camera: {
-    /** Position de la caméra RELATIVE au joueur (vue 3/4 arrière). */
-    offset: { x: 0, y: 26, z: 20 },
+    /**
+     * Position de la caméra RELATIVE au joueur (vue 3/4 arrière).
+     *
+     * ⚠️ Le rapport y/z fixe l'inclinaison, et donc ce qui peut passer
+     * DEVANT le joueur : ici la ligne de visée monte de 40 pour 18, soit
+     * 2,2 unités de hauteur par unité de recul. Un immeuble situé 5 unités
+     * derrière le joueur devrait donc dépasser 11 de haut pour le cacher —
+     * c'est pour cela que `city.height.max` reste bas.
+     */
+    offset: { x: 0, y: 40, z: 18 },
     /** Souplesse du suivi : 0 = collée, 1 = très molle. */
     smoothing: 0.12,
     /**
@@ -36,6 +94,14 @@ export const CONFIG = {
      * verticale) pour qu'on voie assez de ville autour du joueur.
      */
     fov: 60,
+    /**
+     * Anticipation : la caméra vise un peu DEVANT le joueur, proportion-
+     * nellement à sa vitesse. On voit ainsi où l'on va, pas d'où l'on vient.
+     * 0 = désactivé. Exprimé en unités de monde à pleine vitesse.
+     */
+    lookAhead: 7,
+    /** Souplesse propre à l'anticipation (plus molle que le suivi). */
+    lookAheadSmoothing: 0.2,
   },
 
   joystick: {

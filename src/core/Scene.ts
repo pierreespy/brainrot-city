@@ -22,7 +22,9 @@ export class GameScene {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x12141c);
     // Le brouillard cache le bord du monde et allègera le rendu lointain.
-    this.scene.fog = new THREE.Fog(0x12141c, 60, 160);
+    // Il commence au-delà de ce que la caméra cadre, pour ne jamais voiler
+    // les immeubles proches du joueur.
+    this.scene.fog = new THREE.Fog(0x12141c, 70, 190);
 
     this.camera = new THREE.PerspectiveCamera(
       CONFIG.camera.fov,
@@ -37,16 +39,20 @@ export class GameScene {
 
   private addLights(): void {
     // Lumière ambiante : éclaire tout uniformément, évite les zones noires.
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
     // Lumière directionnelle : simule le soleil, donne du relief aux volumes.
+    // Inclinée : sans cela, les faces verticales des immeubles auraient
+    // toutes la même teinte et la ville semblerait plate.
     const sun = new THREE.DirectionalLight(0xffffff, 1.1);
-    sun.position.set(30, 60, 20);
+    sun.position.set(60, 90, 30);
     this.scene.add(sun);
   }
 
   private addGround(): void {
-    const size = CONFIG.world.halfSize * 2;
+    // Un peu plus large que le monde jouable : on ne doit jamais apercevoir
+    // le vide au-delà du dernier immeuble.
+    const size = CONFIG.world.halfSize * 2 + 40;
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(size, size),
       new THREE.MeshLambertMaterial({ color: CONFIG.world.groundColor }),
@@ -55,11 +61,9 @@ export class GameScene {
     ground.rotation.x = -Math.PI / 2;
     this.scene.add(ground);
 
-    // Grille de repère : indispensable pour SENTIR le déplacement quand la
-    // ville n'existe pas encore. Elle disparaîtra en Milestone 2.
-    const grid = new THREE.GridHelper(size, size / 4, 0x5a638c, 0x3d4560);
-    grid.position.y = 0.01; // Légèrement au-dessus du sol pour éviter le clignotement.
-    this.scene.add(grid);
+    // Note : la grille de repère de la Milestone 1 a été retirée. Ce sont
+    // maintenant les trottoirs et les bandes blanches de la ville
+    // (`src/world/City.ts`) qui donnent la sensation de déplacement.
   }
 
   /** Appelé quand l'écran change de taille (rotation du téléphone, resize web). */

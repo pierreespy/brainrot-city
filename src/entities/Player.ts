@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config';
 import type { MoveIntent } from '../systems/input/InputSource';
+import type { Collider } from '../world/Collider';
 
 export class Player {
   /** Position au sol. Y n'existe pas : le jeu est en 2D vue de dessus. */
@@ -16,10 +17,20 @@ export class Player {
 
   readonly mesh: THREE.Mesh;
 
-  /** Vitesse actuelle : sert à accélérer/freiner progressivement. */
-  private readonly velocity = new THREE.Vector2(0, 0);
+  /**
+   * Vitesse actuelle : sert à accélérer/freiner progressivement.
+   * Lue aussi par la caméra, qui vise devant le joueur quand il court.
+   */
+  readonly velocity = new THREE.Vector2(0, 0);
 
-  constructor(scene: THREE.Scene) {
+  /**
+   * Ce qui bloque le passage (la ville). Optionnel : le joueur sait courir
+   * sans, ce qui permet de tester sa logique sans construire de décor.
+   */
+  private readonly collider: Collider | null;
+
+  constructor(scene: THREE.Scene, collider: Collider | null = null) {
+    this.collider = collider;
     const { radius, height, color } = CONFIG.player;
 
     const geometry = new THREE.CapsuleGeometry(radius, height, 4, 12);
@@ -53,11 +64,36 @@ export class Player {
     this.position.y += this.velocity.y * deltaTime;
 
     this.clampToWorld();
+    this.resolveCollisions();
     this.faceMovementDirection();
     this.syncMesh();
   }
 
-  /** Empêche de sortir du terrain. Sera remplacé par les murs de la ville. */
+  /**
+   * Repousse le joueur hors des immeubles, puis annule la part de vitesse
+   * qui pointait dans le mur.
+   *
+   * Sans cette annulation, on continuerait d'« appuyer » contre la façade :
+   * la vitesse accumulée ressortirait d'un coup au moment de se dégager.
+   */
+  private resolveCollisions(): void {
+    if (!this.collider) return;
+
+    const beforeX = this.position.x;
+    const beforeZ = this.position.y;
+
+    if (!this.collider.resolve(this.position, CONFIG.player.radius)) return;
+
+    // Corrigé sur X ? alors la vitesse en X ne sert plus à rien.
+    if (this.position.x !== beforeX) this.velocity.x = 0;
+    if (this.position.y !== beforeZ) this.velocity.y = 0;
+
+    // Le bord du monde reste prioritaire : une poussée ne doit pas
+    // pouvoir éjecter le joueur hors du terrain.
+    this.clampToWorld();
+  }
+
+  /** Empêche de sortir du terrain. */
   private clampToWorld(): void {
     const limit = CONFIG.world.halfSize - CONFIG.player.radius;
     this.position.x = THREE.MathUtils.clamp(this.position.x, -limit, limit);

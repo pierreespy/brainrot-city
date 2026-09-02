@@ -9,6 +9,124 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 🏙️ Milestone 2 : la ville et la caméra
+
+**Résumé** — Le terrain vide devient une **ville** : rues, trottoirs et 124
+immeubles générés, contre lesquels le joueur bute et le long desquels il
+glisse. La caméra a été redressée et vise désormais devant le joueur.
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/world/City.ts` | ⭐ Génère la ville **et** sert de carte de collision |
+| `src/world/Collider.ts` | Le contrat commun de ce qui bloque le passage |
+
+### Comment la ville est faite
+
+Rues et pâtés de maisons alternent tous les `blockSize + roadWidth` (22 + 11 =
+33). Les rues sont centrées sur les **multiples** de ce pas, ce qui garantit
+que **(0, 0) est un carrefour** : le joueur ne démarre jamais dans un mur, et
+le bord du monde tombe au milieu d'une rue.
+
+Chaque pâté est découpé en 2 × 2 parcelles. Chaque immeuble est **plaqué sur
+la rue** et déborde vers l'intérieur du pâté (la cour, jamais vue).
+
+> ⚠️ **Le piège évité.** Ma première version centrait chaque immeuble dans sa
+> parcelle avec un recul. Le banc de test a montré que le joueur **traversait
+> les pâtés de maisons de part en part** : les reculs, tous identiques,
+> s'alignaient d'un pâté à l'autre et ouvraient des couloirs rectilignes à
+> travers toute la ville. D'où la règle `city.lotDepth.min = 1` : un immeuble
+> remplit **au moins** sa parcelle, jamais moins.
+
+La ville est **déterministe** (`city.seed`) : la même ville se régénère à
+chaque lancement, ce qui rend le banc de test reproductible. Changer la graine
+= une autre ville.
+
+### Performance : 124 immeubles = 2 appels GPU
+
+Tous les immeubles partagent une géométrie et un matériau, dans un seul
+`THREE.InstancedMesh` (les trottoirs et les bandes blanches en ont un chacun).
+C'est déjà la technique qui servira à afficher la foule en Milestone 5.
+
+### Collisions
+
+En construisant un immeuble, on note son rectangle au sol dans une **grille
+indexée par pâté**. Tester une collision ne regarde que les 9 cases voisines,
+jamais les 124 immeubles — ça restera vrai avec des centaines de NPC.
+
+La résolution ressort le personnage par le côté où il est le **moins enfoncé**
+et n'annule que la vitesse de cet axe : on **glisse** le long des façades au
+lieu de s'y coller. Indispensable dans une ville en couloirs.
+
+### Caméra
+
+- **Anticipation** (`camera.lookAhead`) : la caméra vise jusqu'à 7 unités
+  devant le joueur, proportionnellement à sa vitesse. On voit où l'on va.
+- **Inclinaison redressée** : `offset` passe de `(0, 26, 20)` à `(0, 40, 18)`.
+
+> ⚠️ **Lien caméra ↔ hauteur des immeubles.** Au premier essai, le joueur
+> disparaissait derrière le toit de l'immeuble situé derrière lui (capture à
+> l'appui). La ligne de visée monte de 40 pour 18 de recul : un immeuble
+> derrière le joueur doit dépasser ~11 de haut pour le cacher. D'où
+> `city.height.max = 10`. **Si tu montes les immeubles, redresse la caméra.**
+
+### Modifié
+
+- `src/config.ts` — `world.halfSize` 60 → **99** (un multiple exact du pas de
+  la ville, sinon la ville ne remplit pas le terrain), nouvelle section
+  `city`, `camera.offset` et `camera.lookAhead`, sol éclairci.
+- `src/core/Scene.ts` — **la grille de repère de la Milestone 1 est retirée**
+  (annoncé) ; ce sont les trottoirs et les bandes blanches qui donnent
+  maintenant la sensation de déplacement. Brouillard reculé (70 → 190), sol
+  élargi, soleil incliné pour donner du relief aux façades.
+- `src/core/Game.ts` — construit la ville avant le joueur et la lui injecte ;
+  passe la vitesse à la caméra ; ajoute `getBuildingCount()` et
+  `isPlayerInsideBuilding()` pour le banc de test.
+- `src/entities/Player.ts` — accepte un `Collider` **optionnel** (il sait
+  encore courir sans décor, ce qui permet de tester sa logique seule) ;
+  `velocity` devient publique en lecture pour la caméra.
+- `src/systems/CameraRig.ts` — anticipation lissée séparément.
+- `README.md` — sections « La ville » et « La caméra », décisions techniques.
+
+**Supprimé** — La `GridHelper` du sol, comme prévu en Milestone 1. Rien d'autre.
+
+### Vérifié (banc de test web, Chromium, format téléphone 390 × 844)
+
+- [x] `npm run typecheck` — OK, aucune erreur
+- [x] `npx expo export --platform web` — bundle généré, **aucune erreur console**
+- [x] **124 immeubles** générés, joueur démarrant libre en (0, 0)
+- [x] **Course en rue** — 27,2 unités en 1,5 s (18 u/s attendues) : le delta
+      time n'a pas bougé
+- [x] **Blocage** — foncer 2,7 s dans une façade arrête le joueur à
+      `x = 4,9`, soit le bord du pâté (5,5) moins son rayon (0,6). Exact.
+- [x] **Glissement** — en diagonale contre une façade, le joueur longe le mur
+      et continue sur l'autre axe (`z` bloqué à −4,9, `x` progresse jusqu'à 26)
+- [x] **Aucun blocage dans un mur** — 40 courses aléatoires enchaînées :
+      `isPlayerInsideBuilding()` est resté **faux à chaque fois**
+- [x] **Bord du monde** — arrêt net à `z = 98,4` (99 − 0,6)
+- [x] **Joueur visible** — captures d'écran au carrefour et collé à une
+      façade : aucun toit ne le masque
+- [x] `game.restart()` — replace le joueur en (0, 0)
+
+### ⚠️ Ce que je n'ai PAS pu vérifier
+
+Toujours **pas de téléphone** dans mon environnement. Le banc web tourne sur
+un GPU logiciel (~30 fps) : ce chiffre ne dit **rien** des performances
+réelles sur mobile, où le GPU fait ce travail les doigts dans le nez. À
+confirmer sur ton téléphone via Expo Go.
+
+### Pour tester
+
+```bash
+npm install
+npm start          # puis scanner le QR code avec Expo Go
+```
+
+Envie d'une autre ville ? Change `city.seed` dans `src/config.ts`.
+
+---
+
 ## 2026-09-01 — Claude — 🔄 Migration vers Expo : le jeu devient une app mobile
 
 **Résumé** — Clarification importante du projet : **Brainrot City est une
@@ -216,8 +334,8 @@ npm run dev              # ← n'existe plus
 |---|---|---|
 | 1 | Projet + scène + déplacement du joueur | ✅ Terminée |
 | — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
-| 2 | Ville simple + caméra | ⬜ À venir |
-| 3 | NPC : spawn + déplacement (~100) | ⬜ |
+| 2 | Ville simple + caméra | ✅ Terminée |
+| 3 | NPC : spawn + déplacement (~100) | ⬜ À venir |
 | 4 | Recrutement au contact | ⬜ |
 | 5 | Système de foule (formation, suivi) | ⬜ |
 | 6 | UI : compteur + restart | ⬜ |

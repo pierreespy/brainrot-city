@@ -10,11 +10,13 @@
  */
 
 import * as THREE from 'three';
+import { CONFIG } from '../config';
 import { GameScene } from './Scene';
 import { Loop } from './Loop';
 import { InputManager } from '../systems/input/InputManager';
 import { CameraRig } from '../systems/CameraRig';
 import { Player } from '../entities/Player';
+import { City } from '../world/City';
 
 export class Game {
   /**
@@ -27,6 +29,7 @@ export class Game {
   readonly input: InputManager;
 
   private readonly gameScene: GameScene;
+  private readonly city: City;
   private readonly cameraRig: CameraRig;
   private readonly player: Player;
   private readonly loop: Loop;
@@ -42,8 +45,11 @@ export class Game {
     this.input = input;
     this.presentFrame = presentFrame;
     this.gameScene = new GameScene(renderer, width, height);
+    // La ville est construite AVANT le joueur : c'est elle qui lui dit
+    // contre quoi il bute.
+    this.city = new City(this.gameScene.scene);
     this.cameraRig = new CameraRig(this.gameScene.camera);
-    this.player = new Player(this.gameScene.scene);
+    this.player = new Player(this.gameScene.scene, this.city);
 
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
 
@@ -66,8 +72,15 @@ export class Game {
     // --- Milestone 4 : this.recruitment.update()
     // --- Milestone 5 : this.crowd.update(deltaTime)
 
-    // 3. Suivre avec la caméra.
-    this.cameraRig.update(this.player.position.x, this.player.position.y, deltaTime);
+    // 3. Suivre avec la caméra, en visant un peu devant le joueur.
+    const { speed } = CONFIG.player;
+    this.cameraRig.update(
+      this.player.position.x,
+      this.player.position.y,
+      deltaTime,
+      this.player.velocity.x / speed,
+      this.player.velocity.y / speed,
+    );
 
     // 4. Dessiner, puis envoyer l'image à l'écran du téléphone.
     this.gameScene.render();
@@ -84,6 +97,23 @@ export class Game {
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
   }
 
+  /** Nombre d'immeubles générés — pratique pour les tests automatisés. */
+  getBuildingCount(): number {
+    return this.city.obstacles.length;
+  }
+
+  /**
+   * Vrai si le joueur se retrouve DANS un immeuble — ne doit jamais arriver.
+   * Sert au banc de test automatisé (marge de 10 % pour tolérer le contact).
+   */
+  isPlayerInsideBuilding(): boolean {
+    return !this.city.isFree(
+      this.player.position.x,
+      this.player.position.y,
+      CONFIG.player.radius * 0.9,
+    );
+  }
+
   /** Position du joueur — pratique pour les tests automatisés. */
   getPlayerPosition(): { x: number; z: number } {
     return { x: this.player.position.x, z: this.player.position.y };
@@ -95,6 +125,7 @@ export class Game {
    */
   dispose(): void {
     this.loop.stop();
+    this.city.dispose();
     this.gameScene.dispose();
   }
 }
