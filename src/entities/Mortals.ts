@@ -66,6 +66,9 @@ export class Mortals {
   /** Objets réutilisés à chaque frame : en créer 100 par frame ferait ramer. */
   private readonly dummy = new THREE.Object3D();
   private readonly probe = new THREE.Vector2();
+  /** Dernière position observée : le centre de ce que la caméra voit. */
+  private viewX = 0;
+  private viewZ = 0;
 
   constructor(scene: THREE.Scene, city: Collider) {
     this.scene = scene;
@@ -74,7 +77,12 @@ export class Mortals {
 
     const citizen = CONFIG.mortals.types.citizen;
     this.mesh = new THREE.InstancedMesh(
-      new THREE.CapsuleGeometry(citizen.radius, citizen.height, 4, 8),
+      new THREE.CapsuleGeometry(
+        citizen.radius,
+        citizen.height,
+        CONFIG.render.bodyCapSegments,
+        CONFIG.render.bodyRadialSegments,
+      ),
       new THREE.MeshLambertMaterial({ color: citizen.color }),
       CONFIG.mortals.count,
     );
@@ -158,7 +166,13 @@ export class Mortals {
 
   // ---------------------------------------------------------------- vie
 
-  update(deltaTime: number): void {
+  /**
+   * @param viewX/viewZ position de la caméra (celle du joueur) : sert à ne
+   *                    dessiner que les mortels visibles
+   */
+  update(deltaTime: number, viewX: number, viewZ: number): void {
+    this.viewX = viewX;
+    this.viewZ = viewZ;
     const citizen = CONFIG.mortals.types.citizen;
     const limit = CONFIG.world.halfSize - citizen.radius;
 
@@ -202,19 +216,44 @@ export class Mortals {
     this.syncMeshes();
   }
 
-  /** Recopie les positions logiques dans le mesh instancié. */
+  /**
+   * Recopie les positions logiques dans le mesh instancié.
+   *
+   * ⚠️ Seuls les mortels **proches** y sont écrits. Les autres continuent de
+   * vivre — ils marchent, ils sont convertissables — mais leur géométrie
+   * n'est pas envoyée au GPU : la caméra ne voit qu'une soixantaine d'unités,
+   * et dessiner les 450 revenait à en dessiner 400 hors de l'écran.
+   *
+   * Les emplacements du mesh sont remplis **en continu** (0, 1, 2…) sans
+   * rapport avec le rang du mortel, et `count` dit où s'arrêter : c'est ce
+   * qui permet d'en sauter sans laisser de trous.
+   */
   private syncMeshes(): void {
     const citizen = CONFIG.mortals.types.citizen;
     const y = citizen.height / 2 + citizen.radius;
+    const maxDistance = CONFIG.render.mortalDrawDistance;
+    const maxDistanceSq = maxDistance * maxDistance;
 
-    for (let i = 0; i < this.mortals.length; i += 1) {
-      const mortal = this.mortals[i];
+    let drawn = 0;
+    for (const mortal of this.mortals) {
+      const dx = mortal.x - this.viewX;
+      const dz = mortal.z - this.viewZ;
+      if (dx * dx + dz * dz > maxDistanceSq) continue;
+
       this.dummy.position.set(mortal.x, y, mortal.z);
       this.dummy.rotation.set(0, mortal.angle, 0);
       this.dummy.updateMatrix();
-      this.mesh.setMatrixAt(i, this.dummy.matrix);
+      this.mesh.setMatrixAt(drawn, this.dummy.matrix);
+      drawn += 1;
     }
+
+    this.mesh.count = drawn;
     this.mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  /** Combien de mortels sont réellement dessinés (banc de test). */
+  get drawnCount(): number {
+    return this.mesh.count;
   }
 
   // ---------------------------------------------------------------- conversion

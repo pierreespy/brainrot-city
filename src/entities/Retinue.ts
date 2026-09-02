@@ -65,7 +65,12 @@ export class Retinue {
 
     const citizen = CONFIG.mortals.types.citizen;
     this.mesh = new THREE.InstancedMesh(
-      new THREE.CapsuleGeometry(citizen.radius, citizen.height, 4, 8),
+      new THREE.CapsuleGeometry(
+        citizen.radius,
+        citizen.height,
+        CONFIG.render.bodyCapSegments,
+        CONFIG.render.bodyRadialSegments,
+      ),
       new THREE.MeshLambertMaterial({ color: CONFIG.retinue.color }),
       CONFIG.retinue.maxSize,
     );

@@ -9,6 +9,90 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — ⚙️ Milestone 7 : première passe d'optimisation
+
+**Résumé** — **−68 % de géométrie** et temps d'image presque divisé par deux,
+sans perte visuelle. Et le jeu sait désormais **se mesurer lui-même** sur un
+téléphone.
+
+### La mesure d'abord
+
+| Avec 600 fidèles | Avant | Après |
+|---|---|---|
+| Triangles par image | 288 798 | **92 766** (−68 %) |
+| Temps d'image (banc, GPU logiciel) | 187 ms | **103 ms** |
+| dont **nos calculs** | 1,13 ms | 1,08 ms |
+| dont **dessin** | 186 ms | 102 ms |
+| Mortels dessinés (sur 450 vivants) | 450 | **~90** |
+| fps du banc en jeu normal | 17 | **37** |
+
+Le verdict était sans appel : **186 ms de dessin contre 1,13 ms de calcul**.
+Notre code n'était pour rien dans le problème ; inutile d'aller l'optimiser.
+
+### Les trois leviers
+
+1. **Corps de foule moins découpés** — 4 calottes → 2, **8 côtés conservés**.
+   Les deux réglages ne se valent pas : la caméra plonge de haut, donc c'est le
+   découpage *radial* qui dessine le contour. J'ai essayé 6 côtés, puis 5 :
+   les mortels proches deviennent des cailloux à facettes. Constaté en
+   capture, revenu en arrière.
+2. **Mortels hors champ non dessinés** — ils continuent de vivre, de marcher
+   et d'être convertissables ; seule leur géométrie ne part plus au GPU. La
+   distance n'est pas choisie au jugé mais **calculée** depuis la caméra : à
+   40 de hauteur, 18 de recul et 60° de champ, le point le plus lointain
+   visible est à 38 unités devant le joueur, pour 15 de demi-largeur — soit 40
+   en diagonale, arrondi à 55 pour la marge.
+3. **Anticrénelage coupé**, dans le renderer **et** sur `GLView`
+   (`msaaSamples={0}`). Ce dernier est propre à iOS, qui applique 4
+   échantillons par pixel par défaut. ⚠️ Le banc web ne peut pas le mesurer,
+   mais c'est un des coûts les plus lourds sur un écran de téléphone : à
+   vérifier sur le tien.
+
+### ⚠️ Ce que j'ai refusé de faire
+
+Descendre à **39 000 triangles** était possible (1 calotte, 5 côtés) et faisait
+gagner 30 % de plus **sur le banc**. Je suis revenu en arrière : la perte
+visuelle était nette, et le banc tourne sur un GPU **logiciel** qui ne
+ressemble à aucun téléphone. Un GPU mobile avale 90 000 triangles sans
+sourciller. Optimiser pour le banc, c'est optimiser pour la mauvaise machine.
+
+### 📊 Le jeu se mesure lui-même
+
+`debug.showStats` affiche en bas à gauche : **images/seconde, taille du
+cortège, mortels dessinés et triangles**. C'est l'outil qui manquait — depuis
+la Milestone 1, je répète que mes fps ne valent rien parce que le banc n'a pas
+de GPU. Le jeu peut maintenant répondre à ma place, sur ton téléphone.
+
+> **À toi de jouer** : lance l'app, ramasse une grosse foule, et dis-moi les
+> chiffres du coin de l'écran. Ce sont les premiers qui vaudront quelque chose.
+
+⚠️ **À passer à `false` avant publication** (Milestone 13).
+
+### Modifié
+
+- `src/config.ts` — section `render` (découpage, anticrénelage, distance de
+  dessin) et section `debug`.
+- `src/entities/Mortals.ts` — les emplacements du mesh sont remplis en continu
+  pour les seuls mortels visibles, `count` dit où s'arrêter.
+- `src/entities/Retinue.ts`, `src/core/createRenderer.ts` — découpage et
+  anticrénelage pilotés par la config.
+- `src/core/Game.ts` — `onStatsChange`, moyenne glissante des fps.
+- `src/ui/Hud.tsx`, `App.tsx` — affichage des compteurs, `msaaSamples={0}`.
+
+### Vérifié (banc de test web, Chromium, format téléphone 390 × 844)
+
+- [x] `npm run typecheck` — OK, aucune erreur console
+- [x] Mesures ci-dessus, cortège de 600
+- [x] **Aucun mortel n'apparaît en bord d'écran** malgré la distance de dessin
+      réduite (capture à l'appui)
+- [x] Silhouettes restées lisses (capture comparée avant/après)
+- [x] Aucune régression : compteur, relance, joystick sous le HUD, formation
+      (0 chevauchement, 0 fidèle dans un mur), conversion, bord du monde
+
+**Cassé** — Rien.
+
+---
+
 ## 2026-09-02 — Claude — 📊 Milestone 6 : le HUD
 
 **Résumé** — Le score s'affiche enfin : **compteur de fidèles**, **bouton de
@@ -983,8 +1067,8 @@ npm run dev              # ← n'existe plus
 | 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
 | 5 | Système de cortège (formation, suivi) | ✅ Terminée |
 | 6 | HUD : compteur de fidèles + relance | ✅ Terminée |
-| 7 | Première passe d'optimisation | ⬜ À venir |
-| 8 | 🏛️ La cité grecque : quartiers, marbre, temples, repères | ⬜ |
+| 7 | Première passe d'optimisation | ✅ Terminée |
+| 8 | 🏛️ La cité grecque : quartiers, marbre, temples, repères | ⬜ À venir |
 | 9 | 🏛️ Le panthéon : dieux jouables | ⬜ |
 | 10 | ⚡ Capacités divines : une par dieu | ⬜ |
 | 11 | ⚔️ Cortèges rivaux | ⬜ |

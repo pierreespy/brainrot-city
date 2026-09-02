@@ -10,12 +10,13 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 6 terminée** — app Expo fonctionnelle, ville
+> **État actuel : Milestone 7 terminée** — app Expo fonctionnelle, ville
 > générée (rues, trottoirs, 124 immeubles), collisions contre les façades,
 > **450 mortels qui déambulent**, **conversion au contact** qui se propage, et
 > un **cortège de plusieurs centaines de fidèles** qui suit le chemin du dieu
-> en foule cohérente, **compteur et bouton de relance**. Joystick tactile et
-> caméra de suivi avec anticipation.
+> en foule cohérente, **compteur et bouton de relance**, et une **première
+> passe d'optimisation** (−68 % de géométrie). Joystick tactile et caméra de
+> suivi avec anticipation.
 
 ---
 
@@ -247,6 +248,48 @@ matrices), soit 7 % du budget d'une frame à 60 Hz. La répulsion compare chaque
 fidèle à ses seuls voisins de grille — 9 cases — et non aux 600 autres, ce qui
 ferait 180 000 paires.
 
+### Les performances
+
+La Milestone 7 a commencé par une **mesure**, pas par une intuition — et c'est
+elle qui a désigné le coupable :
+
+| Avec 600 fidèles | Avant | Après |
+|---|---|---|
+| Triangles par image | 288 798 | **92 766** (−68 %) |
+| Temps d'image (banc, GPU logiciel) | 187 ms | **103 ms** |
+| dont **nos calculs** | 1,13 ms | 1,08 ms |
+| dont **dessin** | 186 ms | 102 ms |
+| Mortels dessinés (sur 450 vivants) | 450 | **~90** |
+
+Tout était dans la géométrie envoyée au GPU. Trois leviers, par ordre de gain :
+
+1. **Des corps de foule moins découpés** — 4 calottes → 2, mais **8 côtés
+   conservés**. Les deux réglages ne se valent pas : la caméra plonge de haut,
+   donc c'est le découpage *radial* qui dessine le contour visible. Descendre
+   le radial à 6, et pire à 5, transforme les mortels proches en cailloux à
+   facettes ; baisser les calottes ne se voit pas.
+2. **Ne plus dessiner les mortels hors champ.** Ils continuent de vivre et
+   d'être convertissables, mais leur géométrie ne part plus au GPU. La
+   distance (55 unités) est **calculée** depuis la caméra : avec un recul de
+   18, une hauteur de 40 et 60° de champ, le point le plus lointain visible
+   est à 38 unités devant le joueur. Changer `camera.offset` oblige à la
+   recalculer.
+3. **L'anticrénelage coupé**, dans le renderer *et* sur `GLView`
+   (`msaaSamples={0}`). Ce second réglage est propre à iOS, qui applique par
+   défaut 4 échantillons par pixel : le banc web ne peut pas le mesurer, mais
+   c'est l'un des coûts les plus lourds sur un écran de téléphone.
+
+> **Ce qui n'a PAS été fait, et pourquoi.** Descendre à 39 000 triangles était
+> possible, et faisait gagner 30 % de plus **sur le banc**. Refusé : la perte
+> visuelle était nette, et le banc tourne sur un GPU **logiciel** qui ne
+> ressemble à aucun téléphone. Optimiser pour lui, c'est optimiser pour la
+> mauvaise machine.
+
+**Le jeu sait se mesurer lui-même.** `debug.showStats` affiche images/seconde,
+taille du cortège, mortels dessinés et triangles dans un coin de l'écran —
+parce que la seule mesure qui compte se prend sur un vrai téléphone. **À passer
+à `false` avant publication.**
+
 ### Le HUD
 
 Le compteur, le bouton de relance et **l'emplacement réservé à la capacité
@@ -377,8 +420,8 @@ fois qu'il y a un jeu à habiller.
 | 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
 | 5 | Système de cortège (formation, suivi) | ✅ Terminée |
 | 6 | HUD : compteur de fidèles + relance | ✅ Terminée |
-| 7 | Première passe d'optimisation | ⬜ À venir |
-| 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ⬜ |
+| 7 | Première passe d'optimisation | ✅ Terminée |
+| 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ⬜ À venir |
 | 9 | 🏛️ **Le panthéon** : dieux jouables (données, apparence, sélection) | ⬜ |
 | 10 | ⚡ **Capacités divines** : une par dieu, jauge et bouton | ⬜ |
 | 11 | ⚔️ **Cortèges rivaux** : concurrence et affrontements | ⬜ |

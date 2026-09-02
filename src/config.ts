@@ -271,6 +271,71 @@ export const CONFIG = {
     lookAheadDeadZone: 0.15,
   },
 
+  /**
+   * Réglages de rendu — le sujet de la Milestone 7.
+   *
+   * Mesure de départ (banc de test, 600 fidèles + 450 mortels) : **288 798
+   * triangles par image**, 187 ms de temps d'image dont **186 ms de dessin**
+   * contre 1,13 ms de calcul. Tout le coût était donc dans la géométrie
+   * envoyée au GPU, pas dans notre code.
+   */
+  render: {
+    /**
+     * Découpage des silhouettes de foule (mortels et fidèles).
+     *
+     * Les deux réglages ne se valent pas. La caméra plonge de haut, donc
+     * c'est le découpage RADIAL qui dessine le contour visible ; les
+     * calottes, vues de dessus, ne coûtent que des triangles.
+     *
+     * D'où 2 calottes (au lieu de 4) mais 8 côtés (conservés) : ~150
+     * triangles par corps contre 275, sans perte visible.
+     *
+     * ⚠️ Descendre le radial à 6, et plus encore à 5, transforme les mortels
+     * proches de la caméra en cailloux à facettes (constaté en capture). Le
+     * gain ne valait que sur le GPU **logiciel** du banc de test ; un GPU de
+     * téléphone avale 90 000 triangles sans sourciller.
+     */
+    bodyCapSegments: 2,
+    bodyRadialSegments: 8,
+
+    /**
+     * Anticrénelage. Il lisse les contours, mais fait travailler le GPU sur
+     * chaque pixel de l'écran — c'est cher sur mobile, où l'écran est déjà
+     * très dense. À réactiver seulement si les bords paraissent trop durs.
+     */
+    antialias: false,
+
+    /**
+     * Distance au-delà de laquelle un mortel n'est plus DESSINÉ (il continue
+     * de vivre, de marcher et d'être convertible).
+     *
+     * Valeur CALCULÉE à partir de la caméra, pas choisie au jugé : avec un
+     * recul de 18, une hauteur de 40 et 60° de champ, le point le plus
+     * lointain visible est à **38 unités devant le joueur**, et la
+     * demi-largeur du champ y vaut 15 — soit 40 unités en diagonale. On garde
+     * 55 de marge pour l'anticipation de caméra et les écrans plus larges.
+     *
+     * ⚠️ Si tu changes `camera.offset` ou `camera.fov`, recalcule cette
+     * valeur, sinon des mortels apparaîtront en bord d'écran.
+     */
+    mortalDrawDistance: 55,
+  },
+
+  /**
+   * Outils de développement. À couper avant publication (Milestone 13).
+   */
+  debug: {
+    /**
+     * Affiche images/seconde et compteurs dans un coin de l'écran.
+     *
+     * C'est l'outil de la Milestone 7 : le banc de test tourne sur un GPU
+     * **logiciel** et ne dit rien des performances réelles. La seule mesure
+     * qui compte se prend sur un vrai téléphone, donc le jeu doit savoir se
+     * mesurer lui-même.
+     */
+    showStats: true,
+  },
+
   /** L'interface : ce qui est posé PAR-DESSUS la 3D. */
   hud: {
     /**

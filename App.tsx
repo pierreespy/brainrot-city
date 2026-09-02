@@ -16,9 +16,10 @@ import { StatusBar } from 'expo-status-bar';
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { PixelRatio } from 'react-native';
 
-import { Game } from './src/core/Game';
+import { Game, type GameStats } from './src/core/Game';
 import { createRenderer } from './src/core/createRenderer';
 import { InputManager } from './src/systems/input/InputManager';
+import { CONFIG } from './src/config';
 import { Joystick } from './src/ui/Joystick';
 import { Hud } from './src/ui/Hud';
 
@@ -29,6 +30,7 @@ export default function App() {
   // Le seul état React de l'app. Le jeu le pousse ici quand il change, au
   // plus 8 fois par seconde (voir `hud.scorePublishInterval`).
   const [faithful, setFaithful] = useState(0);
+  const [stats, setStats] = useState<GameStats | null>(null);
 
   // L'entrée existe AVANT le jeu : le joystick est donc utilisable dès la
   // première image, même si la surface 3D n'est pas encore initialisée.
@@ -52,6 +54,7 @@ export default function App() {
 
     const game = new Game(renderer, w, h, presentFrame, input);
     game.onFaithfulChange = setFaithful;
+    if (CONFIG.debug.showStats) game.onStatsChange = setStats;
     gameRef.current = game;
     game.start();
 
@@ -70,6 +73,11 @@ export default function App() {
           key={`${Math.round(width)}x${Math.round(height)}`}
           style={StyleSheet.absoluteFill}
           onContextCreate={onContextCreate}
+          // ⚠️ Réglage MOBILE que le banc de test web ne peut pas montrer :
+          // sur iOS, GLView applique par défaut un anticrénelage matériel à
+          // 4 échantillons, qui fait travailler le GPU sur chaque pixel d'un
+          // écran déjà très dense. On le coupe.
+          msaaSamples={0}
         />
 
         {/* Le joystick écrit directement dans l'entrée du jeu. Il est posé
@@ -77,7 +85,7 @@ export default function App() {
             en React Native, la dernière couche déclarée reçoit le doigt. */}
         <Joystick touch={input.touch} />
 
-        <Hud faithful={faithful} onRestart={onRestart} />
+        <Hud faithful={faithful} onRestart={onRestart} stats={stats} />
       </View>
     </SafeAreaProvider>
   );

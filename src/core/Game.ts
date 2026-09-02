@@ -22,6 +22,15 @@ import { Retinue } from '../entities/Retinue';
 import { Conversion } from '../systems/Conversion';
 import { PlayerTrail } from '../systems/PlayerTrail';
 
+/** Compteurs de performance, affichés en développement. */
+export interface GameStats {
+  fps: number;
+  /** Mortels réellement dessinés, sur les 450 vivants. */
+  drawnMortals: number;
+  retinue: number;
+  triangles: number;
+}
+
 export class Game {
   /**
    * L'entrée est CRÉÉE À L'EXTÉRIEUR et injectée ici.
@@ -48,9 +57,17 @@ export class Game {
    */
   onFaithfulChange: ((faithful: number) => void) | null = null;
 
+  /** Prévenue avec les compteurs de performance (voir `debug.showStats`). */
+  onStatsChange: ((stats: GameStats) => void) | null = null;
+
   /** Dernier score publié, et quand. Sert à ne pas inonder React. */
   private publishedFaithful = -1;
   private lastPublishTime = 0;
+
+  /** Mesure des images par seconde, sur une moyenne glissante. */
+  private frameCount = 0;
+  private frameTimeSum = 0;
+  private lastStatsTime = 0;
   private readonly loop: Loop;
   private readonly presentFrame: () => void;
 
@@ -95,8 +112,9 @@ export class Game {
     // 2. Déplacer le joueur.
     this.player.update(intent, deltaTime);
 
-    // 3. Faire vivre les mortels.
-    this.mortals.update(deltaTime);
+    // 3. Faire vivre les mortels. On leur donne la position observée : ils
+    //    vivent tous, mais seuls les visibles sont dessinés.
+    this.mortals.update(deltaTime, this.player.position.x, this.player.position.y);
 
     // 4. Convertir les mortels au contact, puis faire suivre le cortège.
     const { x, y: z } = this.player.position;
@@ -117,8 +135,9 @@ export class Game {
       this.player.velocity.y / speed,
     );
 
-    // 5 bis. Annoncer le score, s'il a changé et pas trop souvent.
+    // 5 bis. Annoncer le score et, en développement, les compteurs.
     this.publishFaithful();
+    this.publishStats(deltaTime);
 
     // 6. Dessiner, puis envoyer l'image à l'écran du téléphone.
     this.gameScene.render();
@@ -144,6 +163,34 @@ export class Game {
     this.publishedFaithful = faithful;
     this.lastPublishTime = now;
     this.onFaithfulChange(faithful);
+  }
+
+  /**
+   * Publie les compteurs de performance deux fois par seconde.
+   *
+   * La moyenne est glissante : afficher l'inverse du dernier delta ferait
+   * clignoter un nombre illisible.
+   */
+  private publishStats(deltaTime: number): void {
+    if (this.onStatsChange === null) return;
+
+    this.frameCount += 1;
+    this.frameTimeSum += deltaTime;
+
+    const now = performance.now();
+    if (now - this.lastStatsTime < 500) return;
+    this.lastStatsTime = now;
+
+    const fps = this.frameCount > 0 ? this.frameCount / this.frameTimeSum : 0;
+    this.frameCount = 0;
+    this.frameTimeSum = 0;
+
+    this.onStatsChange({
+      fps: Math.round(fps),
+      drawnMortals: this.mortals.drawnCount,
+      retinue: this.retinue.size,
+      triangles: this.gameScene.renderer.info.render.triangles,
+    });
   }
 
   resize(width: number, height: number): void {
@@ -188,6 +235,11 @@ export class Game {
   /** Les mortels — exposés pour le banc de test automatisé. */
   getMortalCount(): number {
     return this.mortals.count;
+  }
+
+  /** Combien de mortels sont réellement dessinés, sur les 450 vivants. */
+  getDrawnMortalCount(): number {
+    return this.mortals.drawnCount;
   }
 
   getMortalPositions(): { x: number; z: number }[] {

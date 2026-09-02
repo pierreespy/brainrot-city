@@ -16,6 +16,7 @@
 
 import * as THREE from 'three';
 import type { ExpoWebGLRenderingContext } from 'expo-gl';
+import { CONFIG } from '../config';
 
 export interface RendererSetup {
   renderer: THREE.WebGLRenderer;
@@ -50,7 +51,9 @@ export function createRenderer(
   const renderer = new THREE.WebGLRenderer({
     canvas: canvasShim,
     context: gl as unknown as WebGLRenderingContext,
-    antialias: true,
+    // Coupé par défaut : l'anticrénelage fait travailler le GPU sur chaque
+    // pixel, et les écrans de téléphone sont assez denses pour s'en passer.
+    antialias: CONFIG.render.antialias,
   });
 
   // drawingBufferWidth est DÉJÀ en pixels physiques. Si on laissait Three.js

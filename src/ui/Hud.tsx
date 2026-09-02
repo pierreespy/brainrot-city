@@ -12,14 +12,17 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { GameStats } from '../core/Game';
 
 interface Props {
   /** Le nombre de fidèles du cortège. */
   faithful: number;
   onRestart: () => void;
+  /** Compteurs de performance, ou `null` si l'affichage est coupé. */
+  stats: GameStats | null;
 }
 
-export function Hud({ faithful, onRestart }: Props) {
+export function Hud({ faithful, onRestart, stats }: Props) {
   return (
     // `box-none` : cette couche laisse passer les doigts vers le joystick,
     // sauf sur ses propres boutons. Sans cela, l'interface avalerait tout
@@ -44,6 +47,21 @@ export function Hud({ faithful, onRestart }: Props) {
           <Text style={styles.restartIcon}>↻</Text>
         </Pressable>
       </View>
+
+      {/*
+        Compteurs de développement. La seule mesure qui vaille se prend sur un
+        vrai téléphone : le jeu doit donc pouvoir se mesurer lui-même.
+        Coupé par `debug.showStats` avant publication.
+      */}
+      {stats !== null && (
+        <View style={styles.stats} pointerEvents="none">
+          <Text style={styles.statsText} testID="stats">
+            {stats.fps} fps · {stats.retinue} fidèles · {stats.drawnMortals} mortels
+            {' · '}
+            {(stats.triangles / 1000).toFixed(0)}k triangles
+          </Text>
+        </View>
+      )}
 
       {/*
         Emplacement RÉSERVÉ à la capacité divine (Milestone 10).
@@ -107,4 +125,15 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   abilityIcon: { fontSize: 26, opacity: 0.25 },
+
+  stats: {
+    position: 'absolute',
+    left: 16,
+    bottom: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  statsText: { color: 'rgba(255, 255, 255, 0.65)', fontSize: 11, fontWeight: '600' },
 });
