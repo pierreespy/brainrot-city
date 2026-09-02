@@ -52,9 +52,19 @@ export class City implements Collider {
 
   /**
    * Index spatial : les obstacles rangés par case de `pitch` unités
-   * (soit une case par pâté de maisons). La clé est "colonne,ligne".
+   * (soit une case par pâté de maisons).
+   *
+   * La clé est un NOMBRE, pas une chaîne « colonne,ligne » comme au départ :
+   * avec 450 mortels interrogeant 9 cases par frame, la version en chaînes
+   * fabriquait ~4 000 chaînes par frame, à jeter aussitôt. `cellKey()` encode
+   * les deux coordonnées dans un entier — même lisibilité, zéro allocation.
+   *
+   * ⚠️ Honnêteté sur les mesures : ce changement n'a **pas** amélioré les fps
+   * du banc de test. Le profilage a montré que le coût était ailleurs (dans
+   * le dessin des pixels, pas dans nos boucles, qui tiennent en 0,19 ms).
+   * C'est une propreté de principe, pas une optimisation constatée.
    */
-  private readonly grid = new Map<string, Box2[]>();
+  private readonly grid = new Map<number, Box2[]>();
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -224,6 +234,17 @@ export class City implements Collider {
 
   // ---------------------------------------------------------------- collisions
 
+  /**
+   * Encode une case (colonne, ligne) en un entier unique.
+   *
+   * Le décalage de 512 rend les coordonnées négatives positives, et le
+   * facteur 1024 laisse assez de place pour que deux cases ne se confondent
+   * jamais — la cité en compte moins de dix par axe.
+   */
+  private cellKey(cx: number, cz: number): number {
+    return (cx + 512) * 1024 + (cz + 512);
+  }
+
   private addObstacle(box: Box2): void {
     this.obstacles.push(box);
     // Un immeuble peut chevaucher deux cases : on l'inscrit dans toutes
@@ -234,7 +255,7 @@ export class City implements Collider {
     const z1 = Math.floor((box.z + box.halfZ) / this.pitch);
     for (let cx = x0; cx <= x1; cx += 1) {
       for (let cz = z0; cz <= z1; cz += 1) {
-        const key = `${cx},${cz}`;
+        const key = this.cellKey(cx, cz);
         const bucket = this.grid.get(key);
         if (bucket) bucket.push(box);
         else this.grid.set(key, [box]);
@@ -259,7 +280,7 @@ export class City implements Collider {
 
     for (let ix = cx - 1; ix <= cx + 1; ix += 1) {
       for (let iz = cz - 1; iz <= cz + 1; iz += 1) {
-        const bucket = this.grid.get(`${ix},${iz}`);
+        const bucket = this.grid.get(this.cellKey(ix, iz));
         if (!bucket) continue;
         for (const box of bucket) {
           if (this.pushOut(position, radius, box)) moved = true;

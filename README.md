@@ -10,10 +10,10 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 3 terminée** — app Expo fonctionnelle, ville
+> **État actuel : Milestone 4 terminée** — app Expo fonctionnelle, ville
 > générée (rues, trottoirs, 124 immeubles), collisions contre les façades,
-> **100 mortels qui déambulent dans les rues**, joueur au joystick tactile et
-> caméra de suivi avec anticipation.
+> **450 mortels qui déambulent**, **conversion au contact** et cortège qui
+> grandit, joueur au joystick tactile et caméra de suivi avec anticipation.
 
 ---
 
@@ -105,10 +105,12 @@ imprimé dessus.
     │
     ├── entities/
     │   ├── Player.ts      Position et déplacement du joueur
-    │   └── Mortals.ts     ⭐ Les 100 habitants : déambulation + mesh instancié
+    │   ├── Mortals.ts     ⭐ Les 450 habitants : déambulation + mesh instancié
+    │   └── Retinue.ts     ⭐ Le cortège : le score et les fidèles qui suivent
     │
     ├── systems/
     │   ├── CameraRig.ts   Caméra qui suit le joueur en douceur
+    │   ├── Conversion.ts  Le contact : un mortel quitte la cité pour le cortège
     │   └── input/
     │       ├── InputSource.ts   Le contrat commun (une direction x/z)
     │       ├── TouchInput.ts    Direction venue du joystick
@@ -172,9 +174,34 @@ Deux choix expliquent leur comportement :
   philosophes décrits dans [`UNIVERS.md`](./UNIVERS.md) — chacun étant une
   ligne à ajouter, avec sa couleur, sa vitesse et sa **valeur en fidèles**.
 
-Comme les immeubles, les 100 mortels tiennent dans **un seul `InstancedMesh`**,
+Comme les immeubles, les 450 mortels tiennent dans **un seul `InstancedMesh`**,
 donc un appel GPU. Ils réutilisent la ville comme carte de collision : le même
 `Collider` que le joueur, sans une ligne de code en plus.
+
+**Pourquoi 450 et pas 100 ?** Parce que c'est calculé, pas deviné. Le joueur
+balaie un couloir de `2 × conversion.radius` de large à 18 u/s, soit 68 unités²
+par seconde sur les 39 200 de la cité. À 100 mortels, on mesurait **3
+conversions en 40 secondes** : injouable. À 450, environ une par seconde.
+Changer `world.halfSize` ou `conversion.radius` oblige à recalculer.
+
+### La conversion et le cortège
+
+Toucher un mortel le fait quitter la cité pour rejoindre le **cortège**. Trois
+fichiers, chacun avec un seul rôle :
+
+- **`Mortals.ts`** sait rendre ceux qu'on touche (`takeNear`) et les
+  **remplace aussitôt** ailleurs dans la cité, à 70 unités au moins du joueur :
+  le vivier ne se vide jamais et le mesh n'est jamais reconstruit.
+- **`Retinue.ts`** détient le **score** (la somme des *valeurs*, pas le nombre
+  de silhouettes — un hoplite vaudra 3) et les fidèles qui courent derrière.
+- **`Conversion.ts`** ne fait que brancher les deux. C'est là que se
+  grefferont les capacités qui convertissent (Foudre, Charme) : elles ne
+  changeront que le rayon ou le point de conversion.
+
+> ⚠️ **Le suivi du cortège est provisoire.** Chaque fidèle vise un point du
+> disque autour du joueur, sans se soucier de ses voisins ni des détours : il
+> peut rester coincé derrière un immeuble. La vraie formation est le sujet de
+> la Milestone 5, et **seule la méthode `Retinue.update()` sera remplacée**.
 
 ### La caméra
 
@@ -279,8 +306,8 @@ fois qu'il y a un jeu à habiller.
 | — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
 | 2 | Ville simple + caméra | ✅ Terminée |
 | 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
-| 4 | **Conversion** au contact : le cortège grandit | ⬜ À venir |
-| 5 | Système de cortège (formation, suivi) | ⬜ |
+| 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
+| 5 | Système de cortège (formation, suivi) | ⬜ À venir |
 | 6 | HUD : compteur de fidèles + relance | ⬜ |
 | 7 | Première passe d'optimisation | ⬜ |
 | 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ⬜ |

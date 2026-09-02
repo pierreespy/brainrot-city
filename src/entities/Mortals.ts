@@ -77,6 +77,10 @@ export class Mortals {
 
     this.spawnAll();
     this.syncMeshes();
+    // La sphère englobante sert au test « est-ce à l'écran ? ». On la calcule
+    // une fois les mortels placés : elle couvre alors toute la cité, ce qui
+    // reste vrai puisqu'ils ne sortent jamais de ses limites.
+    this.mesh.computeBoundingSphere();
   }
 
   // ---------------------------------------------------------------- naissance
@@ -103,7 +107,10 @@ export class Mortals {
    * dans ce cas on accepte le dernier point, quitte à ce que la collision le
    * repousse à la première frame.
    */
-  private findFreeSpot(): { x: number; z: number } {
+  private findFreeSpot(awayFrom?: { x: number; z: number; distance: number }): {
+    x: number;
+    z: number;
+  } {
     const limit = CONFIG.world.halfSize - 2;
     const radius = CONFIG.mortals.types.citizen.radius;
 
@@ -112,6 +119,12 @@ export class Mortals {
     for (let attempt = 0; attempt < 40; attempt += 1) {
       x = (this.random() * 2 - 1) * limit;
       z = (this.random() * 2 - 1) * limit;
+
+      // Naître sous les yeux du joueur casserait l'illusion : on s'éloigne.
+      if (awayFrom && Math.hypot(x - awayFrom.x, z - awayFrom.z) < awayFrom.distance) {
+        continue;
+      }
+
       this.probe.set(x, z);
       if (!this.city.resolve(this.probe, radius)) return { x, z };
     }
@@ -195,6 +208,57 @@ export class Mortals {
       this.mesh.setMatrixAt(i, this.dummy.matrix);
     }
     this.mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  // ---------------------------------------------------------------- conversion
+
+  /**
+   * Retire les mortels assez proches de (x, z) et renvoie leurs types.
+   *
+   * Le vivier ne se vide jamais : chaque mortel converti est **immédiatement
+   * remplacé** par un nouveau, né loin du joueur. Le nombre d'habitants est
+   * donc constant, et le nombre d'emplacements du mesh instancié aussi — ce
+   * qui évite d'avoir à le reconstruire en pleine partie.
+   *
+   * @returns le type de chaque mortel converti (un hoplite vaudra 3 fidèles)
+   */
+  takeNear(x: number, z: number, radius: number): MortalTypeId[] {
+    const taken: MortalTypeId[] = [];
+    const radiusSq = radius * radius;
+
+    for (const mortal of this.mortals) {
+      const dx = mortal.x - x;
+      const dz = mortal.z - z;
+      if (dx * dx + dz * dz > radiusSq) continue;
+
+      taken.push(mortal.type);
+
+      // On ne SUPPRIME pas la ligne, on la recycle : c'est un nouvel habitant
+      // qui prend la place de celui qui vient de rejoindre le cortège.
+      const spot = this.findFreeSpot({
+        x,
+        z,
+        distance: CONFIG.conversion.respawnMinDistance,
+      });
+      mortal.x = spot.x;
+      mortal.z = spot.z;
+      mortal.angle = this.pickHeading();
+      mortal.timer = this.pickDuration();
+    }
+
+    return taken;
+  }
+
+  /** Repeuple la cité de zéro (utilisé par le restart). */
+  reset(): void {
+    for (const mortal of this.mortals) {
+      const spot = this.findFreeSpot();
+      mortal.x = spot.x;
+      mortal.z = spot.z;
+      mortal.angle = this.pickHeading();
+      mortal.timer = this.pickDuration();
+    }
+    this.syncMeshes();
   }
 
   // ---------------------------------------------------------------- lecture

@@ -71,8 +71,19 @@ export const CONFIG = {
    * suppose « tous les mortels sont identiques » coûterait une réécriture.
    */
   mortals: {
-    /** Combien de mortels vivent dans la cité en même temps. */
-    count: 100,
+    /**
+     * Combien de mortels vivent dans la cité en même temps.
+     *
+     * ⚠️ Valeur calculée, pas devinée. Le joueur balaie un couloir de
+     * `2 × conversion.radius` de large à 18 u/s, soit 68 unités² par seconde
+     * sur les 39 200 de la cité. À 100 mortels cela donnait **3 conversions
+     * en 40 secondes** (mesuré) : injouable. À 450, on attend environ une
+     * conversion par seconde, ce qui est le rythme du genre.
+     *
+     * Si tu changes `world.halfSize` ou `conversion.radius`, ce nombre est à
+     * recalculer.
+     */
+    count: 450,
 
     /**
      * Le catalogue des types. Un type = une ligne, comme pour les dieux.
@@ -104,6 +115,46 @@ export const CONFIG = {
 
     /** Graine du placement initial : la même cité peuplée à chaque lancement. */
     seed: 77,
+  },
+
+  /**
+   * La conversion : ce qui se passe quand le joueur touche un mortel.
+   */
+  conversion: {
+    /**
+     * Distance sous laquelle un mortel rejoint le cortège, mesurée de centre
+     * à centre. Somme des deux rayons (0,6 + 0,45 = 1,05) plus une marge de
+     * confort : sur un téléphone, exiger le contact exact est frustrant.
+     */
+    radius: 1.9,
+    /**
+     * Un mortel converti est remplacé par un nouveau, ailleurs dans la cité,
+     * pour qu'elle ne se vide jamais. Ce nouveau naît au moins à cette
+     * distance du joueur, sinon on le verrait apparaître sous ses yeux.
+     */
+    respawnMinDistance: 70,
+  },
+
+  /**
+   * Le cortège : les fidèles qui suivent le joueur.
+   *
+   * ⚠️ Le SUIVI ci-dessous est provisoire (voir README). La formation
+   * véritable est le sujet de la Milestone 5 ; ces réglages n'ont pour but
+   * que de rendre la conversion visible dès maintenant.
+   */
+  retinue: {
+    /**
+     * Taille maximale. Un `InstancedMesh` réserve ses emplacements une fois
+     * pour toutes : c'est le plafond dur du cortège.
+     */
+    maxSize: 600,
+    color: 0x7dd3fc,
+    /** Les fidèles vont un peu plus vite que le joueur, sinon ils décrochent. */
+    speedFactor: 1.08,
+    /** Distance du premier fidèle au joueur. */
+    minDistance: 1.5,
+    /** Étalement : plus c'est grand, plus le cortège est large. */
+    spacing: 0.5,
   },
 
   player: {

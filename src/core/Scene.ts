@@ -50,9 +50,11 @@ export class GameScene {
   }
 
   private addGround(): void {
-    // Un peu plus large que le monde jouable : on ne doit jamais apercevoir
-    // le vide au-delà du dernier immeuble.
-    const size = CONFIG.world.halfSize * 2 + 40;
+    // BIEN plus large que le monde jouable. La marge de 40 unités ne
+    // suffisait pas : arrivé au bord de la cité, le joueur voyait le vide
+    // au-delà du sol (constaté en capture). Le brouillard s'occupe de cacher
+    // le lointain, et un plan de plus ne coûte rien.
+    const size = CONFIG.world.halfSize * 2 + 300;
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(size, size),
       new THREE.MeshLambertMaterial({ color: CONFIG.world.groundColor }),

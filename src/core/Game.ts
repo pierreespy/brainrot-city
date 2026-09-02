@@ -18,6 +18,8 @@ import { CameraRig } from '../systems/CameraRig';
 import { Player } from '../entities/Player';
 import { City } from '../world/City';
 import { Mortals } from '../entities/Mortals';
+import { Retinue } from '../entities/Retinue';
+import { Conversion } from '../systems/Conversion';
 
 export class Game {
   /**
@@ -34,6 +36,8 @@ export class Game {
   private readonly cameraRig: CameraRig;
   private readonly player: Player;
   private readonly mortals: Mortals;
+  private readonly retinue: Retinue;
+  private readonly conversion: Conversion;
   private readonly loop: Loop;
   private readonly presentFrame: () => void;
 
@@ -55,6 +59,8 @@ export class Game {
     // Les mortels naissent dans les rues : ils ont besoin de la ville pour
     // savoir où elle n'est pas.
     this.mortals = new Mortals(this.gameScene.scene, this.city);
+    this.retinue = new Retinue(this.gameScene.scene, this.city);
+    this.conversion = new Conversion(this.mortals, this.retinue);
 
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
 
@@ -76,12 +82,15 @@ export class Game {
     // 3. Faire vivre les mortels.
     this.mortals.update(deltaTime);
 
-    // --- Milestone 4  : this.conversion.update()          (recrutement au contact)
-    // --- Milestone 5  : this.retinue.update(deltaTime)    (le cortège)
+    // 4. Convertir les mortels au contact, puis faire suivre le cortège.
+    const { x, y: z } = this.player.position;
+    this.conversion.update(x, z);
+    this.retinue.update(deltaTime, x, z);
+
     // --- Milestone 10 : this.ability.update(deltaTime)    (la capacité divine)
     //     Thème et contenu : voir UNIVERS.md
 
-    // 4. Suivre avec la caméra, en visant un peu devant le joueur.
+    // 5. Suivre avec la caméra, en visant un peu devant le joueur.
     const { speed } = CONFIG.player;
     this.cameraRig.update(
       this.player.position.x,
@@ -91,7 +100,7 @@ export class Game {
       this.player.velocity.y / speed,
     );
 
-    // 5. Dessiner, puis envoyer l'image à l'écran du téléphone.
+    // 6. Dessiner, puis envoyer l'image à l'écran du téléphone.
     this.gameScene.render();
     this.presentFrame();
   }
@@ -103,7 +112,31 @@ export class Game {
   /** Remet la partie à zéro (sera branché sur le bouton en Milestone 6). */
   restart(): void {
     this.player.reset();
+    this.retinue.clear();
+    this.mortals.reset();
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
+  }
+
+  /** Le score : le nombre de fidèles du cortège (affiché en Milestone 6). */
+  getFaithfulCount(): number {
+    return this.retinue.faithfulCount;
+  }
+
+  /** Les silhouettes réellement affichées derrière le joueur. */
+  getRetinueSize(): number {
+    return this.retinue.size;
+  }
+
+  getRetinuePositions(): { x: number; z: number }[] {
+    return this.retinue.getPositions();
+  }
+
+  /** Combien de fidèles sont dans un immeuble. Doit toujours valoir 0. */
+  countRetinueInsideBuildings(): number {
+    return this.retinue
+      .getPositions()
+      .filter(({ x, z }) => !this.city.isFree(x, z, CONFIG.mortals.types.citizen.radius * 0.9))
+      .length;
   }
 
   /** Les mortels — exposés pour le banc de test automatisé. */
@@ -155,6 +188,7 @@ export class Game {
   dispose(): void {
     this.loop.stop();
     this.mortals.dispose();
+    this.retinue.dispose();
     this.city.dispose();
     this.gameScene.dispose();
   }

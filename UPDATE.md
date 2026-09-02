@@ -9,6 +9,97 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — ⚡ Milestone 4 : la conversion au contact
+
+**Résumé** — Toucher un mortel le convertit : il quitte la cité et rejoint le
+**cortège**, qui grandit derrière le joueur. Le score existe.
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/entities/Retinue.ts` | Le cortège : le score et les fidèles qui suivent |
+| `src/systems/Conversion.ts` | Le contact : branche le vivier et le cortège |
+
+Le découpage en trois fichiers n'est pas décoratif : `Mortals` ignore le
+cortège, `Retinue` ignore d'où viennent ses fidèles, et `Conversion` est le
+seul endroit où les deux se rencontrent. C'est là que se grefferont la Foudre
+de Zeus et le Charme d'Aphrodite (M10) : elles ne changeront que le rayon.
+
+### La densité était fausse, et ça se mesure
+
+Avec les 100 mortels de la M3 : **3 conversions en 40 secondes de course**.
+Injouable. Le calcul le confirme — le joueur balaie 68 unités² par seconde sur
+les 39 200 de la cité, soit une conversion toutes les six secondes.
+
+`mortals.count` passe donc de 100 à **450**, valeur calculée pour viser une
+conversion par seconde. Mesuré ensuite : **19 à 32 conversions en 40 s** selon
+le trajet. Le commentaire de `config.ts` explique le calcul, pour que la valeur
+soit recalculable si la taille de la cité ou le rayon de conversion changent.
+
+### 🐞 Un bug que les chiffres ne montraient pas
+
+Le compteur affichait **23 fidèles et l'écran n'en montrait aucun.**
+
+Three.js calcule une sphère englobante pour décider si un objet est à l'écran.
+Il la calculait ici alors que le cortège était encore **vide**, puis la gardait
+en cache : les fidèles ajoutés ensuite tombaient hors de cette sphère périmée,
+et l'objet entier était écarté du rendu dès qu'on s'éloignait du centre de la
+carte. Corrigé en désactivant ce test pour le cortège — il colle au joueur,
+il est de toute façon toujours à l'écran. Les mortels, eux, calculent
+désormais leur sphère **après** avoir été placés.
+
+> Ce bug n'apparaissait dans aucune mesure : tous les compteurs étaient bons.
+> Il n'a été vu que sur une **capture d'écran**. D'où l'intérêt de regarder le
+> jeu, et pas seulement ses chiffres.
+
+### Deux autres corrections
+
+- **Le vide au bord du monde.** Arrivé à la limite de la cité, le joueur
+  voyait le sol s'arrêter. La marge du sol passe de 40 à 300 unités : un plan
+  de plus ne coûte rien, et le brouillard s'occupe du lointain.
+- **La grille de collision** est désormais indexée par un entier plutôt que
+  par une chaîne « colonne,ligne » (~4 000 chaînes créées par frame avec 450
+  mortels). ⚠️ **Honnêteté : ce changement n'a rien amélioré aux fps.** Le
+  profilage a montré que nos boucles coûtent **0,19 ms par frame** (1 % du
+  budget) et que cacher les silhouettes double les fps : le coût est
+  entièrement dans le **dessin des pixels** par le GPU logiciel du banc de
+  test, pas dans notre code. C'est une propreté de principe, pas une
+  optimisation constatée.
+
+### Modifié
+
+- `src/config.ts` — sections `conversion` et `retinue`, `mortals.count` à 450.
+- `src/entities/Mortals.ts` — `takeNear()`, remplacement des convertis loin du
+  joueur, `reset()`.
+- `src/core/Game.ts` — étape 4 de la frame ; `restart()` vide le cortège et
+  repeuple la cité ; compteurs exposés au banc de test.
+- `src/core/Scene.ts`, `src/world/City.ts` — les deux corrections ci-dessus.
+
+### Vérifié (banc de test web, Chromium, format téléphone 390 × 844)
+
+- [x] `npm run typecheck` — OK, aucune erreur console
+- [x] **Le cortège grandit** : 19 à 32 fidèles après 40 s de course
+- [x] **Le vivier ne se vide jamais** : toujours exactement 450 mortels
+- [x] **0 fidèle dans un mur**, en surveillance continue pendant les 40 s
+- [x] **0 mortel dans un mur** sur 12 s de surveillance à 450 habitants
+- [x] **Le cortège est visible** (capture à l'appui, après correction du bug)
+- [x] **`restart()`** remet le score à 0, vide le cortège et repeuple la cité
+- [x] Aucune régression : blocage du joueur à `x = 4,9`, glissement, bord du
+      monde, caméra à 5,8 unités de balayage
+
+### ⚠️ Ce qui reste, et qui est le sujet de la Milestone 5
+
+- **Les traînards.** Un fidèle vise son point en ligne droite : il peut rester
+  coincé derrière un immeuble et se retrouver à 30 unités du joueur (mesuré).
+  Il faudra que le cortège suive le **chemin** du joueur, pas sa position.
+- **Les fidèles se traversent entre eux.** Pas de cohésion, pas d'évitement.
+- **Le score n'est pas affiché** : c'est le HUD de la Milestone 6.
+
+**Cassé** — Rien.
+
+---
+
 ## 2026-09-02 — Claude — 🚶 Milestone 3 : les mortels
 
 **Résumé** — La cité est habitée : **100 mortels** déambulent dans les rues,
@@ -665,8 +756,8 @@ npm run dev              # ← n'existe plus
 | — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
 | 2 | Ville simple + caméra | ✅ Terminée |
 | 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
-| 4 | **Conversion** au contact : le cortège grandit | ⬜ À venir |
-| 5 | Système de cortège (formation, suivi) | ⬜ |
+| 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
+| 5 | Système de cortège (formation, suivi) | ⬜ À venir |
 | 6 | HUD : compteur de fidèles + relance | ⬜ |
 | 7 | Première passe d'optimisation | ⬜ |
 | 8 | 🏛️ La cité grecque : quartiers, marbre, temples, repères | ⬜ |
