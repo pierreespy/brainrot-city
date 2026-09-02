@@ -114,6 +114,12 @@ export class Game {
     );
   }
 
+  /** Position de la caméra — pratique pour les tests automatisés. */
+  getCameraPosition(): { x: number; y: number; z: number } {
+    const c = this.gameScene.camera.position;
+    return { x: c.x, y: c.y, z: c.z };
+  }
+
   /** Position du joueur — pratique pour les tests automatisés. */
   getPlayerPosition(): { x: number; z: number } {
     return { x: this.player.position.x, z: this.player.position.y };

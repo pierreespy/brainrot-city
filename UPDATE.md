@@ -9,6 +9,49 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 🎥 Correctif : la caméra se bousculait aux demi-tours
+
+**Symptôme signalé** — « la caméra bouge trop, surtout au premier mouvement ;
+aller à droite, relâcher, puis aller à gauche crée un bousculement visuel ».
+
+**Diagnostic** — C'est l'anticipation ajoutée en Milestone 2, mesurée au banc
+de test sur exactement ce geste (droite 1 s → relâché 0,5 s → gauche 1 s) :
+
+| | Avant | Après |
+|---|---|---|
+| Amplitude du balayage caméra | **14,0 unités** | **5,9 unités** |
+| Vitesse de balayage maximale | **65,4 u/s** | **8,5 u/s** |
+
+65 u/s pour un joueur qui court à 18 u/s : la caméra allait presque quatre
+fois plus vite que ce qu'elle suivait. D'où la sensation de bousculement.
+
+Trois causes, cumulées :
+
+1. **Trop d'amplitude.** `lookAhead` valait 7, donc un demi-tour déplaçait la
+   visée de 14 unités. Ramené à **3,5**.
+2. **Trop rapide.** `lookAheadSmoothing` valait 0,2, soit 80 % de l'écart
+   rattrapé par frame — quasiment aussi sec que le suivi lui-même. Passé à
+   **0,965** (bien plus mou que le suivi, comme prévu à l'origine).
+3. **Un recentrage parasite.** Relâcher le doigt ramenait l'anticipation à
+   zéro, puis repartir dans l'autre sens la relançait : **trois** mouvements
+   de caméra pour un simple aller-retour. Désormais la cible est
+   **conservée** quand le joueur ralentit (`lookAheadDeadZone`), donc un
+   aller-retour ne coûte qu'un seul mouvement.
+
+**Fichiers touchés** — `src/config.ts`, `src/systems/CameraRig.ts`,
+`src/core/Game.ts` (ajout de `getCameraPosition()` pour le banc de test).
+
+**Vérifié**
+
+- [x] `npm run typecheck` — OK
+- [x] Mesures ci-dessus, sur le geste exact signalé
+- [x] Aucune régression : 124 immeubles, blocage à `x = 4,9`, glissement,
+      0 blocage dans un mur sur 40 courses aléatoires, bord du monde à 98,4
+
+**Cassé** — Rien. L'anticipation existe toujours, elle est juste plus discrète.
+
+---
+
 ## 2026-09-02 — Claude — 🏙️ Milestone 2 : la ville et la caméra
 
 **Résumé** — Le terrain vide devient une **ville** : rues, trottoirs et 124

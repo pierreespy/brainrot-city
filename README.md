@@ -154,6 +154,12 @@ Elle suit le joueur avec du retard (`camera.smoothing`) et vise **un peu
 devant lui** (`camera.lookAhead`), proportionnellement à sa vitesse : on voit
 où l'on va plutôt que d'où l'on vient.
 
+L'anticipation est volontairement **discrète et très molle**, et sa cible est
+**conservée quand le joueur s'arrête**. Un demi-tour coûte le double de
+`lookAhead` : à 7, faire droite puis gauche balayait 14 unités à 65 u/s, soit
+presque quatre fois la vitesse du joueur — l'image se bousculait. Si tu
+remontes cette valeur, remonte aussi `lookAheadSmoothing`.
+
 Son inclinaison (`camera.offset`) est liée à la hauteur des immeubles : la
 ligne de visée monte de 40 pour 18 de recul, donc un immeuble derrière le
 joueur devrait dépasser ~11 de haut pour le cacher. C'est pour cela que

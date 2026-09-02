@@ -15,6 +15,8 @@ export class CameraRig {
   private readonly lookAt = new THREE.Vector3();
   /** Décalage d'anticipation courant, lissé frame après frame. */
   private readonly ahead = new THREE.Vector2(0, 0);
+  /** Là où l'anticipation veut aller. Conservée quand le joueur s'arrête. */
+  private readonly aheadTarget = new THREE.Vector2(0, 0);
 
   constructor(camera: THREE.PerspectiveCamera) {
     this.camera = camera;
@@ -32,14 +34,27 @@ export class CameraRig {
     intentX = 0,
     intentZ = 0,
   ): void {
-    const { offset, smoothing, lookAhead, lookAheadSmoothing } = CONFIG.camera;
+    const { offset, smoothing, lookAhead, lookAheadSmoothing, lookAheadDeadZone } =
+      CONFIG.camera;
 
     // Anticipation : on décale la cible DEVANT le joueur, d'autant plus
-    // qu'il va vite. Lissée à part, plus mollement que le suivi, pour que la
-    // caméra ne sursaute pas à chaque changement de direction.
+    // qu'il va vite.
+    //
+    // Deux précautions, l'une et l'autre apprises en jouant :
+    //
+    // 1. Quand le joueur RALENTIT ou s'arrête, on garde la dernière cible au
+    //    lieu de la ramener à zéro. Sinon relâcher le doigt recentrait la
+    //    caméra, et repartir dans l'autre sens la relançait : l'aller-retour
+    //    coûtait trois mouvements de caméra au lieu d'un.
+    // 2. Le lissage est TRÈS mou (bien plus que le suivi), pour que le
+    //    demi-tour s'étale au lieu de claquer.
+    if (Math.hypot(intentX, intentZ) > lookAheadDeadZone) {
+      this.aheadTarget.set(intentX * lookAhead, intentZ * lookAhead);
+    }
+
     const aheadT = 1 - Math.pow(lookAheadSmoothing, deltaTime * 60);
-    this.ahead.x += (intentX * lookAhead - this.ahead.x) * aheadT;
-    this.ahead.y += (intentZ * lookAhead - this.ahead.y) * aheadT;
+    this.ahead.x += (this.aheadTarget.x - this.ahead.x) * aheadT;
+    this.ahead.y += (this.aheadTarget.y - this.ahead.y) * aheadT;
 
     targetX += this.ahead.x;
     targetZ += this.ahead.y;
@@ -59,6 +74,7 @@ export class CameraRig {
   snapTo(targetX: number, targetZ: number): void {
     const { offset } = CONFIG.camera;
     this.ahead.set(0, 0);
+    this.aheadTarget.set(0, 0);
     this.camera.position.set(targetX + offset.x, offset.y, targetZ + offset.z);
     this.camera.lookAt(targetX, 0, targetZ);
   }

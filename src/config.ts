@@ -98,10 +98,26 @@ export const CONFIG = {
      * Anticipation : la caméra vise un peu DEVANT le joueur, proportion-
      * nellement à sa vitesse. On voit ainsi où l'on va, pas d'où l'on vient.
      * 0 = désactivé. Exprimé en unités de monde à pleine vitesse.
+     *
+     * ⚠️ Le coût d'un demi-tour est le DOUBLE de cette valeur. À 7, faire
+     * droite puis gauche balayait 14 unités à 65 u/s — presque quatre fois
+     * la vitesse du joueur : l'image se bousculait.
      */
-    lookAhead: 7,
-    /** Souplesse propre à l'anticipation (plus molle que le suivi). */
-    lookAheadSmoothing: 0.2,
+    lookAhead: 3.5,
+    /**
+     * Souplesse propre à l'anticipation. Même convention que `smoothing` :
+     * c'est la part de l'écart qui RESTE à chaque frame, donc plus c'est
+     * proche de 1, plus c'est mou. Elle doit rester nettement plus molle que
+     * le suivi, sinon la caméra part avant le joueur.
+     */
+    lookAheadSmoothing: 0.965,
+    /**
+     * En dessous de cette intensité de mouvement, on ne change plus la
+     * cible d'anticipation : elle est simplement CONSERVÉE. Sans ça,
+     * relâcher le doigt recentrait la caméra, et repartir dans l'autre sens
+     * la relançait — deux mouvements parasites pour un simple aller-retour.
+     */
+    lookAheadDeadZone: 0.15,
   },
 
   joystick: {
