@@ -21,6 +21,21 @@ import { CONFIG } from '../config';
 import type { Collider } from '../world/Collider';
 import type { MortalTypeId } from './Mortals';
 import type { PlayerTrail } from '../systems/PlayerTrail';
+import type { ViewCulling } from '../systems/ViewCulling';
+import { primeInstances, uploadInstances, writeInstance } from '../core/instancing';
+
+/**
+ * Les cases à examiner autour d'un fidèle : la sienne, puis quatre voisines
+ * seulement — et non les huit.
+ *
+ * Une paire de fidèles se gêne, ou pas ; l'examiner deux fois ne sert à rien.
+ * En ne regardant que « vers l'avant » (droite, et la rangée du dessus), deux
+ * cases voisines ne se rencontrent qu'une fois : la moitié des recherches
+ * disparaît sans qu'aucun contact ne soit oublié.
+ *
+ * Rangées à plat, par paires (dx, dz), pour ne rien allouer en les parcourant.
+ */
+const NEIGHBOURS = [0, 0, 1, 0, -1, 1, 0, 1, 1, 1];
 
 interface Follower {
   readonly type: MortalTypeId;
@@ -36,11 +51,28 @@ export class Retinue {
   private readonly followers: Follower[] = [];
   private readonly mesh: THREE.InstancedMesh;
 
-  private readonly dummy = new THREE.Object3D();
+  /** Le tableau de matrices du mesh, écrit directement (voir `instancing.ts`). */
+  private readonly matrices: Float32Array;
+  /** Hauteur du centre d'une silhouette : la même pour tout le monde. */
+  private readonly meshY: number;
+  /** Combien de silhouettes ont réellement été envoyées au GPU. */
+  private drawn = 0;
+
   private readonly probe = new THREE.Vector2();
   /** Objets de travail réutilisés : rien ne doit être alloué par frame. */
   private readonly target = { x: 0, z: 0 };
   private readonly grid = new Map<number, number[]>();
+  /**
+   * Les cases réellement occupées à la passe précédente.
+   *
+   * ⚠️ Sans cette liste, vider la grille signifiait parcourir **toutes** les
+   * cases jamais utilisées depuis le début de la partie — et la grille garde
+   * une case pour chaque mètre carré que le cortège a traversé. Le jeu
+   * ralentissait donc à mesure qu'on visitait la cité : 2 500 cases à vider
+   * deux fois par image après 4 secondes de course, et cela ne faisait que
+   * monter. On ne vide plus que ce qu'on a rempli.
+   */
+  private readonly usedCells: number[] = [];
 
   /** Même encodage que la grille de la ville : un entier, pas une chaîne. */
   private cellKey(cx: number, cz: number): number {
@@ -64,8 +96,14 @@ export class Retinue {
     this.city = city;
 
     const citizen = CONFIG.mortals.types.citizen;
+    this.meshY = citizen.height / 2 + citizen.radius;
     this.mesh = new THREE.InstancedMesh(
-      new THREE.CapsuleGeometry(citizen.radius, citizen.height, 4, 8),
+      new THREE.CapsuleGeometry(
+        citizen.radius,
+        citizen.height,
+        CONFIG.crowd.capSegments,
+        CONFIG.crowd.radialSegments,
+      ),
       new THREE.MeshLambertMaterial({ color: CONFIG.retinue.color }),
       CONFIG.retinue.maxSize,
     );
@@ -85,6 +123,10 @@ export class Retinue {
     // toute façon toujours à l'écran, et ce test ne pouvait rien économiser.
     this.mesh.frustumCulled = false;
     scene.add(this.mesh);
+
+    primeInstances(this.mesh);
+    this.matrices = this.mesh.instanceMatrix.array as Float32Array;
+    this.mesh.count = 0;
   }
 
   /**
@@ -109,26 +151,27 @@ export class Retinue {
       z: z + (Math.random() - 0.5) * scatter,
       angle: 0,
     });
-    this.mesh.count = this.followers.length;
   }
 
   /**
-   * @param trail le chemin parcouru par la divinité (voir `PlayerTrail`)
+   * @param trail   le chemin parcouru par la divinité (voir `PlayerTrail`)
+   * @param culling le champ de la caméra, pour ne dessiner que ce qui se voit
    */
-  update(deltaTime: number, playerX: number, playerZ: number, trail: PlayerTrail): void {
-    this.followPath(deltaTime, playerX, playerZ, trail);
-    this.separate();
-    this.settle(playerX, playerZ);
-    this.syncMeshes();
-  }
-
-  /** 1. Chacun rejoint le point du chemin qui correspond à son rang. */
-  private followPath(
+  update(
     deltaTime: number,
     playerX: number,
     playerZ: number,
     trail: PlayerTrail,
+    culling: ViewCulling | null = null,
   ): void {
+    this.followPath(deltaTime, trail);
+    this.separate();
+    this.settle(playerX, playerZ);
+    this.syncMeshes(culling);
+  }
+
+  /** 1. Chacun rejoint le point du chemin qui correspond à son rang. */
+  private followPath(deltaTime: number, trail: PlayerTrail): void {
     const { speedFactor, lagMin, lagStep, arriveRadius } = CONFIG.retinue;
     const speed = CONFIG.player.speed * speedFactor;
 
@@ -147,7 +190,10 @@ export class Retinue {
 
       const dx = this.target.x - follower.x;
       const dz = this.target.z - follower.z;
-      const distance = Math.hypot(dx, dz);
+      // `Math.hypot` protège d'un dépassement de capacité dont nos distances
+      // — quelques dizaines d'unités — sont très loin. Mesuré : 13,6 fois
+      // plus lent que la racine carrée, pour 600 appels par image.
+      const distance = Math.sqrt(dx * dx + dz * dz);
 
       // Arrivé « à peu près » : on le laisse tranquille. C'est ce qui donne
       // à la répulsion la place d'étaler le cortège en foule plutôt qu'en
@@ -160,14 +206,6 @@ export class Retinue {
         follower.angle = Math.atan2(dx, dz);
       }
     }
-
-    // Utilisé par la conversion : jusqu'où le cortège ratisse-t-il ?
-    let spread = 0;
-    for (const follower of this.followers) {
-      const reach = Math.hypot(follower.x - playerX, follower.z - playerZ);
-      if (reach > spread) spread = reach;
-    }
-    this.spread = spread;
   }
 
   /**
@@ -191,8 +229,14 @@ export class Retinue {
   private separationPass(): void {
     const { separation, separationStrength } = CONFIG.retinue;
 
-    for (const bucket of this.grid.values()) bucket.length = 0;
+    // 1. Vider la grille — seulement les cases occupées la fois précédente.
+    for (const key of this.usedCells) {
+      const bucket = this.grid.get(key);
+      if (bucket !== undefined) bucket.length = 0;
+    }
+    this.usedCells.length = 0;
 
+    // 2. Ranger chaque fidèle dans sa case.
     for (let i = 0; i < this.followers.length; i += 1) {
       const follower = this.followers[i];
       const key = this.cellKey(
@@ -200,10 +244,17 @@ export class Retinue {
         Math.floor(follower.z / separation),
       );
       const bucket = this.grid.get(key);
-      if (bucket) bucket.push(i);
-      else this.grid.set(key, [i]);
+      if (bucket === undefined) {
+        this.grid.set(key, [i]);
+        this.usedCells.push(key);
+      } else {
+        // Première arrivée dans cette case : elle sera à vider tout à l'heure.
+        if (bucket.length === 0) this.usedCells.push(key);
+        bucket.push(i);
+      }
     }
 
+    // 3. Écarter les voisins trop proches.
     const minDistanceSq = separation * separation;
 
     for (let i = 0; i < this.followers.length; i += 1) {
@@ -211,39 +262,42 @@ export class Retinue {
       const cx = Math.floor(a.x / separation);
       const cz = Math.floor(a.z / separation);
 
-      for (let ox = -1; ox <= 1; ox += 1) {
-        for (let oz = -1; oz <= 1; oz += 1) {
-          const bucket = this.grid.get(this.cellKey(cx + ox, cz + oz));
-          if (!bucket) continue;
+      for (let n = 0; n < NEIGHBOURS.length; n += 2) {
+        const bucket = this.grid.get(this.cellKey(cx + NEIGHBOURS[n], cz + NEIGHBOURS[n + 1]));
+        if (bucket === undefined) continue;
 
-          for (const j of bucket) {
-            // Chaque paire n'est traitée qu'une fois, et les deux fidèles
-            // s'écartent d'autant : personne n'a la priorité.
-            if (j <= i) continue;
-            const b = this.followers[j];
+        // Dans sa PROPRE case, un fidèle ne regarde que les rangs suivants :
+        // sans cela, chaque paire serait traitée deux fois. Dans les cases
+        // « en avant », au contraire, tout le monde est à comparer — leurs
+        // occupants ne regarderont jamais en arrière (voir `NEIGHBOURS`).
+        const onlyAfter = NEIGHBOURS[n] === 0 && NEIGHBOURS[n + 1] === 0;
 
-            let dx = b.x - a.x;
-            let dz = b.z - a.z;
-            const distanceSq = dx * dx + dz * dz;
-            if (distanceSq >= minDistanceSq) continue;
+        for (const j of bucket) {
+          if (onlyAfter && j <= i) continue;
+          const b = this.followers[j];
 
-            let distance = Math.sqrt(distanceSq);
-            if (distance < 0.0001) {
-              // Exactement superposés (deux conversions au même endroit) :
-              // on les décolle dans une direction arbitraire mais stable.
-              dx = (i % 2 === 0 ? 1 : -1) * 0.01;
-              dz = 0.01;
-              distance = 0.014;
-            }
+          let dx = b.x - a.x;
+          let dz = b.z - a.z;
+          const distanceSq = dx * dx + dz * dz;
+          if (distanceSq >= minDistanceSq) continue;
 
-            const push = ((separation - distance) / distance) * separationStrength * 0.5;
-            const px = dx * push;
-            const pz = dz * push;
-            a.x -= px;
-            a.z -= pz;
-            b.x += px;
-            b.z += pz;
+          let distance = Math.sqrt(distanceSq);
+          if (distance < 0.0001) {
+            // Exactement superposés (deux conversions au même endroit) :
+            // on les décolle dans une direction arbitraire mais stable.
+            dx = (i % 2 === 0 ? 1 : -1) * 0.01;
+            dz = 0.01;
+            distance = 0.014;
           }
+
+          // Les deux fidèles s'écartent d'autant : personne n'a la priorité.
+          const push = ((separation - distance) / distance) * separationStrength * 0.5;
+          const px = dx * push;
+          const pz = dz * push;
+          a.x -= px;
+          a.z -= pz;
+          b.x += px;
+          b.z += pz;
         }
       }
     }
@@ -265,25 +319,43 @@ export class Retinue {
         follower.z = this.probe.y;
       }
 
-      const reach = Math.hypot(follower.x - playerX, follower.z - playerZ);
+      const dx = follower.x - playerX;
+      const dz = follower.z - playerZ;
+      const reach = dx * dx + dz * dz;
       if (reach > spread) spread = reach;
     }
 
-    this.spread = spread;
+    // Une seule racine carrée pour tout le cortège, à la toute fin : la
+    // comparaison de distances se fait très bien au carré.
+    this.spread = Math.sqrt(spread);
   }
 
-  private syncMeshes(): void {
-    const citizen = CONFIG.mortals.types.citizen;
-    const y = citizen.height / 2 + citizen.radius;
+  /**
+   * 4. Envoyer au GPU les silhouettes que la caméra cadre, et elles seules.
+   *
+   * Le cortège colle au joueur, donc la plupart sont à l'écran — mais pas
+   * toutes : un cortège de 600 traîne sur une quinzaine d'unités, et la
+   * caméra n'en montre qu'une vingtaine derrière le joueur. Ce qui dépasse
+   * dans son dos ne coûte plus rien.
+   */
+  private syncMeshes(culling: ViewCulling | null): void {
+    const radius = CONFIG.mortals.types.citizen.radius;
+    let drawn = 0;
 
     for (let i = 0; i < this.followers.length; i += 1) {
       const follower = this.followers[i];
-      this.dummy.position.set(follower.x, y, follower.z);
-      this.dummy.rotation.set(0, follower.angle, 0);
-      this.dummy.updateMatrix();
-      this.mesh.setMatrixAt(i, this.dummy.matrix);
+      if (
+        culling !== null &&
+        !culling.isVisible(follower.x, this.meshY, follower.z, radius)
+      ) {
+        continue;
+      }
+      writeInstance(this.matrices, drawn, follower.x, this.meshY, follower.z, follower.angle);
+      drawn += 1;
     }
-    this.mesh.instanceMatrix.needsUpdate = true;
+
+    this.drawn = drawn;
+    uploadInstances(this.mesh, drawn);
   }
 
   // ---------------------------------------------------------------- lecture
@@ -319,14 +391,25 @@ export class Retinue {
     return this.followers.length;
   }
 
+  /** Silhouettes réellement soumises au GPU cette image (banc de mesure). */
+  get drawnCount(): number {
+    return this.drawn;
+  }
+
   getPositions(): { x: number; z: number }[] {
     return this.followers.map((f) => ({ x: f.x, z: f.z }));
   }
 
   clear(): void {
+    for (const key of this.usedCells) {
+      const bucket = this.grid.get(key);
+      if (bucket !== undefined) bucket.length = 0;
+    }
+    this.usedCells.length = 0;
     this.followers.length = 0;
     this.faithful = 0;
     this.spread = 0;
+    this.drawn = 0;
     this.mesh.count = 0;
   }
 

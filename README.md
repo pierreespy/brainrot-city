@@ -10,12 +10,14 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 6 terminée** — app Expo fonctionnelle, ville
+> **État actuel : Milestone 7 terminée** — app Expo fonctionnelle, ville
 > générée (rues, trottoirs, 124 immeubles), collisions contre les façades,
 > **450 mortels qui déambulent**, **conversion au contact** qui se propage, et
 > un **cortège de plusieurs centaines de fidèles** qui suit le chemin du dieu
 > en foule cohérente, **compteur et bouton de relance**. Joystick tactile et
-> caméra de suivi avec anticipation.
+> caméra de suivi avec anticipation. Le jeu est **profilé et optimisé** :
+> 0,07 ms de calcul et 7 800 triangles par image en partie réelle, contre
+> 0,25 ms et 131 000 avant.
 
 ---
 
@@ -72,6 +74,7 @@ ne passe pas (réseau d'entreprise, Wi-Fi public), lance `npx expo start --tunne
 | `npm run android` | Ouvre directement sur un émulateur / téléphone Android |
 | `npm run ios` | Ouvre directement sur un simulateur iOS (macOS uniquement) |
 | `npm run web` | Ouvre le jeu dans un navigateur (banc de test) |
+| `npm run bench` | **Banc de mesure** : ce que coûte une image, étape par étape |
 | `npm run typecheck` | Vérifie les types TypeScript |
 | `npm run doctor` | Vérifie la cohérence des versions Expo |
 
@@ -81,6 +84,10 @@ ne passe pas (réseau d'entreprise, Wi-Fi public), lance `npx expo start --tunne
 |---|---|
 | Téléphone | **Joystick tactile** — pose ton doigt dans la moitié basse de l'écran et glisse |
 | Web (banc de test) | Joystick à la souris, **ou** `ZQSD` / `WASD` / flèches |
+
+**Touche le compteur de fidèles** pour afficher les mesures de performance
+(fps, coût de chaque étape, silhouettes réellement dessinées) — sur le
+téléphone comme sur le banc web. Touche-le à nouveau pour les cacher.
 
 Le joystick apparaît **là où tu poses le doigt** : pas besoin de viser une zone
 précise. Les deux dispositions de clavier fonctionnent sans réglage, car le code
@@ -96,6 +103,10 @@ imprimé dessus.
 ├── App.tsx                ⭐ Enveloppe : le SEUL fichier qui connaît la plateforme
 ├── app.json               Configuration de l'app (nom, icônes, orientation)
 │
+├── tools/                 Hors du jeu : les outils de mesure (npm run bench)
+│   ├── bench.ts           ⭐ Le banc : la vraie simulation, sans écran
+│   └── check-separation.ts  Vérifie que la grille de répulsion n'oublie rien
+│
 └── src/
     ├── config.ts          ⭐ TOUS les réglages (vitesses, tailles, joystick)
     │
@@ -103,6 +114,8 @@ imprimé dessus.
     │   ├── Game.ts        ⭐ Chef d'orchestre : décrit une frame de jeu
     │   ├── Loop.ts        Boucle de jeu + delta time
     │   ├── Scene.ts       Scène Three.js, lumières, sol
+    │   ├── Profiler.ts    ⭐ Ce que coûte une image, étape par étape
+    │   ├── instancing.ts  Écrire une silhouette dans un mesh instancié, vite
     │   └── createRenderer.ts  Pont technique entre expo-gl et Three.js
     │
     ├── entities/
@@ -113,6 +126,7 @@ imprimé dessus.
     ├── systems/
     │   ├── CameraRig.ts   Caméra qui suit le joueur en douceur
     │   ├── Conversion.ts  Le contact : un mortel quitte la cité pour le cortège
+    │   ├── ViewCulling.ts ⭐ Ce que la caméra cadre — donc ce qu'on paie
     │   ├── PlayerTrail.ts ⭐ La trace du dieu : c'est ELLE que le cortège suit
     │   └── input/
     │       ├── InputSource.ts   Le contrat commun (une direction x/z)
@@ -122,7 +136,8 @@ imprimé dessus.
     │
     ├── ui/
     │   ├── Joystick.tsx   Le joystick virtuel (composant React Native)
-    │   └── Hud.tsx        ⭐ Compteur de fidèles, relance, place de la capacité
+    │   ├── Hud.tsx        ⭐ Compteur de fidèles, relance, place de la capacité
+    │   └── Stats.tsx      L'affichage de debug (touche le compteur)
     │
     └── world/
         ├── City.ts        ⭐ La ville : rues, trottoirs, immeubles + collisions
@@ -163,11 +178,11 @@ autre ville — et le banc de test reste reproductible.
 
 ### Les mortels
 
-Ce sont les habitants de la cité, ceux que l'on convertira au contact en
-Milestone 4. Pour l'instant ils vivent leur vie : ils marchent, changent de cap
-toutes les 2 à 5 secondes, et font demi-tour quand ils butent.
+Ce sont les habitants de la cité, ceux que l'on convertit au contact. Entre
+deux conversions ils vivent leur vie : ils marchent, changent de cap toutes les
+2 à 5 secondes, et font demi-tour quand ils butent.
 
-Deux choix expliquent leur comportement :
+Trois choix expliquent leur comportement :
 
 - **Ils suivent les axes des rues**, avec un léger flottement
   (`mortals.headingJitter`). Lancés dans une direction quelconque, ils
@@ -177,6 +192,11 @@ Deux choix expliquent leur comportement :
   catalogue `mortals.types` de `config.ts` attend les hoplites, prêtresses et
   philosophes décrits dans [`UNIVERS.md`](./UNIVERS.md) — chacun étant une
   ligne à ajouter, avec sa couleur, sa vitesse et sa **valeur en fidèles**.
+- **Ils ne coûtent que quand on les voit** (Milestone 7). Sur 450, la caméra
+  n'en cadre qu'une vingtaine : eux seuls sont dessinés et déplacés à chaque
+  image. Les autres avancent une image sur quatre, d'un pas quatre fois plus
+  long — même distance parcourue, quatre fois moins de calcul, et rien à
+  l'écran pour le trahir.
 
 Comme les immeubles, les 450 mortels tiennent dans **un seul `InstancedMesh`**,
 donc un appel GPU. Ils réutilisent la ville comme carte de collision : le même
@@ -271,6 +291,87 @@ React Native la dernière couche déclarée reçoit le doigt : c'est ce qui rend
 bouton de relance cliquable tout en laissant le reste de l'écran au joystick
 (vérifié au banc de test — un glissé sous le HUD déplace bien le joueur).
 
+### Le budget de performance
+
+Une image dure **16,7 ms** à 60 images par seconde. La Milestone 7 a d'abord
+cherché où elles passaient, **avant** de toucher à quoi que ce soit — le projet
+en avait déjà fait l'expérience en Milestone 2, où une belle optimisation de la
+grille de collision n'avait rien changé aux fps : le coût était ailleurs.
+
+Deux instruments, parce qu'il y a deux budgets :
+
+- **`npm run bench`** — le banc de mesure. Il rejoue la vraie simulation
+  (ville, mortels, conversion, cortège) sans écran ni carte graphique : 90
+  secondes de jeu en quelques secondes, et le coût de chaque étape. C'est le
+  budget **processeur**, celui qui nous appartient.
+- **le compteur de fidèles, qu'on touche du doigt** — l'affichage de debug.
+  Les mêmes chiffres, mais sur l'appareil du joueur, dans Expo Go. C'est le
+  seul moyen de mesurer un vrai téléphone.
+
+Ce que la mesure a montré : **la logique du jeu ne coûtait presque rien
+(0,25 ms sur 16,7), et la foule coûtait tout — 286 000 triangles par image**,
+dont la quasi-totalité pour des personnages situés hors de l'écran. La cité
+entière, ses 124 immeubles et ses 434 bandes blanches comprises, n'en pèse que
+3 200.
+
+| Partie réelle, cortège d'une trentaine | Avant | Après |
+|---|---|---|
+| Calcul par image | 0,245 ms | **0,070 ms** |
+| Triangles par image | 131 512 | **7 797** |
+| Mortels dessinés | 450 / 450 | **18 / 450** |
+
+| Pire cas : cortège plein (600 fidèles) | Avant | Après |
+|---|---|---|
+| Calcul par image | 1,584 ms | **0,752 ms** |
+| Triangles par image | 288 796 | **41 228** |
+
+Trois idées suffisent à expliquer l'essentiel, et elles répondent toutes à la
+même question — **est-ce que ça se voit ?**
+
+**1. Ne dessiner que ce qui est cadré.** La caméra est haute et penchée : elle
+ne montre qu'une quarantaine d'unités devant le joueur, sur une cité de 198.
+Three.js sait écarter un *objet* hors champ, mais pas une *instance* : la foule
+entière ne forme qu'un seul objet, toujours à l'écran. `ViewCulling` fait donc
+ce tri nous-mêmes, silhouette par silhouette. Le tronc de vision de la caméra
+plutôt qu'un rayon autour du joueur, parce qu'un rayon devrait être taillé pour
+le pire écran — étroit sur un téléphone vertical, trois fois plus ouvert dans
+une fenêtre de navigateur.
+
+**2. Ne pas faire marcher ce que personne ne regarde.** Un mortel hors champ
+avance une image sur quatre, d'un pas quatre fois plus long : il accumule le
+temps qui lui est dû au lieu de le perdre. Il parcourt exactement la même
+distance et se retrouve au bon endroit quand le joueur arrive.
+
+**3. Alléger la silhouette.** Une capsule de 4 × 8 segments pèse **272
+triangles** ; en 2 × 6, **108**. À 1,6 unité de haut vue de 40 unités, la
+différence ne se voit sur aucune capture — mais elle est multipliée par mille.
+
+Le reste est du travail d'artisan sur les boucles chaudes, chaque fois vérifié
+au banc : matrices d'instances écrites à la main plutôt que par un `Object3D`
+de service, `Math.hypot` remplacé par une racine carrée (**13,6 fois plus
+rapide**, mesuré), envoi partiel du tampon d'instances, et deux grilles
+resserrées :
+
+- **les collisions** n'interrogent plus que les cases que le personnage touche
+  vraiment — une, parfois deux — au lieu des neuf qui l'entourent ;
+- **la répulsion du cortège** ne vide plus que les cases qu'elle a remplies. La
+  grille en gardait une pour chaque mètre carré jamais traversé : le jeu
+  ralentissait donc à mesure qu'on visitait la cité. `separate()` est passée de
+  0,617 à 0,336 ms.
+
+> **Ce qui a été mesuré puis laissé tel quel.** Découper la ville en morceaux
+> pour la trier par quartiers ne rapporterait rien : elle ne pèse que 3 200
+> triangles sur 41 000. Remplacer la table de hachage de la répulsion par un
+> tableau plat gagnerait environ 0,15 ms sur 0,75, au prix d'un code nettement
+> moins lisible. Le budget est tenu ; on s'arrête là et on le note.
+
+Sur le banc web (Chromium, **GPU logiciel**, format téléphone), les images par
+seconde sont passées de **8,5 à 12,1** à l'arrêt et de **8,5 à 10,9** en
+course. Ce chiffre ne dit rien d'un vrai téléphone — le banc rend ses pixels
+sans carte graphique — mais il confirme le sens de la marche. Et il rappelle
+l'essentiel : à 11 images par seconde, l'affichage de debug indique **92 ms
+d'image pour 0,4 ms de calcul**. Le goulot du banc n'a jamais été notre code.
+
 ### La caméra
 
 Elle suit le joueur avec du retard (`camera.smoothing`) et vise **un peu
@@ -356,8 +457,18 @@ parcelle avec un recul, les reculs s'aligneraient d'un pâté à l'autre et
 ouvriraient des couloirs traversant toute la ville (constaté au banc de test :
 le joueur traversait les pâtés au lieu de les contourner).
 
-**Pas d'ombres pour l'instant.** Le rendu d'ombres est coûteux et n'apporte
-rien à ce stade. On les évaluera en Milestone 8, après profiling.
+**Pas d'ombres, et maintenant on sait pourquoi.** Le profilage de la
+Milestone 7 a tranché : le temps d'une image ne part pas dans notre code
+(0,07 ms sur 16,7) mais dans le dessin des pixels. Une passe d'ombres double
+le nombre de géométries rendues et ajoute une lecture de texture par pixel :
+c'est exactement le budget déjà sous tension. À rouvrir si un jour on mesure
+de la marge sur un vrai téléphone, pas avant.
+
+**Le banc de mesure fait partie du jeu.** `npm run bench` importe les vrais
+systèmes, pas des copies : ce qu'il mesure est ce qui tourne. Il publie aussi
+des garde-fous de qualité — personne dans un mur, cortège qui ne décroche pas,
+fidèles qui ne s'empilent pas — pour qu'une optimisation qui casserait le jeu
+se voie en chiffres et pas seulement à l'œil.
 
 ---
 
@@ -377,7 +488,7 @@ fois qu'il y a un jeu à habiller.
 | 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
 | 5 | Système de cortège (formation, suivi) | ✅ Terminée |
 | 6 | HUD : compteur de fidèles + relance | ✅ Terminée |
-| 7 | Première passe d'optimisation | ⬜ À venir |
+| 7 | **Première passe d'optimisation** : profileur, banc de mesure, tri par instance | ✅ Terminée |
 | 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ⬜ |
 | 9 | 🏛️ **Le panthéon** : dieux jouables (données, apparence, sélection) | ⬜ |
 | 10 | ⚡ **Capacités divines** : une par dieu, jauge et bouton | ⬜ |
@@ -398,8 +509,10 @@ fois qu'il y a un jeu à habiller.
   cortège de 500 fidèles reste lisible à l'écran.
 - **M6 — HUD.** Le compteur affiche des **fidèles**. Prévoir dès maintenant la
   place du **bouton de capacité** (M10) : le HUD sera à redessiner sinon.
-- **M7 — Optimisation.** Le budget de performance doit être tenu **avant**
-  d'ajouter marbre, colonnes et cortèges rivaux, pas après.
+- **M7 — Optimisation.** Le budget de performance devait être tenu **avant**
+  d'ajouter marbre, colonnes et cortèges rivaux. Il l'est : 0,07 ms de calcul
+  et 7 800 triangles par image en partie réelle. La M8 peut donc dépenser —
+  et le banc dira aussitôt combien.
 - **M8 — La cité grecque.** L'habillage : palettes de marbre, toits de tuiles,
   colonnes et oliviers (deux `InstancedMesh` de plus), et surtout le **découpage
   en quartiers** (Agora, Acropole, Port, Théâtre…). Ce découpage corrige un

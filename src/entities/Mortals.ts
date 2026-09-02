@@ -1,27 +1,33 @@
 /**
  * Mortals.ts — les habitants de la cité.
  *
- * Ce sont les PNJ que l'on convertira au contact en Milestone 4. Pour
- * l'instant ils se contentent de vivre : ils marchent, suivent les rues et
- * évitent les immeubles.
+ * Ce sont les PNJ que l'on convertit au contact. Ils marchent, suivent les
+ * rues et évitent les immeubles.
  *
- * Trois principes, hérités de ce qui a déjà été posé :
+ * Quatre principes, hérités de ce qui a déjà été posé :
  *
  * 1. **Données d'un côté, affichage de l'autre.** Un mortel est une ligne de
  *    chiffres (position, cap, minuterie) ; le mesh n'est qu'un reflet. C'est
- *    ce qui permettra d'en afficher des milliers.
+ *    ce qui permet d'en afficher des centaines.
  *
- * 2. **Un seul InstancedMesh.** 100 mortels = 1 appel GPU, comme les 124
+ * 2. **Un seul InstancedMesh.** 450 mortels = 1 appel GPU, comme les 124
  *    immeubles de la Milestone 2.
  *
  * 3. **Un TYPE par mortel dès maintenant**, même s'il n'y a que des citoyens.
  *    Hoplites, prêtresses et philosophes sont prévus (voir UNIVERS.md) et
  *    n'auront qu'une ligne à ajouter au catalogue de `config.ts`.
+ *
+ * 4. **On ne paie que ce qui se voit** (Milestone 7). La caméra ne cadre
+ *    qu'une quarantaine d'unités devant le joueur : sur 450 mortels, une
+ *    trentaine seulement sont à l'écran. Les autres ne sont ni dessinés, ni
+ *    déplacés à chaque image — voir `update()`.
  */
 
 import * as THREE from 'three';
 import { CONFIG } from '../config';
 import type { Collider } from '../world/Collider';
+import type { ViewCulling } from '../systems/ViewCulling';
+import { primeInstances, uploadInstances, writeInstance } from '../core/instancing';
 
 /** Les types existants, déduits du catalogue : aujourd'hui « citizen ». */
 export type MortalTypeId = keyof typeof CONFIG.mortals.types;
@@ -35,6 +41,14 @@ interface Mortal {
   angle: number;
   /** Secondes restantes avant de changer de cap. */
   timer: number;
+  /**
+   * Temps écoulé depuis son dernier déplacement.
+   *
+   * Un mortel hors champ n'avance pas à chaque image : il accumule ici les
+   * secondes qui lui sont dues, et les dépense d'un coup quand vient son
+   * tour. Il parcourt exactement la même distance, en moins d'étapes.
+   */
+  pending: number;
 }
 
 /** Générateur déterministe (mulberry32) — même principe que pour la ville. */
@@ -60,12 +74,28 @@ export class Mortals {
   private readonly city: Collider;
   private readonly mortals: Mortal[] = [];
   private readonly mesh: THREE.InstancedMesh;
+  /** Le tableau de matrices du mesh, écrit directement (voir `instancing.ts`). */
+  private readonly matrices: Float32Array;
+  /** Hauteur du centre d'une silhouette : la même pour tout le monde. */
+  private readonly meshY: number;
 
   private readonly random: () => number;
 
-  /** Objets réutilisés à chaque frame : en créer 100 par frame ferait ramer. */
-  private readonly dummy = new THREE.Object3D();
+  /** Numéro d'image, pour répartir les mortels hors champ sur N tours. */
+  private frame = 0;
+  /** Combien de silhouettes ont réellement été envoyées au GPU. */
+  private drawn = 0;
+
+  /**
+   * Objets de travail réutilisés d'une image à l'autre.
+   *
+   * Rien ne doit être alloué dans la boucle de jeu : 60 tableaux jetables par
+   * seconde finissent par déclencher le ramasse-miettes, et une pause du
+   * ramasse-miettes se voit à l'écran.
+   */
   private readonly probe = new THREE.Vector2();
+  private readonly spot = { x: 0, z: 0 };
+  private readonly taken: MortalTypeId[] = [];
 
   constructor(scene: THREE.Scene, city: Collider) {
     this.scene = scene;
@@ -73,21 +103,32 @@ export class Mortals {
     this.random = createRandom(CONFIG.mortals.seed);
 
     const citizen = CONFIG.mortals.types.citizen;
+    this.meshY = citizen.height / 2 + citizen.radius;
     this.mesh = new THREE.InstancedMesh(
-      new THREE.CapsuleGeometry(citizen.radius, citizen.height, 4, 8),
+      new THREE.CapsuleGeometry(
+        citizen.radius,
+        citizen.height,
+        CONFIG.crowd.capSegments,
+        CONFIG.crowd.radialSegments,
+      ),
       new THREE.MeshLambertMaterial({ color: citizen.color }),
       CONFIG.mortals.count,
     );
-    // Ils bougent : Three.js doit relire les matrices à chaque frame.
+    // Ils bougent : Three.js doit relire les matrices à chaque image.
     this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    // Le tri par objet ne peut plus rien écarter : nous faisons désormais le
+    // nôtre, instance par instance (voir `ViewCulling`), et ce mesh unique
+    // couvre de toute façon la cité entière.
+    this.mesh.frustumCulled = false;
     scene.add(this.mesh);
 
+    primeInstances(this.mesh);
+    this.matrices = this.mesh.instanceMatrix.array as Float32Array;
+
     this.spawnAll();
-    this.syncMeshes();
-    // La sphère englobante sert au test « est-ce à l'écran ? ». On la calcule
-    // une fois les mortels placés : elle couvre alors toute la cité, ce qui
-    // reste vrai puisqu'ils ne sortent jamais de ses limites.
-    this.mesh.computeBoundingSphere();
+    // Rien n'est encore cadré (la caméra n'existe peut-être pas) : pour cette
+    // toute première image, on affiche tout le monde.
+    this.sync(null);
   }
 
   // ---------------------------------------------------------------- naissance
@@ -101,6 +142,7 @@ export class Mortals {
         z: spot.z,
         angle: this.pickHeading(),
         timer: this.pickDuration(),
+        pending: 0,
       });
     }
   }
@@ -112,7 +154,10 @@ export class Mortals {
    * carte, donc quelques essais suffisent presque toujours. Le plafond de 40
    * essais évite la boucle infinie si un jour la ville devenait très dense —
    * dans ce cas on accepte le dernier point, quitte à ce que la collision le
-   * repousse à la première frame.
+   * repousse à la première image.
+   *
+   * ⚠️ Le résultat est un objet REUTILISÉ : il faut le lire tout de suite,
+   * pas le conserver.
    */
   private findFreeSpot(awayFrom?: { x: number; z: number; distance: number }): {
     x: number;
@@ -128,14 +173,19 @@ export class Mortals {
       z = (this.random() * 2 - 1) * limit;
 
       // Naître sous les yeux du joueur casserait l'illusion : on s'éloigne.
-      if (awayFrom && Math.hypot(x - awayFrom.x, z - awayFrom.z) < awayFrom.distance) {
-        continue;
+      if (awayFrom !== undefined) {
+        const dx = x - awayFrom.x;
+        const dz = z - awayFrom.z;
+        if (dx * dx + dz * dz < awayFrom.distance * awayFrom.distance) continue;
       }
 
       this.probe.set(x, z);
-      if (!this.city.resolve(this.probe, radius)) return { x, z };
+      if (!this.city.resolve(this.probe, radius)) break;
     }
-    return { x, z };
+
+    this.spot.x = x;
+    this.spot.z = z;
+    return this.spot;
   }
 
   /**
@@ -158,63 +208,117 @@ export class Mortals {
 
   // ---------------------------------------------------------------- vie
 
-  update(deltaTime: number): void {
+  /**
+   * Une image de vie citadine — et le poste où la Milestone 7 a le plus gagné.
+   *
+   * Un seul parcours du tableau fait les trois choses d'un coup, parce que
+   * les trois dépendent de la même question : **ce mortel est-il à l'écran ?**
+   *
+   * - **à l'écran** — il avance à chaque image, et sa silhouette est envoyée
+   *   au GPU ;
+   * - **hors champ** — il n'est pas dessiné du tout, et il n'avance qu'une
+   *   image sur `mortals.offscreenSlices`, en rattrapant d'un coup le temps
+   *   qu'il a accumulé. Il parcourt la même distance, personne ne le voit
+   *   sautiller, et il est là où il doit être quand on arrive.
+   *
+   * Pourquoi le champ de la caméra et non un rayon autour du joueur ? Parce
+   * qu'un rayon devrait être taillé pour le pire écran (voir `ViewCulling`).
+   *
+   * @param culling le champ de la caméra, rafraîchi juste avant l'appel
+   */
+  update(deltaTime: number, culling: ViewCulling | null = null): void {
     const citizen = CONFIG.mortals.types.citizen;
     const limit = CONFIG.world.halfSize - citizen.radius;
+    const slices = CONFIG.mortals.offscreenSlices;
 
-    for (const mortal of this.mortals) {
-      mortal.timer -= deltaTime;
-      if (mortal.timer <= 0) {
-        mortal.angle = this.pickHeading();
-        mortal.timer = this.pickDuration();
-      }
+    this.frame += 1;
+    const slice = this.frame % slices;
 
-      const step = citizen.speed * deltaTime;
-      mortal.x += Math.sin(mortal.angle) * step;
-      mortal.z += Math.cos(mortal.angle) * step;
-
-      // Le bord du monde et les immeubles font demi-tour, pas mur.
-      let blocked = false;
-      if (mortal.x < -limit || mortal.x > limit) {
-        mortal.x = THREE.MathUtils.clamp(mortal.x, -limit, limit);
-        blocked = true;
-      }
-      if (mortal.z < -limit || mortal.z > limit) {
-        mortal.z = THREE.MathUtils.clamp(mortal.z, -limit, limit);
-        blocked = true;
-      }
-
-      this.probe.set(mortal.x, mortal.z);
-      if (this.city.resolve(this.probe, citizen.radius)) {
-        mortal.x = this.probe.x;
-        mortal.z = this.probe.y;
-        blocked = true;
-      }
-
-      // Buter contre quelque chose remet la minuterie à zéro : sans ça, un
-      // mortal resterait planté contre la façade jusqu'à la fin de son cap.
-      if (blocked) {
-        mortal.angle = this.pickHeading();
-        mortal.timer = this.pickDuration();
-      }
-    }
-
-    this.syncMeshes();
-  }
-
-  /** Recopie les positions logiques dans le mesh instancié. */
-  private syncMeshes(): void {
-    const citizen = CONFIG.mortals.types.citizen;
-    const y = citizen.height / 2 + citizen.radius;
+    let drawn = 0;
 
     for (let i = 0; i < this.mortals.length; i += 1) {
       const mortal = this.mortals[i];
-      this.dummy.position.set(mortal.x, y, mortal.z);
-      this.dummy.rotation.set(0, mortal.angle, 0);
-      this.dummy.updateMatrix();
-      this.mesh.setMatrixAt(i, this.dummy.matrix);
+      const visible =
+        culling === null || culling.isVisible(mortal.x, this.meshY, mortal.z, citizen.radius);
+
+      mortal.pending += deltaTime;
+      if (visible || i % slices === slice) {
+        this.step(mortal, mortal.pending, citizen.speed, limit, citizen.radius);
+        mortal.pending = 0;
+      }
+
+      if (visible) {
+        writeInstance(this.matrices, drawn, mortal.x, this.meshY, mortal.z, mortal.angle);
+        drawn += 1;
+      }
     }
-    this.mesh.instanceMatrix.needsUpdate = true;
+
+    this.drawn = drawn;
+    uploadInstances(this.mesh, drawn);
+  }
+
+  /** Un pas de marche : avancer, buter, repartir ailleurs si l'on a buté. */
+  private step(
+    mortal: Mortal,
+    deltaTime: number,
+    speed: number,
+    limit: number,
+    radius: number,
+  ): void {
+    mortal.timer -= deltaTime;
+    if (mortal.timer <= 0) {
+      mortal.angle = this.pickHeading();
+      mortal.timer = this.pickDuration();
+    }
+
+    const step = speed * deltaTime;
+    mortal.x += Math.sin(mortal.angle) * step;
+    mortal.z += Math.cos(mortal.angle) * step;
+
+    // Le bord du monde et les immeubles font demi-tour, pas mur.
+    let blocked = false;
+    if (mortal.x < -limit || mortal.x > limit) {
+      mortal.x = THREE.MathUtils.clamp(mortal.x, -limit, limit);
+      blocked = true;
+    }
+    if (mortal.z < -limit || mortal.z > limit) {
+      mortal.z = THREE.MathUtils.clamp(mortal.z, -limit, limit);
+      blocked = true;
+    }
+
+    this.probe.set(mortal.x, mortal.z);
+    if (this.city.resolve(this.probe, radius)) {
+      mortal.x = this.probe.x;
+      mortal.z = this.probe.y;
+      blocked = true;
+    }
+
+    // Buter contre quelque chose remet la minuterie à zéro : sans ça, un
+    // mortel resterait planté contre la façade jusqu'à la fin de son cap.
+    if (blocked) {
+      mortal.angle = this.pickHeading();
+      mortal.timer = this.pickDuration();
+    }
+  }
+
+  /**
+   * Recopie les positions logiques dans le mesh instancié.
+   *
+   * Utilisé hors de la boucle de jeu (première image, remise à zéro) : là,
+   * on affiche tout le monde, la caméra décidera dès l'image suivante.
+   */
+  private sync(culling: ViewCulling | null): void {
+    const radius = CONFIG.mortals.types.citizen.radius;
+    let drawn = 0;
+    for (const mortal of this.mortals) {
+      if (culling !== null && !culling.isVisible(mortal.x, this.meshY, mortal.z, radius)) {
+        continue;
+      }
+      writeInstance(this.matrices, drawn, mortal.x, this.meshY, mortal.z, mortal.angle);
+      drawn += 1;
+    }
+    this.drawn = drawn;
+    uploadInstances(this.mesh, drawn);
   }
 
   // ---------------------------------------------------------------- conversion
@@ -229,7 +333,9 @@ export class Mortals {
    *
    * @param alsoTouchedBy test optionnel : un fidèle du cortège touche-t-il ce
    *                      mortel ? (c'est ce qui fait boule de neige)
-   * @returns le type de chaque mortel converti (un hoplite vaudra 3 fidèles)
+   * @returns le type de chaque mortel converti (un hoplite vaudra 3 fidèles).
+   *          ⚠️ Tableau REUTILISÉ d'une image à l'autre : à consommer tout de
+   *          suite, jamais à conserver.
    */
   takeNear(
     x: number,
@@ -237,7 +343,8 @@ export class Mortals {
     radius: number,
     alsoTouchedBy?: (mortalX: number, mortalZ: number) => boolean,
   ): MortalTypeId[] {
-    const taken: MortalTypeId[] = [];
+    const taken = this.taken;
+    taken.length = 0;
     const radiusSq = radius * radius;
 
     for (const mortal of this.mortals) {
@@ -263,6 +370,7 @@ export class Mortals {
       mortal.z = spot.z;
       mortal.angle = this.pickHeading();
       mortal.timer = this.pickDuration();
+      mortal.pending = 0;
     }
 
     return taken;
@@ -276,14 +384,20 @@ export class Mortals {
       mortal.z = spot.z;
       mortal.angle = this.pickHeading();
       mortal.timer = this.pickDuration();
+      mortal.pending = 0;
     }
-    this.syncMeshes();
+    this.sync(null);
   }
 
   // ---------------------------------------------------------------- lecture
 
   get count(): number {
     return this.mortals.length;
+  }
+
+  /** Silhouettes réellement soumises au GPU cette image (banc de mesure). */
+  get drawnCount(): number {
+    return this.drawn;
   }
 
   /** Copie des positions — pour le banc de test uniquement. */

@@ -122,6 +122,22 @@ export const CONFIG = {
      */
     spawnClearance: 7,
 
+    /**
+     * Sur combien d'images étaler la déambulation des mortels HORS CHAMP.
+     *
+     * La caméra ne cadre qu'une trentaine de mortels sur 450. Les autres
+     * n'ont aucune raison d'avancer 60 fois par seconde : ils avancent une
+     * image sur 4, d'un pas quatre fois plus long. Ils parcourent exactement
+     * la même distance — le temps qui leur est dû est accumulé, pas perdu —
+     * et se retrouvent au bon endroit quand le joueur arrive.
+     *
+     * ⚠️ Ne pas monter beaucoup plus haut. À 4, un mortel hors champ avance
+     * par pas de 17 cm ; c'est ce qui garantit qu'il ne traverse pas une
+     * façade (le pas doit rester très inférieur à l'épaisseur d'un mur), et
+     * qu'il ne « saute » pas visiblement en entrant dans le champ.
+     */
+    offscreenSlices: 4,
+
     /** Graine du placement initial : la même cité peuplée à chaque lancement. */
     seed: 77,
   },
@@ -213,6 +229,41 @@ export const CONFIG = {
     separationPasses: 2,
   },
 
+  /**
+   * La foule — ce que coûte UNE silhouette, mortels et fidèles confondus.
+   *
+   * ⚠️ Le poste de dépense numéro un du jeu. Une capsule de 4 × 8 segments
+   * pèse 272 triangles ; à 450 mortels plus 600 fidèles, cela fait 286 000
+   * triangles envoyés au GPU à chaque image, soit 99 % de la scène (la ville
+   * entière n'en compte que 2 500). C'est ici, et nulle part ailleurs, que se
+   * gagne le budget d'affichage.
+   */
+  crowd: {
+    /**
+     * Segments de la capsule.
+     *
+     * ⚠️ Passé de 4 × 8 à 2 × 6 en Milestone 7 : **272 triangles la
+     * silhouette, contre 108**. Une divinité mesure 1,6 unité et la caméra la
+     * regarde de 40 unités de haut : à cette taille à l'écran, les facettes
+     * supplémentaires ne se voyaient sur aucune capture. En dessous de 6
+     * segments radiaux, en revanche, la silhouette devient anguleuse quand le
+     * cortège passe sous le nez de la caméra.
+     */
+    capSegments: 2,
+    radialSegments: 6,
+
+    /**
+     * Marge, en unités, ajoutée au champ de la caméra pour décider ce qu'on
+     * dessine (voir `ViewCulling`).
+     *
+     * Elle absorbe le fait qu'une silhouette a une épaisseur, et que la
+     * caméra bouge entre le test et l'affichage. Trop petite, on verrait des
+     * mortels apparaître en bord d'écran ; trop grande, on redessine pour
+     * rien. 4 unités = deux fois la largeur d'un personnage.
+     */
+    cullMargin: 4,
+  },
+
   player: {
     /** Unités par seconde. Monte à 30 pour voir la différence. */
     speed: 18,
@@ -283,6 +334,24 @@ export const CONFIG = {
      * seconde, ce que l'œil lit déjà comme instantané.
      */
     scorePublishInterval: 120,
+  },
+
+  /**
+   * Le profileur : ce que coûte une image, étape par étape (Milestone 7).
+   *
+   * Il est branché en permanence — son coût est de huit lectures d'horloge
+   * par image — mais n'affiche rien tant qu'on ne le lui demande pas.
+   * **Touche le compteur de fidèles pour faire apparaître les mesures**, y
+   * compris sur le téléphone : c'est le seul moyen de savoir ce que coûte le
+   * jeu sur l'appareil du joueur plutôt que sur une machine de développement.
+   */
+  profiler: {
+    /** Nombre d'images agrégées avant de publier une moyenne. */
+    windowFrames: 30,
+    /** Intervalle minimal entre deux publications vers l'interface, en ms. */
+    publishInterval: 500,
+    /** L'affichage est-il visible au lancement ? */
+    visibleAtStart: false,
   },
 
   joystick: {

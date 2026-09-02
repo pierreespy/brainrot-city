@@ -17,23 +17,30 @@ interface Props {
   /** Le nombre de fidèles du cortège. */
   faithful: number;
   onRestart: () => void;
+  /**
+   * Toucher le compteur affiche les mesures de performance (Milestone 7).
+   *
+   * Il n'y a pas de bouton dédié : l'écran d'un téléphone est petit, et une
+   * commande de debug n'a pas à occuper une place que le jeu utilisera.
+   */
+  onToggleStats: () => void;
 }
 
-export function Hud({ faithful, onRestart }: Props) {
+export function Hud({ faithful, onRestart, onToggleStats }: Props) {
   return (
     // `box-none` : cette couche laisse passer les doigts vers le joystick,
     // sauf sur ses propres boutons. Sans cela, l'interface avalerait tout
     // l'écran et le jeu deviendrait injouable.
     <SafeAreaView style={styles.root} pointerEvents="box-none">
       <View style={styles.topRow} pointerEvents="box-none">
-        <View style={styles.score} pointerEvents="none">
+        <Pressable testID="score-toggle" onPress={onToggleStats} style={styles.score}>
           <Text style={styles.scoreValue} testID="score">
             {faithful}
           </Text>
           <Text style={styles.scoreLabel}>
             {faithful > 1 ? 'fidèles' : 'fidèle'}
           </Text>
-        </View>
+        </Pressable>
 
         <Pressable
           testID="restart"

@@ -66,6 +66,9 @@ export class City implements Collider {
    */
   private readonly grid = new Map<number, Box2[]>();
 
+  /** Vecteur de travail de `isFree()` — voir le commentaire de la méthode. */
+  private readonly probe = new THREE.Vector2();
+
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     this.build();
@@ -270,16 +273,30 @@ export class City implements Collider {
    * chevauche sur X et sur Z, et on ressort par le côté où l'on est le moins
    * enfoncé. Résultat : on GLISSE le long des façades au lieu de s'y coller,
    * ce qui est indispensable au confort dans une ville en couloirs.
+   *
+   * ⚠️ Milestone 7 — on n'interroge QUE les cases que le personnage touche
+   * vraiment, pas les neuf qui l'entourent.
+   *
+   * C'est correct, et pas seulement plus rapide : un immeuble est inscrit
+   * dans **toutes** les cases que son rectangle touche. Si le cercle du
+   * personnage chevauche un immeuble, le point de chevauchement appartient
+   * aux deux — donc l'immeuble figure forcément dans une case que le cercle
+   * touche. Aucun contact ne peut nous échapper.
+   *
+   * Et la case fait 33 unités pour un personnage large de 0,9 : il en touche
+   * une, parfois deux, jamais neuf. Mesuré : 5 400 recherches par image
+   * ramenées à 620 pour un cortège de 600.
    */
   resolve(position: THREE.Vector2, radius: number): boolean {
     let moved = false;
 
-    // Le joueur ne peut toucher que les cases adjacentes à la sienne.
-    const cx = Math.floor(position.x / this.pitch);
-    const cz = Math.floor(position.y / this.pitch);
+    const minX = Math.floor((position.x - radius) / this.pitch);
+    const maxX = Math.floor((position.x + radius) / this.pitch);
+    const minZ = Math.floor((position.y - radius) / this.pitch);
+    const maxZ = Math.floor((position.y + radius) / this.pitch);
 
-    for (let ix = cx - 1; ix <= cx + 1; ix += 1) {
-      for (let iz = cz - 1; iz <= cz + 1; iz += 1) {
+    for (let ix = minX; ix <= maxX; ix += 1) {
+      for (let iz = minZ; iz <= maxZ; iz += 1) {
         const bucket = this.grid.get(this.cellKey(ix, iz));
         if (!bucket) continue;
         for (const box of bucket) {
@@ -309,10 +326,16 @@ export class City implements Collider {
     return true;
   }
 
-  /** Vrai si un point est libre (utile aux NPC en Milestone 3). */
+  /**
+   * Vrai si un point est libre (utile aux NPC en Milestone 3).
+   *
+   * Le vecteur de travail est REUTILISÉ : cette méthode est appelée en boucle
+   * par le banc de test, et en fabriquer un par appel donnerait du travail au
+   * ramasse-miettes pour rien.
+   */
   isFree(x: number, z: number, radius = 0): boolean {
-    const probe = new THREE.Vector2(x, z);
-    return !this.resolve(probe, radius);
+    this.probe.set(x, z);
+    return !this.resolve(this.probe, radius);
   }
 
   dispose(): void {

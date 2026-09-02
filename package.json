@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "doctor": "expo-doctor"
+    "doctor": "expo-doctor",
+    "bench": "tsc -p tsconfig.bench.json && node dist/bench/tools/bench.js"
   },
   "dependencies": {
     "expo": "~54.0.37",
