@@ -26,6 +26,7 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config';
 import type { Collider } from '../world/Collider';
+import type { Population } from '../world/Population';
 import type { ViewCulling } from '../systems/ViewCulling';
 import { primeInstances, uploadInstances, writeInstance } from '../core/instancing';
 
@@ -71,7 +72,7 @@ const START_CLEARANCE = {
 
 export class Mortals {
   private readonly scene: THREE.Scene;
-  private readonly city: Collider;
+  private readonly city: Collider & Population;
   private readonly mortals: Mortal[] = [];
   private readonly mesh: THREE.InstancedMesh;
   /** Le tableau de matrices du mesh, écrit directement (voir `instancing.ts`). */
@@ -97,7 +98,7 @@ export class Mortals {
   private readonly spot = { x: 0, z: 0 };
   private readonly taken: MortalTypeId[] = [];
 
-  constructor(scene: THREE.Scene, city: Collider) {
+  constructor(scene: THREE.Scene, city: Collider & Population) {
     this.scene = scene;
     this.city = city;
     this.random = createRandom(CONFIG.mortals.seed);
@@ -163,28 +164,24 @@ export class Mortals {
     x: number;
     z: number;
   } {
-    const limit = CONFIG.world.halfSize - 2;
     const radius = CONFIG.mortals.types.citizen.radius;
 
-    let x = 0;
-    let z = 0;
     for (let attempt = 0; attempt < 40; attempt += 1) {
-      x = (this.random() * 2 - 1) * limit;
-      z = (this.random() * 2 - 1) * limit;
+      // Le tirage n'est PAS uniforme : il suit la densité des quartiers, si
+      // bien que l'agora grouille et que le bois sacré reste désert.
+      this.city.pickPopulatedSpot(this.random, this.spot);
 
       // Naître sous les yeux du joueur casserait l'illusion : on s'éloigne.
       if (awayFrom !== undefined) {
-        const dx = x - awayFrom.x;
-        const dz = z - awayFrom.z;
+        const dx = this.spot.x - awayFrom.x;
+        const dz = this.spot.z - awayFrom.z;
         if (dx * dx + dz * dz < awayFrom.distance * awayFrom.distance) continue;
       }
 
-      this.probe.set(x, z);
+      this.probe.set(this.spot.x, this.spot.z);
       if (!this.city.resolve(this.probe, radius)) break;
     }
 
-    this.spot.x = x;
-    this.spot.z = z;
     return this.spot;
   }
 

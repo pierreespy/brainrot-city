@@ -16,6 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 interface Props {
   /** Le nombre de fidèles du cortège. */
   faithful: number;
+  /** Le quartier traversé — vide tant que le jeu n'a rien annoncé. */
+  district: string;
   onRestart: () => void;
   /**
    * Toucher le compteur affiche les mesures de performance (Milestone 7).
@@ -26,7 +28,7 @@ interface Props {
   onToggleStats: () => void;
 }
 
-export function Hud({ faithful, onRestart, onToggleStats }: Props) {
+export function Hud({ faithful, district, onRestart, onToggleStats }: Props) {
   return (
     // `box-none` : cette couche laisse passer les doigts vers le joystick,
     // sauf sur ses propres boutons. Sans cela, l'interface avalerait tout
@@ -51,6 +53,18 @@ export function Hud({ faithful, onRestart, onToggleStats }: Props) {
           <Text style={styles.restartIcon}>↻</Text>
         </Pressable>
       </View>
+
+      {/*
+        Le quartier traversé (Milestone 8). Il s'affiche sous le compteur,
+        discrètement : c'est un repère, pas une information à surveiller.
+      */}
+      {district !== '' && (
+        <View style={styles.district} pointerEvents="none">
+          <Text style={styles.districtText} testID="district">
+            {district}
+          </Text>
+        </View>
+      )}
 
       {/*
         Emplacement RÉSERVÉ à la capacité divine (Milestone 10).
@@ -114,4 +128,20 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   abilityIcon: { fontSize: 26, opacity: 0.25 },
+
+  district: {
+    alignSelf: 'center',
+    marginTop: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+  },
+  districtText: {
+    color: 'rgba(255, 255, 255, 0.92)',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+  },
 });

@@ -314,10 +314,12 @@ export class Retinue {
       follower.z = THREE.MathUtils.clamp(follower.z, -limit, limit);
 
       this.probe.set(follower.x, follower.z);
-      if (this.city.resolve(this.probe, citizen.radius)) {
-        follower.x = this.probe.x;
-        follower.z = this.probe.y;
-      }
+      // ⚠️ On EXTRAIT, on ne repousse pas : voir `Collider.extract()`.
+      // Entre deux maisons mitoyennes, sortir de l'une fait entrer dans
+      // l'autre, et le fidèle fait la navette sans jamais se dégager.
+      this.city.extract(this.probe, citizen.radius);
+      follower.x = this.probe.x;
+      follower.z = this.probe.y;
 
       const dx = follower.x - playerX;
       const dz = follower.z - playerZ;

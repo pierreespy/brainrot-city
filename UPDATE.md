@@ -9,6 +9,154 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 🏛️ Milestone 8 : la cité grecque
+
+**Résumé** — La grille uniforme devient une **cité en six quartiers** : Agora,
+Céramique, Acropole, Port, Théâtre, Bois sacré. Marbre et tuiles, colonnes,
+oliviers, et la mer au bout du port. Le budget de la Milestone 7 tient :
+**0,087 ms de calcul par image** sur les 16,7 disponibles.
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/world/districts.ts` | ⭐ Le PLAN : quel quartier occupe quel pâté |
+| `src/world/Population.ts` | Le contrat de « où naissent les mortels » |
+
+### Le vrai sujet : on se perdait
+
+Le défaut était noté depuis la Milestone 2, dans le README comme dans
+UNIVERS.md : **tous les carrefours se ressemblaient, donc on s'y perdait et on
+ne mesurait pas sa progression.** Les monuments ne suffisent pas à corriger ça.
+Trois choses y répondent, et la première fait l'essentiel du travail :
+
+1. **La couleur du sol.** La caméra plonge de 40 unités : ce que le joueur voit
+   le plus, c'est le sol. Chaque quartier a sa dalle — marbre pâle à l'agora,
+   ocre à la Céramique, vert au bois sacré, gris-vert au port. On sait qu'on a
+   changé d'endroit avant d'avoir vu le moindre bâtiment. Et cela n'a rien
+   coûté : la dalle de pâté existait déjà depuis la M2, elle a juste pris une
+   couleur.
+2. **Le nom du quartier**, annoncé sous le compteur quand on y entre.
+3. **La densité de mortels par quartier** : ×2,6 à l'agora, ×3 au théâtre,
+   ×0,4 au bois sacré. C'est ce qui transforme le choix d'une direction en
+   vrai choix.
+
+### ⚠️ Le repère « visible de loin » était impossible
+
+UNIVERS.md promettait une Acropole « visible depuis toute la carte ». Le calcul
+dit non : la caméra est à 40 unités de haut, inclinée de 66°, avec 60° de
+champ — **le haut de l'écran touche le sol à 55 unités**. Rien ne dépasse cet
+horizon, quelle que soit sa hauteur.
+
+Un temple deux fois plus grand ne se verrait donc pas de plus loin ; il
+masquerait seulement le joueur qui passe devant, ce que la M2 avait déjà
+interdit en plafonnant la hauteur des bâtiments. L'Acropole reste donc à
+hauteur de maison, et c'est sa **dalle claire** et sa colonnade qui la font
+reconnaître. UNIVERS.md a été corrigé plutôt que le jeu.
+
+### Le toit, ou pourquoi une cité paraît grecque
+
+Vue de 40 unités de haut, une maison est **essentiellement un toit**. C'est la
+tuile, pas la façade, qui fait l'essentiel du dépaysement — et c'est aussi ce
+qui a demandé le plus d'allers-retours en capture :
+
+| Ce qu'on a essayé | Ce que ça donnait |
+|---|---|
+| 2 × 2 parcelles par pâté (comme en M2) | Quatre **énormes** toits rouges par pâté |
+| 3 × 3 parcelles, pâté plein | Un tissu de petites toitures — mais des pièges (voir plus bas) |
+| 3 × 3 en **anneau autour d'une cour** | Retenu : des toitures serrées, des cours, des venelles |
+
+### 🐞 Deux pièges à personnages, trouvés par le banc
+
+Le banc de mesure de la M7 a gagné sa place : il a attrapé les deux, en
+chiffres, avant qu'on les voie à l'œil.
+
+**1. Les maisons mitoyennes piégeaient les fidèles.** La collision ressort un
+personnage de la maison où il est, par le côté le plus court. Si les maisons se
+touchent, en sortir d'une le fait entrer dans la voisine, qui le renvoie dans
+la première : **un cycle stable**, que répéter la passe ne casse pas. Sous la
+pression d'un cortège de 600, jusqu'à **40 fidèles sur 600** finissaient dans
+un mur, là où la règle est zéro.
+
+> `Collider.extract()` remplace `resolve()` pour la foule. À chaque tour, il
+> cherche l'obstacle où l'on est le **plus** enfoncé, essaie ses quatre
+> sorties, et garde celle qui laisse le moins d'enfoncement **total**. Cette
+> quantité décroît strictement : le cycle devient impossible. Coût : seulement
+> pour ceux qui touchent vraiment quelque chose.
+
+**2. Les cours fermées enfermaient pour de bon.** Une cour sur cinq se
+retrouvait ceinturée de maisons sans ouverture. Un fidèle poussé là n'en
+ressortait jamais — étalement du cortège mesuré à **82 unités**. Chaque pâté
+laisse désormais une parcelle du pourtour vide : c'est la venelle qui ouvre la
+cour sur la rue.
+
+Le même banc a aussi imposé le **quai** : sans lui, la rue du bord ne faisait
+que 5,5 unités entre les entrepôts et la mer, et le cortège s'y écrasait. Les
+entrepôts sont donc en retrait d'une parcelle — ce qu'un port devrait être de
+toute façon.
+
+### Ce qui bloque, et ce qui ne bloque pas
+
+Murs, plateformes, gradins et entrepôts sont des obstacles. **Colonnes et
+oliviers n'en sont pas.** Ce n'est pas un oubli : la M7 avait mesuré qu'un seul
+fidèle coincé décroche de 40 unités, et les obstacles fins sont exactement ce
+qui les coince. Semer une forêt de poteaux dans les rues coûterait plus en
+jouabilité que ça ne rapporte en réalisme.
+
+Les oliviers ont d'ailleurs été **rapetissés** après capture : traversables et
+larges, ils passaient au-dessus du joueur et le cachaient. Sur un jeu où l'on
+suit sa propre foule, perdre son personnage de vue une seconde est déjà trop.
+
+### Le budget, vérifié plutôt que supposé
+
+| Partie réelle (cortège d'une cinquantaine) | M7 | M8 |
+|---|---|---|
+| Calcul par image | 0,070 ms | **0,087 ms** |
+| Triangles par image | 9 119 | **20 710** |
+| … dont le décor | 3 196 | **12 858** |
+| Mortels dessinés | 18 / 450 | 20 / 450 |
+
+| Pire cas (cortège plein, 600 fidèles) | M7 | M8 |
+|---|---|---|
+| Calcul par image | 0,772 ms | **0,844 ms** |
+| Triangles par image | 53 604 | **70 839** |
+
+Le décor a **quadruplé** en géométrie — toits, colonnes, oliviers, gradins,
+pavage — et reste marginal devant la foule. C'était tout l'intérêt de faire la
+M7 **avant** la M8 : on savait où était le budget avant de dépenser.
+
+### Vérifié
+
+- [x] `npm run typecheck` — OK
+- [x] `npm run bench` — **0 mortel et 0 fidèle dans un mur** dans les deux
+      scénarios, et les 8 directions de la grille de répulsion
+- [x] Banc web (Chromium, 390 × 844), tour des six quartiers : **aucune erreur
+      console**, le nom du quartier suit bien le joueur, 190 bâtiments
+- [x] Bord du monde à **98,4**, joueur jamais dans un mur
+- [x] Relance, joystick sous le HUD, affichage de debug : inchangés
+- [x] Captures des six quartiers relues une à une — c'est ainsi qu'on a
+      attrapé les toits géants, le temple illisible et les arbres qui cachent
+
+### ⚠️ Ce qui reste ouvert
+
+- **Les hoplites, prêtresses et philosophes** étaient annoncés pour cette
+  milestone. Ils demandent un mesh par type et des comportements propres
+  (fuir, rester immobile), et la prêtresse recharge une capacité qui n'existe
+  qu'en M10. Ils partent donc avec le panthéon, en **M9**. La densité de
+  mortels par quartier, elle, est déjà là et les attend.
+- **Le cortège reste trop dense à 600** : 44 % de fidèles superposés, étalement
+  moyen de 69 unités. C'est la limite mesurée en M7 — 600 fidèles pour une rue
+  de 11 unités, soit quatre fois trop de monde — et la cité n'y change rien.
+  Personne n'est plus coincé dans un mur, mais le plafond jouable reste bien
+  en dessous de `retinue.maxSize`.
+
+**Cassé** — L'ancienne ville grise a disparu : palette, sol, ciel et lumière
+sont ceux d'une cité de Méditerranée. `city.palette` et `city.sidewalkColor`
+n'existent plus (les couleurs vivent dans `districts.ts`), et `lotDepth` est
+figé à 1 — au-dessus, les maisons se chevauchent et piègent les personnages.
+
+---
+
 ## 2026-09-02 — Claude — ⚡ Milestone 7 : première passe d'optimisation
 
 **Résumé** — Le jeu est désormais **mesuré**, puis optimisé à partir de ces

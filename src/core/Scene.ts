@@ -20,11 +20,13 @@ export class GameScene {
     this.renderer.shadowMap.enabled = false; // Coûteux, inutile à ce stade.
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x12141c);
-    // Le brouillard cache le bord du monde et allègera le rendu lointain.
-    // Il commence au-delà de ce que la caméra cadre, pour ne jamais voiler
-    // les immeubles proches du joueur.
-    this.scene.fog = new THREE.Fog(0x12141c, 70, 190);
+    // Un ciel de Méditerranée : depuis la Milestone 8, la cité est claire, et
+    // un fond nocturne lui donnait un cerne sombre sur les bords.
+    this.scene.background = new THREE.Color(CONFIG.world.skyColor);
+    // Le brouillard cache le bord du monde et allège le rendu lointain. Il
+    // commence au-delà de ce que la caméra cadre, pour ne jamais voiler ce
+    // qui est proche du joueur.
+    this.scene.fog = new THREE.Fog(CONFIG.world.skyColor, 90, 200);
 
     this.camera = new THREE.PerspectiveCamera(
       CONFIG.camera.fov,
@@ -39,12 +41,18 @@ export class GameScene {
 
   private addLights(): void {
     // Lumière ambiante : éclaire tout uniformément, évite les zones noires.
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    // Légèrement bleutée — c'est le ciel qui remplit les ombres.
+    //
+    // ⚠️ Ces deux intensités ont été remontées en Milestone 8. Réglées pour
+    // la ville sombre de la Milestone 2, elles rendaient la cité grecque
+    // terne : le marbre virait au gris et la terre battue à la boue. Une
+    // cité de Méditerranée doit être ÉCLATANTE — c'est la moitié du thème.
+    this.scene.add(new THREE.AmbientLight(0xd6e4f0, 0.95));
 
-    // Lumière directionnelle : simule le soleil, donne du relief aux volumes.
-    // Inclinée : sans cela, les faces verticales des immeubles auraient
-    // toutes la même teinte et la ville semblerait plate.
-    const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+    // Lumière directionnelle : le soleil, qui donne du relief aux volumes.
+    // Inclinée : sans cela, les faces verticales auraient toutes la même
+    // teinte et la cité semblerait plate. Chaude, pour le marbre et la tuile.
+    const sun = new THREE.DirectionalLight(0xfff4de, 1.75);
     sun.position.set(60, 90, 30);
     this.scene.add(sun);
   }

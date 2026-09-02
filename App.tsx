@@ -31,6 +31,7 @@ export default function App() {
   // Le seul état React de l'app. Le jeu le pousse ici quand il change, au
   // plus 8 fois par seconde (voir `hud.scorePublishInterval`).
   const [faithful, setFaithful] = useState(0);
+  const [district, setDistrict] = useState('');
 
   // L'affichage de debug (Milestone 7). Il n'est pas alimenté par le jeu : au
   // contraire, c'est LUI qui vient chercher les mesures, deux fois par
@@ -74,6 +75,7 @@ export default function App() {
 
     const game = new Game(renderer, w, h, presentFrame, input);
     game.onFaithfulChange = setFaithful;
+    game.onDistrictChange = setDistrict;
     gameRef.current = game;
     game.start();
 
@@ -104,7 +106,12 @@ export default function App() {
             en React Native, la dernière couche déclarée reçoit le doigt. */}
         <Joystick touch={input.touch} />
 
-        <Hud faithful={faithful} onRestart={onRestart} onToggleStats={onToggleStats} />
+        <Hud
+          faithful={faithful}
+          district={district}
+          onRestart={onRestart}
+          onToggleStats={onToggleStats}
+        />
 
         <Stats stats={stats} />
       </View>

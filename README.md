@@ -10,14 +10,14 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 7 terminée** — app Expo fonctionnelle, ville
-> générée (rues, trottoirs, 124 immeubles), collisions contre les façades,
+> **État actuel : Milestone 8 terminée** — app Expo fonctionnelle, **cité
+> grecque** générée en six quartiers (Agora, Céramique, Acropole, Port,
+> Théâtre, Bois sacré), collisions contre les façades,
 > **450 mortels qui déambulent**, **conversion au contact** qui se propage, et
 > un **cortège de plusieurs centaines de fidèles** qui suit le chemin du dieu
 > en foule cohérente, **compteur et bouton de relance**. Joystick tactile et
 > caméra de suivi avec anticipation. Le jeu est **profilé et optimisé** :
-> 0,07 ms de calcul et 9 100 triangles par image en partie réelle, contre
-> 0,25 ms et 131 500 avant.
+> 0,09 ms de calcul par image en partie réelle, sur les 16,7 disponibles.
 
 ---
 
@@ -140,8 +140,10 @@ imprimé dessus.
     │   └── Stats.tsx      L'affichage de debug (touche le compteur)
     │
     └── world/
-        ├── City.ts        ⭐ La ville : rues, trottoirs, immeubles + collisions
-        └── Collider.ts    Le contrat commun de ce qui bloque le passage
+        ├── City.ts        ⭐ La cité : ce qu'on bâtit dans chaque quartier
+        ├── districts.ts   ⭐ Le PLAN : quel quartier occupe quel pâté
+        ├── Collider.ts    Le contrat commun de ce qui bloque le passage
+        └── Population.ts  Le contrat de « où naissent les mortels »
 ```
 
 ### Les deux fichiers à connaître
@@ -152,19 +154,19 @@ imprimé dessus.
 - **`src/core/Game.ts`** — la méthode `update()` liste, dans l'ordre, tout ce
   qui se passe à chaque frame. Lire ces 15 lignes = comprendre le jeu entier.
 
-### La ville
+### La cité et ses quartiers
 
-La ville n'est pas dessinée à la main : elle est **générée** à partir de
-quatre nombres dans `src/config.ts` (taille d'un pâté de maisons, largeur des
-rues, nombre de parcelles, hauteur des immeubles).
+La cité n'est pas dessinée à la main : elle est **générée** à partir de
+quelques nombres de `src/config.ts` (taille d'un pâté, largeur des rues,
+nombre de parcelles, hauteur des maisons).
 
 ```
-   rue        pâté de maisons        rue
+   rue         pâté de maisons        rue
   |----|  |------------------|  |----|
        ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-       ▓ immeuble │ immeuble ▓      ← plaqués sur la rue,
-       ▓──────────┼──────────▓        ils débordent vers la cour
-       ▓ immeuble │ immeuble ▓
+       ▓ maison │ maison │ m. ▓      ← plaquées sur la rue,
+       ▓────────┼── cour ─┼────▓        en anneau autour d'une cour
+       ▓ maison │ (vide) │ m. ▓
        ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ```
 
@@ -172,9 +174,60 @@ Les rues sont centrées sur les multiples du pas `blockSize + roadWidth`, ce qui
 garantit deux choses : **(0, 0) est toujours un carrefour** (le joueur ne
 démarre jamais dans un mur) et le bord du monde tombe au milieu d'une rue.
 
-La ville est **déterministe** : la graine `city.seed` fixe le tirage, donc la
-même ville se régénère à chaque lancement. Change la graine, tu obtiens une
-autre ville — et le banc de test reste reproductible.
+La cité est **déterministe** : la graine `city.seed` fixe le tirage, donc la
+même cité se régénère à chaque lancement. Change la graine, tu obtiens une
+autre cité — et le banc de test reste reproductible.
+
+**Six quartiers** (Milestone 8), décrits dans
+[`src/world/districts.ts`](./src/world/districts.ts) :
+
+| Quartier | Ce qu'on y trouve | Densité de mortels |
+|---|---|---|
+| **Agora** | Places dallées, colonnades, autels. Le point de départ. | ×2,6 |
+| **La Céramique** | Le tissu courant : maisons ocre, toits de tuiles, cours | ×1 |
+| **Acropole** | Plateforme de marbre, péristyle, cella | ×0,5 |
+| **Le Port** | Entrepôts en retrait, quai ouvert, **la mer** au-delà | ×1,3 |
+| **Le Théâtre** | Trois anneaux de gradins en demi-cercle | ×3 |
+| **Bois sacré** | Oliviers, pas de bâti. Une respiration, un raccourci. | ×0,4 |
+
+**Le plan est écrit à la main, le contenu est généré.** Un repère tiré au sort
+n'est pas un repère : l'Acropole doit être au même endroit à chaque partie,
+sinon elle n'aide personne à s'orienter. En revanche, ce qu'on bâtit *dans* un
+pâté reste tiré par la graine.
+
+**Pourquoi des quartiers ?** Parce que la grille uniforme de la Milestone 2
+avait un défaut de jeu identifié dès sa livraison : tous les carrefours se
+ressemblaient, donc **on s'y perdait et on ne mesurait pas sa progression**.
+Trois choses y répondent, et la première fait l'essentiel du travail :
+
+1. **La couleur du sol.** La caméra plonge de 40 unités : ce que le joueur
+   voit le plus, c'est le sol. Chaque quartier a sa dalle — marbre pâle à
+   l'agora, ocre à la Céramique, vert au bois sacré, gris-vert au port. On sait
+   qu'on a changé d'endroit avant même d'avoir vu un bâtiment.
+2. **Le nom du quartier**, annoncé sous le compteur quand on y entre.
+3. **La densité de mortels**, qui donne une *raison* d'aller quelque part :
+   l'agora et le théâtre valent le détour, le bois sacré est un raccourci
+   désert.
+
+> ⚠️ **Un repère « visible de loin » n'est pas possible avec cette caméra**, et
+> c'était pourtant l'intention de départ pour l'Acropole (voir `UNIVERS.md`).
+> La caméra est à 40 unités de haut et penchée : **le haut de l'écran touche le
+> sol à 55 unités**. Rien ne dépasse cet horizon, quelle que soit sa hauteur —
+> grandir le temple ne l'aurait pas rendu visible de plus loin, mais l'aurait
+> fait masquer le joueur en passant devant. C'est donc au sol que l'orientation
+> se joue.
+
+**Ce qui bloque, et ce qui ne bloque pas.** Murs, plateformes, gradins et
+entrepôts sont des obstacles ; **colonnes et oliviers n'en sont pas**. Ce n'est
+pas un oubli : un cortège de plusieurs centaines de fidèles se coince sur les
+obstacles fins, et la Milestone 7 avait mesuré qu'un seul fidèle bloqué
+décroche de 40 unités. Semer une forêt de poteaux dans les rues coûterait plus
+en jouabilité que ça ne rapporte en réalisme.
+
+**Chaque pâté a sa venelle.** Une parcelle du pourtour est toujours laissée
+vide, pour que la cour intérieure soit ouverte sur la rue. Sans elle, une cour
+sur cinq était entièrement ceinturée : un fidèle poussé là-dedans n'en
+ressortait jamais, et l'étalement du cortège grimpait à 82 unités au banc.
 
 ### Les mortels
 
@@ -201,6 +254,11 @@ Trois choix expliquent leur comportement :
 Comme les immeubles, les 450 mortels tiennent dans **un seul `InstancedMesh`**,
 donc un appel GPU. Ils réutilisent la ville comme carte de collision : le même
 `Collider` que le joueur, sans une ligne de code en plus.
+
+- **Ils naissent là où il y a du monde** (Milestone 8). Le tirage n'est plus
+  uniforme : il suit la densité du quartier, si bien que l'agora grouille et
+  que le bois sacré reste désert. C'est ce qui transforme le choix d'une
+  direction en vrai choix.
 
 **Pourquoi 450 et pas 100 ?** Parce que c'est calculé, pas deviné. Le joueur
 balaie un couloir de `2 × conversion.radius` de large à 18 u/s, soit 68 unités²
@@ -502,8 +560,8 @@ fois qu'il y a un jeu à habiller.
 | 5 | Système de cortège (formation, suivi) | ✅ Terminée |
 | 6 | HUD : compteur de fidèles + relance | ✅ Terminée |
 | 7 | **Première passe d'optimisation** : profileur, banc de mesure, tri par instance | ✅ Terminée |
-| 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ⬜ À venir |
-| 9 | 🏛️ **Le panthéon** : dieux jouables (données, apparence, sélection) | ⬜ |
+| 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ✅ Terminée |
+| 9 | 🏛️ **Le panthéon** : dieux jouables (données, apparence, sélection) | ⬜ À venir |
 | 10 | ⚡ **Capacités divines** : une par dieu, jauge et bouton | ⬜ |
 | 11 | ⚔️ **Cortèges rivaux** : concurrence et affrontements | ⬜ |
 | 12 | Game feel, effets et audio | ⬜ |
@@ -526,11 +584,14 @@ fois qu'il y a un jeu à habiller.
   d'ajouter marbre, colonnes et cortèges rivaux. Il l'est : 0,07 ms de calcul
   et 9 100 triangles par image en partie réelle. La M8 peut donc dépenser —
   et le banc dira aussitôt combien.
-- **M8 — La cité grecque.** L'habillage : palettes de marbre, toits de tuiles,
-  colonnes et oliviers (deux `InstancedMesh` de plus), et surtout le **découpage
-  en quartiers** (Agora, Acropole, Port, Théâtre…). Ce découpage corrige un
-  vrai défaut de jeu constaté en M2 : la grille actuelle est uniforme, donc on
-  s'y perd et on ne mesure pas sa progression.
+- **M8 — La cité grecque.** Faite : six quartiers, marbre et tuiles, colonnes,
+  oliviers, la mer au bord du port. Le découpage corrige le défaut constaté en
+  M2 — la grille uniforme où l'on se perdait — et c'est **la couleur du sol**,
+  plus que les monuments, qui fait le travail.
+  **Ce qui n'a PAS été fait ici** : les hoplites, prêtresses et philosophes,
+  annoncés pour cette milestone. Ils demandent un mesh par type et des
+  comportements propres (fuir, rester immobile), et la prêtresse recharge une
+  capacité qui n'existe qu'en M10. Ils vont donc avec le panthéon, en M9.
 - **M9 — Le panthéon.** Un dieu = **une ligne de données**, pas une classe.
   Apparence, capacité, réglages propres. Plus l'écran de sélection.
 - **M10 — Capacités divines.** Le cœur du thème : Foudre, Talaria, Charme,

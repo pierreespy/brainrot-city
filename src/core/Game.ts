@@ -23,6 +23,7 @@ import { Conversion } from '../systems/Conversion';
 import { PlayerTrail } from '../systems/PlayerTrail';
 import { ViewCulling } from '../systems/ViewCulling';
 import { Profiler, type ProfileSnapshot } from './Profiler';
+import { DISTRICTS } from '../world/districts';
 
 /**
  * Ce que le jeu sait dire de sa propre performance — lu par l'affichage de
@@ -73,6 +74,19 @@ export class Game {
    * qu'est un HUD, il annonce un nombre.
    */
   onFaithfulChange: ((faithful: number) => void) | null = null;
+
+  /**
+   * Prévenue quand le joueur change de quartier (Milestone 8).
+   *
+   * Elle annonce un **nom**, pas un quartier : le jeu ne sait pas plus ce
+   * qu'est un HUD ici qu'ailleurs. C'est le remède au défaut relevé en
+   * Milestone 2 — « on s'y perd et on ne mesure pas sa progression » : la
+   * couleur du sol dit qu'on a changé d'endroit, ce nom dit lequel.
+   */
+  onDistrictChange: ((label: string) => void) | null = null;
+
+  /** Dernier quartier annoncé, pour ne parler que quand ça change. */
+  private publishedDistrict = '';
 
   /** Dernier score publié, et quand. Sert à ne pas inonder React. */
   private publishedFaithful = -1;
@@ -163,6 +177,7 @@ export class Game {
 
     // 6. Annoncer le score, s'il a changé et pas trop souvent.
     this.publishFaithful();
+    this.publishDistrict(x, z);
 
     // 7. Dessiner, puis envoyer l'image à l'écran du téléphone.
     this.gameScene.render();
@@ -170,6 +185,28 @@ export class Game {
     this.profiler.mark('rendu');
 
     this.profiler.frameEnd();
+  }
+
+  /**
+   * Annonce le quartier traversé.
+   *
+   * Pas de minuterie ici, contrairement au score : on ne change de quartier
+   * qu'en marchant, soit quelques fois par minute. Le test d'égalité suffit
+   * à ne réveiller React que pour de vrai.
+   */
+  private publishDistrict(x: number, z: number): void {
+    if (this.onDistrictChange === null) return;
+    const label = DISTRICTS[this.city.districtAt(x, z)].label;
+    if (label === this.publishedDistrict) return;
+    this.publishedDistrict = label;
+    this.onDistrictChange(label);
+  }
+
+  /** Le quartier où se trouve le joueur — pour le banc de test. */
+  getDistrict(): string {
+    return DISTRICTS[
+      this.city.districtAt(this.player.position.x, this.player.position.y)
+    ].label;
   }
 
   /**
@@ -223,6 +260,7 @@ export class Game {
     // Le compteur doit retomber à zéro tout de suite, sans attendre le
     // prochain intervalle de publication.
     this.publishedFaithful = -1;
+    this.publishedDistrict = '';
     this.lastPublishTime = 0;
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
     this.profiler.reset();

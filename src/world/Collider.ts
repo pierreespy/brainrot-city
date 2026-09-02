@@ -18,6 +18,17 @@ export interface Collider {
    * @returns true si la position a dû être corrigée
    */
   resolve(position: THREE.Vector2, radius: number): boolean;
+
+  /**
+   * Sort `position` d'un AMAS d'obstacles mitoyens, en place.
+   *
+   * `resolve()` traite chaque obstacle séparément et peut donc faire passer
+   * d'un mur au suivant indéfiniment. `extract()` garantit la sortie, au
+   * prix de quelques tests de plus : à réserver aux personnages qu'on
+   * BOUSCULE — les fidèles se poussent entre eux et finissent dans les murs,
+   * là où le joueur, lui, n'y entre jamais.
+   */
+  extract(position: THREE.Vector2, radius: number): boolean;
 }
 
 /** Un obstacle rectangulaire aligné sur les axes (le seul type utile ici). */

@@ -15,8 +15,18 @@ export const CONFIG = {
    */
   world: {
     halfSize: 99,
-    /** Couleur du sol = l'asphalte des rues (les trottoirs sont posés dessus). */
-    groundColor: 0x30354a,
+    /**
+     * Couleur du sol = la terre battue des rues (les dalles des quartiers
+     * sont posées dessus).
+     */
+    groundColor: 0xbfa981,
+    /**
+     * La mer, au-delà du port. Elle remplace le mur invisible sur ce bord de
+     * la carte : le joueur comprend enfin pourquoi il ne va pas plus loin.
+     */
+    seaColor: 0x2f7d9e,
+    /** Le ciel, et le brouillard qui s'y fond au loin. */
+    skyColor: 0xb4cfe0,
   },
 
   /**
@@ -31,30 +41,86 @@ export const CONFIG = {
     blockSize: 22,
     /** Largeur d'une rue, d'un trottoir à l'autre. */
     roadWidth: 11,
-    /** Le trottoir dépasse du pâté : c'est lui qu'on longe en courant. */
-    sidewalkHeight: 0.18,
-    sidewalkColor: 0x474e68,
-    /** Chaque pâté est découpé en `lotsPerBlock` × `lotsPerBlock` parcelles. */
-    lotsPerBlock: 2,
     /**
-     * Profondeur de l'immeuble, en multiples de sa parcelle. Le bâtiment est
-     * plaqué sur la RUE et déborde vers l'intérieur du pâté : à 1 il occupe
-     * exactement sa parcelle, à 1.4 il mord sur la cour.
-     *
-     * ⚠️ Ne jamais descendre sous 1 : les immeubles laisseraient des trous
-     * entre eux et la ville deviendrait traversable en diagonale.
+     * La dalle du quartier dépasse du pâté : c'est elle qu'on longe en
+     * courant, et c'est SA COULEUR qui dit dans quel quartier on est.
+     * Chaque quartier a la sienne (voir `world/districts.ts`).
      */
-    lotDepth: { min: 1, max: 1.45 },
+    sidewalkHeight: 0.18,
+    /**
+     * Chaque pâté est découpé en `lotsPerBlock` × `lotsPerBlock` parcelles.
+     *
+     * ⚠️ Passé de 2 à 3 en Milestone 8, pour une raison purement visuelle :
+     * avec 2, un pâté n'était que quatre maisons de 11 unités de côté, donc
+     * **quatre énormes toits rouges** vus d'en haut. À 3, la Céramique
+     * redevient un tissu de petites toitures — ce qu'annonce son nom.
+     */
+    lotsPerBlock: 3,
+    /**
+     * Profondeur d'une maison, en multiples de sa parcelle.
+     *
+     * ⚠️ Vaut exactement 1 depuis la Milestone 8, et il y a deux raisons de
+     * ne pas y toucher :
+     *
+     * - **en dessous de 1**, les maisons laisseraient des trous entre elles
+     *   et la cité deviendrait traversable en diagonale (Milestone 2) ;
+     * - **au-dessus de 1**, elles se CHEVAUCHENT. Deux obstacles qui se
+     *   recouvrent se repoussent l'un l'autre : un personnage coincé dans
+     *   leur intersection est renvoyé de l'un vers l'autre indéfiniment, et
+     *   aucune passe de collision n'en sort. Mesuré au banc avec un cortège
+     *   de 600 : jusqu'à 13 fidèles dans un mur, là où la règle est zéro.
+     *
+     * La variété ne vient donc plus de la profondeur, mais de la HAUTEUR et
+     * des parcelles laissées vides (`emptyLotChance`) — qui creusent les
+     * cours intérieures d'une cité grecque.
+     */
+    lotDepth: { min: 1, max: 1 },
     /**
      * Hauteur des immeubles. Volontairement BASSE : plus haut, les façades
      * situées derrière le joueur passeraient devant la caméra et le
      * cacheraient (constaté au banc de test). À relire avec `camera.offset`.
      */
     height: { min: 4, max: 10 },
-    /** Probabilité qu'une parcelle reste vide (place, terrain vague). */
-    emptyLotChance: 0.12,
-    /** Palette des façades — tirée au hasard, mais toujours la même partie. */
-    palette: [0x5f6890, 0x7079a3, 0x515a7f, 0x828bb4, 0x6a7398, 0x4d5578],
+    /**
+     * Probabilité qu'une parcelle reste vide.
+     *
+     * C'est ce qui creuse les cours et les venelles de la Céramique — et,
+     * depuis que la profondeur des maisons est figée à 1, la seule source de
+     * variété du plan au sol.
+     */
+    emptyLotChance: 0.18,
+    /**
+     * Hauteur des entrepôts du port : bas et larges, pour qu'on voie la mer
+     * par-dessus depuis le quai.
+     */
+    warehouseHeight: { min: 3, max: 5.5 },
+
+    /**
+     * Le toit de tuiles — l'apport visuel décisif de la Milestone 8.
+     *
+     * ⚠️ Ce n'est pas de la décoration. La caméra plonge de 40 unités de
+     * haut : d'une maison, on voit surtout **son toit**. C'est la tuile, pas
+     * la façade, qui fait qu'une cité paraît grecque. Le débord donne
+     * l'ombre portée qui détache le bâtiment de sa rue.
+     */
+    roofHeight: 0.55,
+    roofOverhang: 0.9,
+
+    /** Colonnes : agora, temples, péristyles. Décor, elles ne bloquent pas. */
+    columnRadius: 0.42,
+    columnHeight: 4.6,
+    columnSpacing: 4.4,
+
+    /** Oliviers plantés dans un pâté de bois sacré. */
+    treesPerGrove: 11,
+
+    /**
+     * Le pavage au milieu des rues. Il remplace les bandes blanches de la
+     * Milestone 2 : une cité grecque n'a pas de marquage routier, mais elle
+     * a des dalles — et sans repère au sol, on ne sent plus qu'on avance.
+     */
+    pavingSize: 2.4,
+    pavingGap: 2.2,
     /**
      * Graine du générateur aléatoire. Change ce nombre = autre ville.
      * Fixe = la ville est identique à chaque lancement (et testable).
@@ -92,7 +158,13 @@ export const CONFIG = {
     types: {
       citizen: {
         label: 'Citoyen',
-        color: 0xd8c9a3,
+        /**
+         * ⚠️ Assombri en Milestone 8. Le beige clair d'origine se lisait très
+         * bien sur l'asphalte gris de la Milestone 2 ; sur le marbre et la
+         * terre battue de la cité grecque, les mortels disparaissaient dans
+         * le décor. Une foule doit se voir : c'est elle qu'on vient chercher.
+         */
+        color: 0x74513a,
         value: 1,
         /** Unités par seconde. Très lent face aux 18 u/s du joueur. */
         speed: 2.6,

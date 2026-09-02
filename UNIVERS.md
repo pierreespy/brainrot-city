@@ -51,17 +51,21 @@ vocabulaire, l'habillage et le contenu :
 
 ## La cité
 
-La ville actuelle (Milestone 2) est une grille uniforme de pâtés de maisons.
-Elle fonctionne, mais elle a un **défaut de jeu identifié** : tous les
-carrefours se ressemblent, donc **on s'y perd et on ne mesure pas sa
-progression**. Le thème est l'occasion de le corriger, en découpant la cité en
-**quartiers reconnaissables**.
+> **État : bâtie en Milestone 8.** Les six quartiers ci-dessous existent dans
+> le jeu. Ce qui suit reste la référence du « pourquoi » ; le « comment » est
+> dans [`README.md`](./README.md) et le plan dans `src/world/districts.ts`.
+
+La ville de la Milestone 2 était une grille uniforme de pâtés de maisons. Elle
+fonctionnait, mais elle avait un **défaut de jeu identifié** : tous les
+carrefours se ressemblaient, donc **on s'y perdait et on ne mesurait pas sa
+progression**. Le thème a été l'occasion de le corriger, en découpant la cité
+en **quartiers reconnaissables**.
 
 | Quartier | À quoi ça ressemble | Rôle de jeu |
 |---|---|---|
 | **L'Agora** | Grande place ouverte, dallée, colonnades | Point de départ (le carrefour central actuel), forte densité de mortels |
 | **La Céramique** | Pâtés serrés, toits de tuiles, ruelles | Le tissu urbain courant — l'équivalent de la ville actuelle |
-| **L'Acropole** | Temple sur une butte, visible de loin | **Repère d'orientation** visible depuis toute la carte |
+| **L'Acropole** | Temple de marbre, péristyle à ciel ouvert | Repère — mais **au sol**, pas à l'horizon : voir l'encadré |
 | **Le Port** | Quais, entrepôts, mer sur un bord | Bord de carte naturel : plus besoin d'un mur invisible |
 | **Le Théâtre** | Gradins en demi-cercle | Petite arène, gros paquet de mortels d'un coup |
 | **Le Bois sacré** | Oliviers, autels, pas de bâti | Respiration visuelle, raccourci |
@@ -71,11 +75,22 @@ actuelles, toits de tuiles, **colonnes**, statues, braseros, oliviers. Le sol
 passe de l'asphalte à la **pierre et à la terre battue** ; les bandes blanches
 de la route deviennent des **dalles**.
 
-**Ce que ça coûte techniquement** — presque rien de nouveau. La génération de
-`src/world/City.ts` reste la même : on ajoute un **type de quartier par pâté**
-qui choisit la palette, la hauteur et la forme des bâtiments. Les colonnes et
-les oliviers sont deux `InstancedMesh` de plus, soit deux appels GPU — la
-technique posée en Milestone 2 tient.
+**Ce que ça a coûté techniquement** — à peu près ce qui était prévu. La
+génération de `src/world/City.ts` a gardé sa structure : un **quartier par
+pâté** choisit la palette, la hauteur et la façon d'occuper le terrain. Les
+colonnes, les toits et les oliviers sont des `InstancedMesh` de plus, soit
+quelques appels GPU — la technique posée en Milestone 2 a tenu, et le décor ne
+pèse que 12 858 triangles sur les 70 000 d'une image chargée.
+
+> ⚠️ **Un repère visible depuis toute la carte n'est pas possible**, et il a
+> fallu s'y faire. La caméra est à 40 unités de haut et penchée : le haut de
+> l'écran touche le sol à **55 unités**. Rien ne dépasse cet horizon, quelle
+> que soit sa hauteur — un temple deux fois plus grand ne se verrait pas de
+> plus loin, il masquerait seulement le joueur qui passe devant. L'orientation
+> se joue donc **au sol** : chaque quartier a sa couleur de dalle, et son nom
+> s'affiche quand on y entre. Si l'on tient un jour à une silhouette à
+> l'horizon, c'est la caméra qu'il faudra redresser — et alors relire la
+> hauteur des bâtiments, qui en dépend.
 
 ---
 
