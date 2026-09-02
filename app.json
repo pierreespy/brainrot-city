@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Brainrot City",
-    "slug": "brainrot-city",
+    "name": "Olympus",
+    "slug": "olympus",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -13,10 +13,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.brainrotcity.game"
+      "bundleIdentifier": "com.pierreespy.olympus"
     },
     "android": {
-      "package": "com.brainrotcity.game",
+      "package": "com.pierreespy.olympus",
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "backgroundColor": "#12141c"

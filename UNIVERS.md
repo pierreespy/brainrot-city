@@ -1,4 +1,4 @@
-# L'univers — mythologie grecque
+# L'univers d'Olympus — mythologie grecque
 
 > Document de référence du **thème**. Le « quoi » et le « pourquoi » du
 > contenu ; le « comment » technique reste dans [`README.md`](./README.md),
@@ -8,6 +8,19 @@
 > des **points de départ à régler en jouant**, pas des vérités.
 
 ---
+
+## Le nom
+
+Le jeu s'appelle **Olympus** (décidé le 2026-09-02, en remplacement de
+« Brainrot City », qui ne collait plus au thème).
+
+Sur les stores, il est prévu de l'accompagner d'un sous-titre qui dit le
+genre — par exemple **« Olympus : Divine Rush »** — car « Olympus » seul est
+un mot **très disputé** dans les jeux mobiles : c'est le compromis entre un
+nom court et la possibilité d'être trouvé.
+
+L'identifiant technique de l'app est **`com.pierreespy.olympus`**. Il est
+**définitif dès la première publication** sur les stores : ne plus y toucher.
 
 ## Le pitch
 
@@ -134,7 +147,6 @@ monde) et un sens aux capacités d'Athéna, d'Arès et d'Hadès.
 
 ## Ce qui n'est PAS décidé
 
-- **Le nom du jeu.** « Brainrot City » colle mal à la mythologie. À trancher.
 - **Le style des personnages** — silhouettes stylisées ou plus détaillées.
   Contrainte technique ferme : des **milliers** de mortels affichés, donc des
   modèles très légers et un seul mesh instancié.

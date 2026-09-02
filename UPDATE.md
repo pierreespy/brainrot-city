@@ -9,6 +9,59 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 🏷️ Le jeu s'appelle désormais **Olympus**
+
+**Résumé** — « Brainrot City » devient **Olympus**, pour coller au thème de la
+mythologie grecque décidé plus tôt dans la journée.
+
+### Modifié
+
+| Fichier | Changement |
+|---|---|
+| `app.json` | `name` → **Olympus**, `slug` → `olympus`, et surtout l'**identifiant de bundle** |
+| `package.json` | `name` → `olympus` |
+| `App.tsx` | Le titre affiché dans le HUD |
+| `README.md` | Titre du projet |
+| `UNIVERS.md` | Nouvelle section « Le nom » ; le nom sort de la liste des questions ouvertes |
+
+### ⚠️ L'identifiant de bundle est le point irréversible
+
+`com.brainrotcity.game` → **`com.pierreespy.olympus`**, sur iOS **et** Android.
+
+J'ai écarté `com.olympus.game` : un identifiant doit être **unique sur toute
+la planète**, et « olympus » est un mot très disputé — le risque qu'il soit
+déjà pris était réel. Le préfixe reprend donc ton pseudo GitHub, ce qui est la
+convention quand on ne possède pas de nom de domaine. Si tu achètes un domaine
+un jour, c'est **maintenant** qu'il faut le dire : **une fois l'app publiée sur
+les stores, cet identifiant ne peut plus jamais changer.**
+
+### ⚠️ Reste à faire côté stores (pas faisable depuis le code)
+
+- **Vérifier que « Olympus » est disponible** sur l'App Store et le Play Store.
+  Le mot est **très utilisé** dans les jeux mobiles (Gods of Olympus, Olympus
+  Rush, Olympus Game…). Il est probable qu'il faille publier sous un nom
+  composé, du type **« Olympus : Divine Rush »** — ce qui aide aussi à être
+  trouvé, « Olympus » seul ne disant rien du genre de jeu.
+- **Vérifier l'absence de marque déposée** en classes 9 et 41 (INPI, EUIPO).
+
+### Non renommé volontairement
+
+Le **dépôt GitHub** s'appelle toujours `brainrot-city`. Le renommer casserait
+les liens et les clones existants, et c'est une action qui t'appartient
+(Settings → General → Repository name). Ça n'a aucune conséquence sur l'app.
+
+### Vérifié
+
+- [x] `npm run typecheck` — OK
+- [x] `npx expo export --platform web` — bundle régénéré, **aucune erreur console**
+- [x] Le HUD affiche bien **Olympus** (capture vérifiée)
+- [x] Aucune régression : 124 immeubles, blocage, glissement, bord du monde
+
+**Cassé** — Rien dans le code. En revanche, l'app installée via Expo Go
+apparaîtra comme une **nouvelle app** (l'identifiant a changé) : c'est normal.
+
+---
+
 ## 2026-09-02 — Claude — 🏛️ Thème décidé : mythologie grecque
 
 **Résumé** — Le jeu prend un thème : **mythologie grecque**. Tu incarnes une
