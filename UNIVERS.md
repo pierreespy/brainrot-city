@@ -1,0 +1,142 @@
+# L'univers — mythologie grecque
+
+> Document de référence du **thème**. Le « quoi » et le « pourquoi » du
+> contenu ; le « comment » technique reste dans [`README.md`](./README.md),
+> et l'historique dans [`UPDATE.md`](./UPDATE.md).
+>
+> **État : décidé le 2026-09-02.** Les chiffres d'équilibrage ci-dessous sont
+> des **points de départ à régler en jouant**, pas des vérités.
+
+---
+
+## Le pitch
+
+Tu incarnes une **divinité de l'Olympe** descendue dans une cité grecque. Les
+mortels que tu croises te suivent : ton **cortège** grandit à mesure que tu
+traverses l'agora, le port et les temples. Chaque dieu joue différemment grâce
+à **une capacité qui lui est propre**.
+
+Le genre ne change pas — c'est toujours un *crowd runner*. Le thème remplace le
+vocabulaire, l'habillage et le contenu :
+
+| Générique | Dans le jeu |
+|---|---|
+| Le joueur | Une **divinité** de l'Olympe |
+| Les PNJ | Des **mortels** de la cité |
+| La foule | Le **cortège** de fidèles |
+| Recruter | **Convertir** un mortel |
+| La ville | Une **cité grecque** (agora, temples, port) |
+| Le pouvoir spécial | La **capacité divine** |
+
+---
+
+## La cité
+
+La ville actuelle (Milestone 2) est une grille uniforme de pâtés de maisons.
+Elle fonctionne, mais elle a un **défaut de jeu identifié** : tous les
+carrefours se ressemblent, donc **on s'y perd et on ne mesure pas sa
+progression**. Le thème est l'occasion de le corriger, en découpant la cité en
+**quartiers reconnaissables**.
+
+| Quartier | À quoi ça ressemble | Rôle de jeu |
+|---|---|---|
+| **L'Agora** | Grande place ouverte, dallée, colonnades | Point de départ (le carrefour central actuel), forte densité de mortels |
+| **La Céramique** | Pâtés serrés, toits de tuiles, ruelles | Le tissu urbain courant — l'équivalent de la ville actuelle |
+| **L'Acropole** | Temple sur une butte, visible de loin | **Repère d'orientation** visible depuis toute la carte |
+| **Le Port** | Quais, entrepôts, mer sur un bord | Bord de carte naturel : plus besoin d'un mur invisible |
+| **Le Théâtre** | Gradins en demi-cercle | Petite arène, gros paquet de mortels d'un coup |
+| **Le Bois sacré** | Oliviers, autels, pas de bâti | Respiration visuelle, raccourci |
+
+**Vocabulaire visuel** — marbre clair et ocre à la place des façades grises
+actuelles, toits de tuiles, **colonnes**, statues, braseros, oliviers. Le sol
+passe de l'asphalte à la **pierre et à la terre battue** ; les bandes blanches
+de la route deviennent des **dalles**.
+
+**Ce que ça coûte techniquement** — presque rien de nouveau. La génération de
+`src/world/City.ts` reste la même : on ajoute un **type de quartier par pâté**
+qui choisit la palette, la hauteur et la forme des bâtiments. Les colonnes et
+les oliviers sont deux `InstancedMesh` de plus, soit deux appels GPU — la
+technique posée en Milestone 2 tient.
+
+---
+
+## Les mortels
+
+Tous les PNJ ne se valent pas : c'est ce qui donne un intérêt à **choisir** où
+courir plutôt que de ratisser au hasard.
+
+| Mortel | Valeur | Comportement |
+|---|---|---|
+| **Citoyen** | 1 fidèle | Déambule tranquillement. Le tout-venant. |
+| **Hoplite** | 3 fidèles | Plus lent à convertir (contact plus long) |
+| **Prêtresse** | 1 fidèle + recharge la capacité | Rare, immobile près des temples |
+| **Philosophe** | 1 fidèle | **Fuit** le cortège : il faut le coincer |
+
+> Départ prudent : la Milestone 3 ne fera **que des citoyens**. Les autres
+> types arrivent avec le thème, une fois la boucle de base jouable.
+
+---
+
+## Le panthéon jouable
+
+Chaque dieu se résume à **trois choses** : une apparence, une capacité, et un
+ou deux réglages qui lui sont propres. Techniquement, ce n'est donc **pas une
+classe par dieu**, mais une **ligne dans un tableau de données** — ce qui rend
+l'ajout d'un dieu quasi gratuit.
+
+| Dieu | Capacité | Ce qu'elle fait | Durée | Recharge |
+|---|---|---|---|---|
+| **Hermès** ⚡ | **Talaria** | Sprint : +80 % de vitesse, le cortège suit sans se disloquer | 3 s | 12 s |
+| **Zeus** 🌩️ | **Foudre** | Convertit d'un coup **tous** les mortels dans un rayon | instantané | 20 s |
+| **Aphrodite** 💫 | **Charme** | Le rayon de conversion est multiplié par 2,5 | 6 s | 20 s |
+| **Poséidon** 🌊 | **Ressac** | Une vague **pousse vers toi** les mortels devant toi | instantané | 18 s |
+| **Athéna** 🛡️ | **Égide** | Ton cortège ne peut **rien perdre** | 5 s | 25 s |
+| **Hadès** 💀 | **Retour du Styx** | Récupère la moitié des fidèles perdus récemment | instantané | 30 s |
+| **Arès** ⚔️ | **Charge** | Ton cortège **vole** des fidèles aux cortèges rivaux | 4 s | 22 s |
+
+**Comment les capacités sont conçues.** Chacune répond à un problème de jeu
+différent, pour que le choix du dieu soit un vrai choix :
+
+- Hermès résout **la distance** (arriver le premier) ;
+- Zeus et Poséidon résolvent **le ramassage** (convertir vite, ou faire venir
+  à soi) ;
+- Aphrodite résout **la marge d'erreur** (frôler suffit) ;
+- Athéna et Hadès résolvent **la perte** (encaisser, ou réparer) ;
+- Arès résout **le conflit** (prendre chez l'adversaire).
+
+**Deux dieux de départ, le reste à débloquer.** Hermès (le plus lisible) et
+Zeus (le plus spectaculaire) sont disponibles d'emblée ; les autres se
+débloquent en jouant. Cela donne une raison de rejouer sans rien demander au
+joueur.
+
+**Le contrat technique** sera le même que pour les entrées et les collisions —
+une interface, plusieurs implémentations :
+
+```
+src/systems/abilities/Ability.ts    Le contrat : activate(), update(), état de recharge
+src/entities/gods/roster.ts         Le tableau de données : un dieu = une ligne
+src/ui/AbilityButton.tsx            Le bouton + la jauge de recharge
+```
+
+Le jeu ne connaîtra donc **jamais** « Zeus » : il connaît « la capacité du dieu
+sélectionné ». Ajouter un dieu = ajouter une ligne et une implémentation.
+
+---
+
+## Les rivaux
+
+Des **cortèges adverses** menés par d'autres divinités parcourent la cité et
+convertissent les mêmes mortels. Au contact, le plus gros cortège prend au plus
+petit. C'est ce qui donne un enjeu à la carte (aller vite là où il y a du
+monde) et un sens aux capacités d'Athéna, d'Arès et d'Hadès.
+
+---
+
+## Ce qui n'est PAS décidé
+
+- **Le nom du jeu.** « Brainrot City » colle mal à la mythologie. À trancher.
+- **Le style des personnages** — silhouettes stylisées ou plus détaillées.
+  Contrainte technique ferme : des **milliers** de mortels affichés, donc des
+  modèles très légers et un seul mesh instancié.
+- **Le mode de jeu** — partie chronométrée, survie, ou objectif de conversion.
+- **La monétisation** — publicité, achat des dieux, ou rien.

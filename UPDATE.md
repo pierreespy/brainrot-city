@@ -9,6 +9,82 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 🏛️ Thème décidé : mythologie grecque
+
+**Résumé** — Le jeu prend un thème : **mythologie grecque**. Tu incarnes une
+divinité de l'Olympe, les mortels rejoignent ton **cortège**, et **chaque dieu
+a une capacité qui lui est propre**. La feuille de route est réécrite en
+conséquence. **Aucun code n'a changé** : ce bloc ne touche que la planification.
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `UNIVERS.md` | ⭐ Le document de référence du thème : la cité et ses quartiers, les mortels, le panthéon jouable et ses capacités, les rivaux |
+
+### La feuille de route passe de 8 à 13 milestones
+
+Les milestones 3 à 7 restent **techniques et inchangées** : elles construisent
+la boucle de jeu, identique quel que soit l'habillage. Le thème arrive
+ensuite — on habille un jeu qui existe, on ne construit pas un habillage en
+espérant qu'un jeu s'y loge.
+
+| # | Avant | Après |
+|---|---|---|
+| 3–5 | NPC, recrutement, foule | Idem, renommés **mortels**, **conversion**, **cortège** |
+| 6 | UI compteur + restart | Idem, + **réserver la place du bouton de capacité** |
+| 7 | Optimisation | Idem — à tenir **avant** d'ajouter marbre et rivaux |
+| 8 | Gameplay et game feel | 🏛️ **La cité grecque** (quartiers, marbre, temples) |
+| 9 | — | 🏛️ **Le panthéon** : dieux jouables + sélection |
+| 10 | — | ⚡ **Capacités divines** : une par dieu |
+| 11 | — | ⚔️ **Cortèges rivaux** |
+| 12 | — | Game feel, effets, audio |
+| 13 | — | Publication (EAS Build, stores) |
+
+### Trois décisions qui engagent le code AVANT le thème
+
+Elles sont notées ici parce que les ignorer coûterait une réécriture :
+
+1. **Un mortel a un TYPE dès la M3**, même s'il n'y en a qu'un seul au début.
+   Hoplites et prêtresses arrivent en M8 ; sans ce champ, tout est à reprendre.
+2. **Un mortel peut valoir PLUS D'UN fidèle dès la M4** (l'hoplite en vaut 3).
+   Un compteur qui fait `+1` en dur serait à refaire.
+3. **Le HUD de la M6 réserve la place du bouton de capacité** (M10), sinon il
+   sera à redessiner.
+
+### Un défaut de jeu que le thème répare
+
+La ville de la Milestone 2 est une grille **uniforme** : tous les carrefours se
+ressemblent, donc on s'y perd et on ne mesure pas sa progression. Le découpage
+en quartiers de la M8 (Agora, Acropole visible de loin, Port, Théâtre) n'est
+donc pas que de la décoration : c'est la correction de ce défaut.
+
+### Les capacités, en une ligne chacune
+
+Chacune répond à un problème de jeu **différent** — c'est ce qui fait du choix
+du dieu un vrai choix, et non un choix de couleur.
+
+| Dieu | Capacité | Problème qu'elle résout |
+|---|---|---|
+| Hermès | **Talaria** (sprint) | La distance |
+| Zeus | **Foudre** (conversion en zone) | Le ramassage |
+| Poséidon | **Ressac** (attire les mortels) | Le ramassage, autrement |
+| Aphrodite | **Charme** (rayon ×2,5) | La marge d'erreur |
+| Athéna | **Égide** (aucune perte) | Encaisser |
+| Hadès | **Retour du Styx** (récupère les perdus) | Réparer |
+| Arès | **Charge** (vole aux rivaux) | Le conflit |
+
+Détail complet, durées et recharges : **[`UNIVERS.md`](./UNIVERS.md)**.
+
+### Ce qui n'est PAS décidé
+
+Le **nom du jeu** (« Brainrot City » colle mal à la mythologie), le style des
+personnages, le mode de jeu et la monétisation. Listé en fin d'`UNIVERS.md`.
+
+**Cassé** — Rien. Aucun fichier de code touché.
+
+---
+
 ## 2026-09-02 — Claude — 🎥 Correctif : la caméra se bousculait aux demi-tours
 
 **Symptôme signalé** — « la caméra bouge trop, surtout au premier mouvement ;
@@ -378,9 +454,14 @@ npm run dev              # ← n'existe plus
 | 1 | Projet + scène + déplacement du joueur | ✅ Terminée |
 | — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
 | 2 | Ville simple + caméra | ✅ Terminée |
-| 3 | NPC : spawn + déplacement (~100) | ⬜ À venir |
-| 4 | Recrutement au contact | ⬜ |
-| 5 | Système de foule (formation, suivi) | ⬜ |
-| 6 | UI : compteur + restart | ⬜ |
+| 3 | **Mortels** : spawn + déambulation (~100) | ⬜ À venir |
+| 4 | **Conversion** au contact : le cortège grandit | ⬜ |
+| 5 | Système de cortège (formation, suivi) | ⬜ |
+| 6 | HUD : compteur de fidèles + relance | ⬜ |
 | 7 | Première passe d'optimisation | ⬜ |
-| 8 | Gameplay et game feel | ⬜ |
+| 8 | 🏛️ La cité grecque : quartiers, marbre, temples, repères | ⬜ |
+| 9 | 🏛️ Le panthéon : dieux jouables | ⬜ |
+| 10 | ⚡ Capacités divines : une par dieu | ⬜ |
+| 11 | ⚔️ Cortèges rivaux | ⬜ |
+| 12 | Game feel, effets et audio | ⬜ |
+| 13 | Publication (EAS Build, stores) | ⬜ |

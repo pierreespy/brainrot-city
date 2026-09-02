@@ -68,9 +68,11 @@ export class Game {
     // 2. Déplacer le joueur.
     this.player.update(intent, deltaTime);
 
-    // --- Milestone 3 : this.npcs.update(deltaTime)
-    // --- Milestone 4 : this.recruitment.update()
-    // --- Milestone 5 : this.crowd.update(deltaTime)
+    // --- Milestone 3  : this.mortals.update(deltaTime)   (les PNJ)
+    // --- Milestone 4  : this.conversion.update()          (recrutement au contact)
+    // --- Milestone 5  : this.retinue.update(deltaTime)    (le cortège)
+    // --- Milestone 10 : this.ability.update(deltaTime)    (la capacité divine)
+    //     Thème et contenu : voir UNIVERS.md
 
     // 3. Suivre avec la caméra, en visant un peu devant le joueur.
     const { speed } = CONFIG.player;

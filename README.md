@@ -1,7 +1,12 @@
 # Brainrot City
 
-Jeu 3D de foule (inspiré du genre *crowd runner*) : tu contrôles un personnage,
-tu recrutes les passants au contact, ta foule grandit.
+Jeu 3D de foule (inspiré du genre *crowd runner*) **sur le thème de la
+mythologie grecque** : tu incarnes une divinité de l'Olympe, les mortels que tu
+croises rejoignent ton cortège, et chaque dieu dispose d'une **capacité qui lui
+est propre**.
+
+👉 L'univers, les quartiers de la cité, le panthéon jouable et les capacités
+sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
@@ -240,21 +245,71 @@ rien à ce stade. On les évaluera en Milestone 8, après profiling.
 
 ## Feuille de route
 
+Le thème (mythologie grecque) a été décidé le 2026-09-02, après la Milestone 2.
+Les milestones 3 à 7 restent **techniques** : elles construisent la boucle de
+jeu, qui est la même quel que soit l'habillage. Le thème arrive ensuite, une
+fois qu'il y a un jeu à habiller.
+
 | # | Milestone | État |
 |---|---|---|
 | 1 | Projet + scène + déplacement du joueur | ✅ Terminée |
 | — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
 | 2 | Ville simple + caméra | ✅ Terminée |
-| 3 | NPC : spawn + déplacement (~100) | ⬜ À venir |
-| 4 | Recrutement au contact | ⬜ |
-| 5 | Système de foule (formation, suivi) | ⬜ |
-| 6 | UI : compteur + restart | ⬜ |
+| 3 | **Mortels** : spawn + déambulation (~100) | ⬜ À venir |
+| 4 | **Conversion** au contact : le cortège grandit | ⬜ |
+| 5 | Système de cortège (formation, suivi) | ⬜ |
+| 6 | HUD : compteur de fidèles + relance | ⬜ |
 | 7 | Première passe d'optimisation | ⬜ |
-| 8 | Gameplay et game feel | ⬜ |
+| 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ⬜ |
+| 9 | 🏛️ **Le panthéon** : dieux jouables (données, apparence, sélection) | ⬜ |
+| 10 | ⚡ **Capacités divines** : une par dieu, jauge et bouton | ⬜ |
+| 11 | ⚔️ **Cortèges rivaux** : concurrence et affrontements | ⬜ |
+| 12 | Game feel, effets et audio | ⬜ |
+| 13 | Publication (EAS Build, App Store et Play Store) | ⬜ |
 
----
+### Ce que le thème change, milestone par milestone
+
+- **M3 — Mortels.** Les PNJ s'appellent des mortels. Un seul type pour
+  commencer (le citoyen) ; hoplites, prêtresses et philosophes viennent en M8,
+  quand la boucle est jouable. Le code, lui, prévoit dès M3 un **type** par
+  mortel, sinon il faudra tout reprendre.
+- **M4 — Conversion.** Le contact « recrute » ; le thème n'ajoute qu'un mot et
+  un effet visuel. Mais la M4 doit prévoir qu'un mortel puisse valoir **plus
+  d'un fidèle** (l'hoplite en vaut 3), sinon le compteur sera à refaire.
+- **M5 — Cortège.** Inchangé techniquement. C'est ici que se décide si un
+  cortège de 500 fidèles reste lisible à l'écran.
+- **M6 — HUD.** Le compteur affiche des **fidèles**. Prévoir dès maintenant la
+  place du **bouton de capacité** (M10) : le HUD sera à redessiner sinon.
+- **M7 — Optimisation.** Le budget de performance doit être tenu **avant**
+  d'ajouter marbre, colonnes et cortèges rivaux, pas après.
+- **M8 — La cité grecque.** L'habillage : palettes de marbre, toits de tuiles,
+  colonnes et oliviers (deux `InstancedMesh` de plus), et surtout le **découpage
+  en quartiers** (Agora, Acropole, Port, Théâtre…). Ce découpage corrige un
+  vrai défaut de jeu constaté en M2 : la grille actuelle est uniforme, donc on
+  s'y perd et on ne mesure pas sa progression.
+- **M9 — Le panthéon.** Un dieu = **une ligne de données**, pas une classe.
+  Apparence, capacité, réglages propres. Plus l'écran de sélection.
+- **M10 — Capacités divines.** Le cœur du thème : Foudre, Talaria, Charme,
+  Ressac, Égide, Retour du Styx, Charge. Même principe d'architecture que les
+  entrées et les collisions — **un contrat, plusieurs implémentations** — donc
+  le jeu ne connaîtra jamais « Zeus », seulement « la capacité active ».
+- **M11 — Rivaux.** Ce qui donne un enjeu à la carte et un sens aux capacités
+  défensives (Égide, Retour du Styx) et offensives (Charge).
+
+> **Envie de voir le thème plus tôt ?** On peut avancer la seule *palette* de
+> la M8 (marbre et tuiles, ~1 h de travail, aucun risque) sans toucher aux
+> quartiers. En revanche, refaire la génération de la cité **avant** que la
+> foule existe reviendrait à la refaire deux fois : le cortège change la façon
+> dont on lit l'espace.
 
 ## Travail à deux
+
+Deux documents à connaître avant de coder :
+
+- **[`UNIVERS.md`](./UNIVERS.md)** — le thème : la cité grecque et ses
+  quartiers, les mortels, le panthéon jouable et les capacités de chaque dieu.
+  C'est le « quoi » et le « pourquoi » du contenu.
+- **[`UPDATE.md`](./UPDATE.md)** — le journal, ci-dessous.
 
 Le fichier **[`UPDATE.md`](./UPDATE.md)** liste les dernières modifications
 apportées au projet, de la plus récente à la plus ancienne. **À lire en premier**
