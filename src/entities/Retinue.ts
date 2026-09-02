@@ -42,6 +42,15 @@ export class Retinue {
   /** Le score : la somme des VALEURS des fidèles, pas leur nombre. */
   private faithful = 0;
 
+  /**
+   * Distance du fidèle le plus éloigné du joueur, mise à jour à chaque frame.
+   *
+   * Elle sert de **filtre grossier** à la conversion : un mortel hors de ce
+   * rayon ne peut être touché par personne, on n'a donc pas à le comparer aux
+   * centaines de fidèles un par un.
+   */
+  private spread = 0;
+
   constructor(scene: THREE.Scene, city: Collider) {
     this.scene = scene;
     this.city = city;
@@ -97,6 +106,7 @@ export class Retinue {
     const citizen = CONFIG.mortals.types.citizen;
     const speed = CONFIG.player.speed * speedFactor;
     const limit = CONFIG.world.halfSize - citizen.radius;
+    let spread = 0;
 
     for (let i = 0; i < this.followers.length; i += 1) {
       const follower = this.followers[i];
@@ -105,6 +115,7 @@ export class Retinue {
       // est loin. La racine carrée répartit les fidèles en surface plutôt
       // qu'en anneaux de plus en plus larges.
       const wanted = minDistance + spacing * Math.sqrt(i);
+
       const targetX = playerX + Math.sin(follower.bearing) * wanted;
       const targetZ = playerZ + Math.cos(follower.bearing) * wanted;
 
@@ -127,8 +138,13 @@ export class Retinue {
         follower.x = this.probe.x;
         follower.z = this.probe.y;
       }
+
+      // On profite de la boucle pour mesurer l'étalement du cortège.
+      const reach = Math.hypot(follower.x - playerX, follower.z - playerZ);
+      if (reach > spread) spread = reach;
     }
 
+    this.spread = spread;
     this.syncMeshes();
   }
 
@@ -148,6 +164,27 @@ export class Retinue {
 
   // ---------------------------------------------------------------- lecture
 
+  /** Distance du fidèle le plus éloigné du joueur (filtre de conversion). */
+  get spreadRadius(): number {
+    return this.spread;
+  }
+
+  /**
+   * Un fidèle se trouve-t-il à portée de ce point ?
+   *
+   * Appelé uniquement pour les rares mortels que le filtre grossier n'a pas
+   * écartés — d'où le parcours linéaire, parfaitement acceptable ici.
+   */
+  hasFollowerNear(x: number, z: number, radius: number): boolean {
+    const radiusSq = radius * radius;
+    for (const follower of this.followers) {
+      const dx = follower.x - x;
+      const dz = follower.z - z;
+      if (dx * dx + dz * dz <= radiusSq) return true;
+    }
+    return false;
+  }
+
   /** Le score affiché au joueur (Milestone 6). */
   get faithfulCount(): number {
     return this.faithful;
@@ -165,6 +202,7 @@ export class Retinue {
   clear(): void {
     this.followers.length = 0;
     this.faithful = 0;
+    this.spread = 0;
     this.mesh.count = 0;
   }
 

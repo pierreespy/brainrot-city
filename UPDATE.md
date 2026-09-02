@@ -9,6 +9,59 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — ⚡ La conversion fait boule de neige
+
+**Demandé** — Un mortel doit être converti quand il est touché **par la
+divinité ou par un fidèle déjà converti**, et non par la seule divinité.
+
+**Effet mesuré** — Sur le même trajet de 40 secondes : **39 fidèles** contre
+19 à 32 auparavant. C'est le comportement qui fait le genre : plus le cortège
+est large, plus il ratisse.
+
+### Le piège évité : 270 000 tests par frame
+
+Comparer naïvement 450 mortels à 600 fidèles ferait 270 000 tests à chaque
+image. La solution tient en une observation : **le cortège reste groupé autour
+du joueur**. Au-delà de son étalement plus le rayon de conversion, aucun fidèle
+ne peut toucher qui que ce soit.
+
+`Retinue` mesure donc cet étalement **gratuitement**, pendant la boucle de
+suivi qu'elle parcourt déjà. `Conversion` s'en sert comme filtre grossier : une
+soustraction par mortel écarte la quasi-totalité de la cité, et seuls les rares
+survivants sont comparés aux fidèles un par un.
+
+| Mesure | Valeur |
+|---|---|
+| Coût de la conversion, cortège vide | **0,022 ms/frame** |
+| Coût de la conversion, cortège de 47 | **0,003 ms/frame** |
+| Coût total de nos boucles | **0,18 ms/frame** (1 % du budget) |
+
+### 🎨 Un réglage corrigé au passage
+
+Avec un cortège dense, **la divinité disparaissait dans sa propre foule**
+(constaté en capture). `retinue.minDistance` passe de 1,5 à **2,4** : le
+premier rang de fidèles laisse désormais un anneau libre autour du joueur, qui
+reste repérable à l'écran.
+
+### Modifié
+
+- `src/entities/Retinue.ts` — `spreadRadius` et `hasFollowerNear()`.
+- `src/entities/Mortals.ts` — `takeNear()` accepte un second test de contact.
+- `src/systems/Conversion.ts` — le filtre en deux temps.
+- `src/config.ts` — `retinue.minDistance` 1,5 → 2,4.
+
+### Vérifié
+
+- [x] `npm run typecheck` — OK, aucune erreur console
+- [x] **39 fidèles** en 40 s contre 19-32 avant
+- [x] Coûts mesurés ci-dessus, avec un cortège de 47
+- [x] **0 fidèle dans un mur**, toujours 450 mortels dans la cité
+- [x] La divinité reste visible dans un cortège dense (capture à l'appui)
+
+**Cassé** — Rien.
+
+---
+
 ## 2026-09-02 — Claude — ⚡ Milestone 4 : la conversion au contact
 
 **Résumé** — Toucher un mortel le convertit : il quitte la cité et rejoint le

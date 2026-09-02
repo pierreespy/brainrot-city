@@ -220,16 +220,28 @@ export class Mortals {
    * donc constant, et le nombre d'emplacements du mesh instancié aussi — ce
    * qui évite d'avoir à le reconstruire en pleine partie.
    *
+   * @param alsoTouchedBy test optionnel : un fidèle du cortège touche-t-il ce
+   *                      mortel ? (c'est ce qui fait boule de neige)
    * @returns le type de chaque mortel converti (un hoplite vaudra 3 fidèles)
    */
-  takeNear(x: number, z: number, radius: number): MortalTypeId[] {
+  takeNear(
+    x: number,
+    z: number,
+    radius: number,
+    alsoTouchedBy?: (mortalX: number, mortalZ: number) => boolean,
+  ): MortalTypeId[] {
     const taken: MortalTypeId[] = [];
     const radiusSq = radius * radius;
 
     for (const mortal of this.mortals) {
       const dx = mortal.x - x;
       const dz = mortal.z - z;
-      if (dx * dx + dz * dz > radiusSq) continue;
+      // Touché par la divinité elle-même, ou — si l'appelant fournit ce
+      // test — par l'un de ses fidèles.
+      const touched =
+        dx * dx + dz * dz <= radiusSq ||
+        (alsoTouchedBy !== undefined && alsoTouchedBy(mortal.x, mortal.z));
+      if (!touched) continue;
 
       taken.push(mortal.type);
 

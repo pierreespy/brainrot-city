@@ -151,8 +151,14 @@ export const CONFIG = {
     color: 0x7dd3fc,
     /** Les fidèles vont un peu plus vite que le joueur, sinon ils décrochent. */
     speedFactor: 1.08,
-    /** Distance du premier fidèle au joueur. */
-    minDistance: 1.5,
+    /**
+     * Distance du premier fidèle au joueur.
+     *
+     * ⚠️ Ne pas descendre : à 1,5 les fidèles collaient la divinité au point
+     * de la cacher dans sa propre foule (constaté en capture). Le joueur doit
+     * toujours pouvoir se repérer à l'écran.
+     */
+    minDistance: 2.4,
     /** Étalement : plus c'est grand, plus le cortège est large. */
     spacing: 0.5,
   },

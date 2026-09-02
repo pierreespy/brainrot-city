@@ -186,8 +186,19 @@ Changer `world.halfSize` ou `conversion.radius` oblige à recalculer.
 
 ### La conversion et le cortège
 
-Toucher un mortel le fait quitter la cité pour rejoindre le **cortège**. Trois
-fichiers, chacun avec un seul rôle :
+Un mortel est converti quand il est touché **par la divinité ou par un fidèle
+déjà converti**. C'est ce second cas qui fait la boule de neige du genre : plus
+le cortège est large, plus il ratisse.
+
+> Comparer 450 mortels à 600 fidèles ferait 270 000 tests par frame. On procède
+> donc en deux temps : le cortège reste groupé autour du joueur, donc au-delà
+> de son étalement (`Retinue.spreadRadius`, mesuré gratuitement pendant le
+> suivi) plus le rayon de conversion, aucun fidèle ne peut toucher personne.
+> Ce filtre écarte la quasi-totalité de la cité en une soustraction par mortel,
+> et seuls les rares survivants sont comparés aux fidèles un par un. Mesuré :
+> **0,003 ms par frame** avec un cortège de 47.
+
+Trois fichiers, chacun avec un seul rôle :
 
 - **`Mortals.ts`** sait rendre ceux qu'on touche (`takeNear`) et les
   **remplace aussitôt** ailleurs dans la cité, à 70 unités au moins du joueur :
