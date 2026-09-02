@@ -1,4 +1,4 @@
-# L'univers d'Olympus — mythologie grecque
+# L'univers de Gods Rush — mythologie grecque
 
 > Document de référence du **thème**. Le « quoi » et le « pourquoi » du
 > contenu ; le « comment » technique reste dans [`README.md`](./README.md),
@@ -11,25 +11,22 @@
 
 ## Le nom
 
-Le jeu s'appelle **Olympus** (décidé le 2026-09-02, en remplacement de
-« Brainrot City », qui ne collait plus au thème).
+Le jeu s'appelle **Gods Rush** (décidé le 2026-09-02, après « Brainrot City »
+puis « Olympus »).
 
-**Vérifié le 2026-09-02 sur l'App Store** : beaucoup de noms *composés* avec
-« Olympus », mais **aucune app nommée « Olympus » tout court**. Comme Apple
-impose l'unicité du nom d'app, le nom court est donc réservable — c'est lui
-qu'on prend.
+Le nom dit les deux choses à la fois : **Gods** pour le panthéon jouable et ses
+capacités, **Rush** pour le genre — c'est le mot que les joueurs de *crowd
+runner* reconnaissent et cherchent. « Olympus » seul, quoique disponible, ne
+disait rien du genre de jeu.
 
-Le genre passera dans le **sous-titre** (champ distinct de 30 caractères, lui
-aussi indexé par la recherche), du type « Divine crowd rush ». On garde ainsi
-un nom court **et** les mots-clés : « Olympus » seul ne dit pas que c'est un
-jeu, encore moins un jeu de foule.
-
-> ⚠️ Reste à vérifier : l'absence de **marque déposée** en classes 9 et 41
-> (INPI, EUIPO). L'App Store ne contrôle que l'unicité du nom, pas les
-> marques — et Olympus Corporation détient « Olympus » en classe 9.
-
-L'identifiant technique de l'app est **`com.pierreespy.olympus`**. Il est
+L'identifiant technique de l'app est **`com.pierreespy.godsrush`**. Il est
 **définitif dès la première publication** sur les stores : ne plus y toucher.
+
+> ⚠️ Restent à vérifier avant publication : le nom exact sur l'App Store
+> (Apple impose l'unicité du nom d'app) et l'absence de **marque déposée** en
+> classes 9 et 41 (INPI, EUIPO). Attention, « Rush » est un mot très employé
+> dans les jeux mobiles : il faut chercher les voisins immédiats, pas
+> seulement la correspondance exacte.
 
 ## Le pitch
 

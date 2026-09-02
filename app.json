@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Olympus",
-    "slug": "olympus",
+    "name": "Gods Rush",
+    "slug": "gods-rush",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -13,10 +13,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pierreespy.olympus"
+      "bundleIdentifier": "com.pierreespy.godsrush"
     },
     "android": {
-      "package": "com.pierreespy.olympus",
+      "package": "com.pierreespy.godsrush",
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "backgroundColor": "#12141c"

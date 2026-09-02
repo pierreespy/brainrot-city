@@ -9,6 +9,50 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 🏷️ Nom définitif : **Gods Rush**
+
+**Résumé** — Le jeu s'appelle **Gods Rush**. Ce bloc remplace celui du dessous,
+qui actait « Olympus » : ce dernier n'aura jamais été publié.
+
+**Pourquoi ce nom** — Il dit les deux choses à la fois : *Gods* pour le
+panthéon jouable et ses capacités, *Rush* pour le genre — le mot que les
+joueurs de *crowd runner* reconnaissent. « Olympus », quoique disponible sur
+l'App Store, ne disait rien du genre de jeu.
+
+### Modifié
+
+| Fichier | Changement |
+|---|---|
+| `app.json` | `name` → **Gods Rush**, `slug` → `gods-rush`, identifiant de bundle |
+| `package.json` | `name` → `gods-rush` |
+| `App.tsx` | Titre affiché dans le HUD |
+| `README.md`, `UNIVERS.md` | Titre et section « Le nom » |
+
+**Identifiant de bundle** — `com.pierreespy.olympus` → **`com.pierreespy.godsrush`**
+(iOS et Android). Le changer est **sans conséquence aujourd'hui**, rien n'étant
+publié ; ce ne sera plus le cas après la première mise en ligne.
+
+### ⚠️ Restent à vérifier avant publication
+
+- **Le nom sur l'App Store** : Apple impose l'unicité du nom d'app.
+- **Les marques déposées** en classes 9 et 41 (INPI, EUIPO).
+- ⚠️ « Rush » est un mot **très employé** dans les jeux mobiles. Chercher les
+  **voisins immédiats** (« God Rush », « Gods Rush 3D »…), pas seulement la
+  correspondance exacte : un nom trop proche d'un jeu existant nuit au
+  référencement même quand il est juridiquement disponible.
+
+### Vérifié
+
+- [x] `npm run typecheck` — OK
+- [x] Bundle web régénéré, **aucune erreur console**
+- [x] Le HUD affiche **Gods Rush** (capture vérifiée)
+- [x] Aucune régression : 124 immeubles, blocage, glissement, bord du monde
+
+**Cassé** — Rien. Comme au renommage précédent, l'app apparaîtra comme
+**nouvelle** dans Expo Go, l'identifiant ayant changé.
+
+---
+
 ## 2026-09-02 — Claude — 🏷️ Le jeu s'appelle désormais **Olympus**
 
 **Résumé** — « Brainrot City » devient **Olympus**, pour coller au thème de la

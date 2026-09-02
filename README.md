@@ -1,4 +1,4 @@
-# Olympus
+# Gods Rush
 
 Jeu 3D de foule (inspiré du genre *crowd runner*) **sur le thème de la
 mythologie grecque** : tu incarnes une divinité de l'Olympe, les mortels que tu
