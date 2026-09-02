@@ -10,9 +10,10 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 2 terminée** — app Expo fonctionnelle, ville
+> **État actuel : Milestone 3 terminée** — app Expo fonctionnelle, ville
 > générée (rues, trottoirs, 124 immeubles), collisions contre les façades,
-> joueur au joystick tactile et caméra de suivi avec anticipation.
+> **100 mortels qui déambulent dans les rues**, joueur au joystick tactile et
+> caméra de suivi avec anticipation.
 
 ---
 
@@ -103,7 +104,8 @@ imprimé dessus.
     │   └── createRenderer.ts  Pont technique entre expo-gl et Three.js
     │
     ├── entities/
-    │   └── Player.ts      Position et déplacement du joueur
+    │   ├── Player.ts      Position et déplacement du joueur
+    │   └── Mortals.ts     ⭐ Les 100 habitants : déambulation + mesh instancié
     │
     ├── systems/
     │   ├── CameraRig.ts   Caméra qui suit le joueur en douceur
@@ -152,6 +154,27 @@ démarre jamais dans un mur) et le bord du monde tombe au milieu d'une rue.
 La ville est **déterministe** : la graine `city.seed` fixe le tirage, donc la
 même ville se régénère à chaque lancement. Change la graine, tu obtiens une
 autre ville — et le banc de test reste reproductible.
+
+### Les mortels
+
+Ce sont les habitants de la cité, ceux que l'on convertira au contact en
+Milestone 4. Pour l'instant ils vivent leur vie : ils marchent, changent de cap
+toutes les 2 à 5 secondes, et font demi-tour quand ils butent.
+
+Deux choix expliquent leur comportement :
+
+- **Ils suivent les axes des rues**, avec un léger flottement
+  (`mortals.headingJitter`). Lancés dans une direction quelconque, ils
+  passeraient leur vie le nez contre les façades ; lancés le long d'un axe, ils
+  descendent la rue.
+- **Ils ont un TYPE dès maintenant**, alors qu'il n'existe que le citoyen. Le
+  catalogue `mortals.types` de `config.ts` attend les hoplites, prêtresses et
+  philosophes décrits dans [`UNIVERS.md`](./UNIVERS.md) — chacun étant une
+  ligne à ajouter, avec sa couleur, sa vitesse et sa **valeur en fidèles**.
+
+Comme les immeubles, les 100 mortels tiennent dans **un seul `InstancedMesh`**,
+donc un appel GPU. Ils réutilisent la ville comme carte de collision : le même
+`Collider` que le joueur, sans une ligne de code en plus.
 
 ### La caméra
 
@@ -255,8 +278,8 @@ fois qu'il y a un jeu à habiller.
 | 1 | Projet + scène + déplacement du joueur | ✅ Terminée |
 | — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
 | 2 | Ville simple + caméra | ✅ Terminée |
-| 3 | **Mortels** : spawn + déambulation (~100) | ⬜ À venir |
-| 4 | **Conversion** au contact : le cortège grandit | ⬜ |
+| 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
+| 4 | **Conversion** au contact : le cortège grandit | ⬜ À venir |
 | 5 | Système de cortège (formation, suivi) | ⬜ |
 | 6 | HUD : compteur de fidèles + relance | ⬜ |
 | 7 | Première passe d'optimisation | ⬜ |

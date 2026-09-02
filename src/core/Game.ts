@@ -17,6 +17,7 @@ import { InputManager } from '../systems/input/InputManager';
 import { CameraRig } from '../systems/CameraRig';
 import { Player } from '../entities/Player';
 import { City } from '../world/City';
+import { Mortals } from '../entities/Mortals';
 
 export class Game {
   /**
@@ -32,6 +33,7 @@ export class Game {
   private readonly city: City;
   private readonly cameraRig: CameraRig;
   private readonly player: Player;
+  private readonly mortals: Mortals;
   private readonly loop: Loop;
   private readonly presentFrame: () => void;
 
@@ -50,6 +52,9 @@ export class Game {
     this.city = new City(this.gameScene.scene);
     this.cameraRig = new CameraRig(this.gameScene.camera);
     this.player = new Player(this.gameScene.scene, this.city);
+    // Les mortels naissent dans les rues : ils ont besoin de la ville pour
+    // savoir où elle n'est pas.
+    this.mortals = new Mortals(this.gameScene.scene, this.city);
 
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
 
@@ -68,13 +73,15 @@ export class Game {
     // 2. Déplacer le joueur.
     this.player.update(intent, deltaTime);
 
-    // --- Milestone 3  : this.mortals.update(deltaTime)   (les PNJ)
+    // 3. Faire vivre les mortels.
+    this.mortals.update(deltaTime);
+
     // --- Milestone 4  : this.conversion.update()          (recrutement au contact)
     // --- Milestone 5  : this.retinue.update(deltaTime)    (le cortège)
     // --- Milestone 10 : this.ability.update(deltaTime)    (la capacité divine)
     //     Thème et contenu : voir UNIVERS.md
 
-    // 3. Suivre avec la caméra, en visant un peu devant le joueur.
+    // 4. Suivre avec la caméra, en visant un peu devant le joueur.
     const { speed } = CONFIG.player;
     this.cameraRig.update(
       this.player.position.x,
@@ -84,7 +91,7 @@ export class Game {
       this.player.velocity.y / speed,
     );
 
-    // 4. Dessiner, puis envoyer l'image à l'écran du téléphone.
+    // 5. Dessiner, puis envoyer l'image à l'écran du téléphone.
     this.gameScene.render();
     this.presentFrame();
   }
@@ -97,6 +104,20 @@ export class Game {
   restart(): void {
     this.player.reset();
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
+  }
+
+  /** Les mortels — exposés pour le banc de test automatisé. */
+  getMortalCount(): number {
+    return this.mortals.count;
+  }
+
+  getMortalPositions(): { x: number; z: number }[] {
+    return this.mortals.getPositions();
+  }
+
+  /** Combien de mortels sont dans un immeuble. Doit toujours valoir 0. */
+  countMortalsInsideBuildings(): number {
+    return this.mortals.countInsideBuildings();
   }
 
   /** Nombre d'immeubles générés — pratique pour les tests automatisés. */
@@ -133,6 +154,7 @@ export class Game {
    */
   dispose(): void {
     this.loop.stop();
+    this.mortals.dispose();
     this.city.dispose();
     this.gameScene.dispose();
   }

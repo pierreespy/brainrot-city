@@ -9,6 +9,75 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 🚶 Milestone 3 : les mortels
+
+**Résumé** — La cité est habitée : **100 mortels** déambulent dans les rues,
+évitent les immeubles et font demi-tour quand ils butent. Ce sont eux que l'on
+convertira au contact en Milestone 4.
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/entities/Mortals.ts` | ⭐ Les habitants : naissance, déambulation, mesh instancié |
+
+### Deux décisions qui expliquent leur comportement
+
+1. **Ils suivent les axes des rues.** Un mortel ne part pas dans une direction
+   quelconque : il prend l'un des quatre axes de la cité, avec un flottement
+   de ±0,35 radian (`mortals.headingJitter`). Lancés au hasard, ils
+   passeraient leur vie le nez contre les façades.
+2. **Ils ont un TYPE dès maintenant**, alors qu'il n'existe que le citoyen.
+   C'était la contrainte notée en adoptant le thème : greffer les hoplites et
+   les prêtresses plus tard sur un code qui suppose « tous les mortels sont
+   identiques » coûterait une réécriture. Le catalogue `mortals.types` porte
+   déjà la couleur, la vitesse, la taille **et la valeur en fidèles** de
+   chaque type.
+
+### Performance
+
+Les 100 mortels tiennent dans **un seul `InstancedMesh`**, comme les 124
+immeubles. Ils réutilisent la ville comme carte de collision — le même
+`Collider` que le joueur, sans une ligne de code supplémentaire. Le coût par
+frame est donc de 100 additions et 100 matrices, pas de 100 objets 3D.
+
+### Modifié
+
+- `src/config.ts` — nouvelle section `mortals` (nombre, catalogue des types,
+  durée de marche, flottement de cap, graine).
+- `src/core/Game.ts` — les mortels naissent après la ville, vivent à l'étape 3
+  de la frame ; ajout de `getMortalCount()`, `getMortalPositions()` et
+  `countMortalsInsideBuildings()` pour le banc de test.
+- `README.md` — section « Les mortels », arborescence, feuille de route.
+
+### Vérifié (banc de test web, Chromium, format téléphone 390 × 844)
+
+- [x] `npm run typecheck` — OK
+- [x] **100 mortels**, **0 dans un mur** à la naissance
+- [x] **0 dans un mur** en surveillance continue pendant 12 s (relevé toutes
+      les 250 ms) — c'est le test qui compte : buter ne doit jamais faire
+      traverser
+- [x] **Ils bougent tous** : 11,1 unités parcourues en moyenne en 12 s,
+      **aucun immobile**
+- [x] **Ils occupent toute la cité** : de −98 à +98 sur les deux axes
+- [x] Aucune régression : blocage du joueur à `x = 4,9`, glissement, bord du
+      monde, caméra à 5,8 unités de balayage
+- [x] Aucune erreur console
+
+### ⚠️ Ce qui reste à faire, et qui est normal à ce stade
+
+- **La cité paraît vide.** 100 mortels sur 198 × 198 unités, cela fait environ
+  huit silhouettes à l'écran. C'est le chiffre prévu par la feuille de route,
+  et `mortals.count` se change en une seconde — mais la bonne densité ne se
+  jugera qu'une fois la conversion en place (M4).
+- **Les mortels se traversent entre eux.** Ils s'évitent les immeubles, pas
+  leurs semblables : la séparation est le sujet de la Milestone 5.
+- **Ils traversent le joueur**, faute de conversion. C'est la M4.
+
+**Cassé** — Rien.
+
+---
+
 ## 2026-09-02 — Claude — 🏷️ Nom : **Divine City**
 
 **Résumé** — Le jeu s'appelle **Divine City**. C'est le quatrième nom de la
@@ -595,8 +664,8 @@ npm run dev              # ← n'existe plus
 | 1 | Projet + scène + déplacement du joueur | ✅ Terminée |
 | — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
 | 2 | Ville simple + caméra | ✅ Terminée |
-| 3 | **Mortels** : spawn + déambulation (~100) | ⬜ À venir |
-| 4 | **Conversion** au contact : le cortège grandit | ⬜ |
+| 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
+| 4 | **Conversion** au contact : le cortège grandit | ⬜ À venir |
 | 5 | Système de cortège (formation, suivi) | ⬜ |
 | 6 | HUD : compteur de fidèles + relance | ⬜ |
 | 7 | Première passe d'optimisation | ⬜ |

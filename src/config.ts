@@ -62,6 +62,50 @@ export const CONFIG = {
     seed: 20260902,
   },
 
+  /**
+   * Les mortels — les PNJ que l'on convertit (Milestone 4).
+   *
+   * ⚠️ Un mortel a un **type** dès maintenant, alors qu'il n'en existe qu'un
+   * seul (le citoyen). C'est volontaire : hoplites, prêtresses et philosophes
+   * sont prévus (voir UNIVERS.md), et les greffer plus tard sur un code qui
+   * suppose « tous les mortels sont identiques » coûterait une réécriture.
+   */
+  mortals: {
+    /** Combien de mortels vivent dans la cité en même temps. */
+    count: 100,
+
+    /**
+     * Le catalogue des types. Un type = une ligne, comme pour les dieux.
+     * `value` est le nombre de fidèles gagnés à la conversion (Milestone 4).
+     */
+    types: {
+      citizen: {
+        label: 'Citoyen',
+        color: 0xd8c9a3,
+        value: 1,
+        /** Unités par seconde. Très lent face aux 18 u/s du joueur. */
+        speed: 2.6,
+        radius: 0.45,
+        height: 1.1,
+      },
+    },
+
+    /** Durée d'une marche en ligne droite avant de changer de cap. */
+    wander: { minSeconds: 2, maxSeconds: 5 },
+
+    /**
+     * Écart maximal (en radians) autour d'une direction cardinale.
+     *
+     * Les mortels ne partent PAS dans une direction totalement aléatoire :
+     * ils suivent l'axe des rues, avec un léger flottement. Sans cela, ils
+     * passeraient leur temps le nez dans les façades.
+     */
+    headingJitter: 0.35,
+
+    /** Graine du placement initial : la même cité peuplée à chaque lancement. */
+    seed: 77,
+  },
+
   player: {
     /** Unités par seconde. Monte à 30 pour voir la différence. */
     speed: 18,
