@@ -9,87 +9,253 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
-## 2026-09-02 — Claude — ⚙️ Milestone 7 : première passe d'optimisation
+## 2026-09-02 — Claude — ⚡ Milestone 7 : première passe d'optimisation
 
-**Résumé** — **−68 % de géométrie** et temps d'image presque divisé par deux,
-sans perte visuelle. Et le jeu sait désormais **se mesurer lui-même** sur un
-téléphone.
+**Résumé** — Le jeu est désormais **mesuré**, puis optimisé à partir de ces
+mesures. En partie réelle : **0,070 ms de calcul par image contre 0,245**, et
+**9 119 triangles contre 131 512**. Deux nouveaux outils : un banc de mesure
+(`npm run bench`) et un affichage de debug qui marche sur le téléphone.
 
-### La mesure d'abord
+> **Cette entrée fusionne deux Milestone 7** menées en parallèle par deux
+> sessions. Elles ont trouvé le même coupable — la géométrie de la foule — mais
+> ne se recouvraient qu'à moitié : l'une a traité le **dessin** (découpage des
+> corps, anticrénelage, mortels hors champ), l'autre le **dessin et le
+> processeur** (tri par tronc de vision, banc de mesure, boucles chaudes). Là
+> où elles se contredisaient, c'est la mesure qui a tranché — voir « Les
+> arbitrages entre les deux versions » plus bas.
 
-| Avec 600 fidèles | Avant | Après |
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/core/Profiler.ts` | ⭐ Ce que coûte une image, étape par étape |
+| `src/core/instancing.ts` | Écrire une silhouette dans un mesh instancié, vite |
+| `src/systems/ViewCulling.ts` | ⭐ Ce que la caméra cadre — donc ce qu'on paie |
+| `src/ui/Stats.tsx` | L'affichage de debug (touche le compteur de fidèles) |
+| `tools/bench.ts` | ⭐ Le banc de mesure : la vraie simulation, sans écran |
+| `tools/check-separation.ts` | Vérifie que la grille de répulsion n'oublie rien |
+| `tsconfig.bench.json` | Compilation du banc (hors application) |
+
+### D'abord mesurer, ensuite optimiser
+
+La Milestone 2 avait laissé un avertissement dans le code : une réécriture
+soignée de la grille de collision n'avait **rien** changé aux fps, parce que le
+coût était ailleurs. On a donc commencé par construire de quoi savoir.
+
+`npm run bench` rejoue la vraie simulation — mêmes fichiers, même graine, un
+joueur automatique qui descend les rues et tourne — sans écran ni carte
+graphique. 90 secondes de jeu en quelques secondes, et le coût de chaque étape.
+
+Le verdict a été net, et différent de ce qu'on aurait deviné :
+
+| Poste | Avant |
+|---|---|
+| Toute la logique du jeu | 0,245 ms sur les 16,7 d'une image |
+| **Triangles envoyés au GPU** | **288 796 par image au pire cas** |
+| … dont la cité entière (124 immeubles, 434 bandes) | 3 196, soit **1 %** |
+
+Autrement dit : **99 % de ce qu'on faisait dessiner était de la foule, et la
+quasi-totalité de cette foule était hors de l'écran.**
+
+### Les quatre idées qui ont tout fait
+
+**1. Ne dessiner que ce qui est cadré.** La caméra est haute et penchée : elle
+ne montre qu'une quarantaine d'unités devant le joueur, sur une cité de 198.
+Three.js sait écarter un *objet* hors champ, mais pas une *instance* — et la
+foule entière ne forme qu'un seul objet, toujours à l'écran. `ViewCulling` fait
+ce tri silhouette par silhouette, avec le tronc de vision de la caméra plutôt
+qu'un rayon autour du joueur : un rayon devrait être taillé pour le pire écran,
+étroit sur un téléphone vertical, trois fois plus ouvert en fenêtre large.
+
+> Effet mesuré : **18 mortels dessinés sur 450**, sans que rien ne manque à
+> l'écran (vérifié en capture, y compris en bord de cadre).
+
+**2. Alléger la silhouette — mais pas n'importe comment.** Une capsule de
+4 × 8 segments pèse **272 triangles**, en 2 × 8 seulement **144**. Les deux
+réglages ne se valent pas : la caméra plonge de haut, donc c'est le découpage
+**radial** qui dessine le contour visible, tandis que les calottes ne coûtent
+que des triangles. On divise donc les calottes par deux et on garde les 8
+côtés. Descendre le radial à 6 gagnait encore 25 %, mais transformait les
+mortels proches en cailloux à facettes (constaté en capture des deux côtés).
+
+**3. Couper l'anticrénelage**, dans le renderer **et** sur `GLView`
+(`msaaSamples={0}`). Ce second réglage est propre à iOS, qui applique par
+défaut 4 échantillons par pixel sur un écran déjà très dense. ⚠️ Le banc web ne
+peut pas le mesurer, mais c'est l'un des postes les plus lourds sur téléphone.
+
+**4. Ne pas faire marcher ce que personne ne regarde.** Un mortel hors champ
+avance une image sur quatre, d'un pas quatre fois plus long : le temps qui lui
+est dû est **accumulé, pas perdu**. Il parcourt la même distance et se retrouve
+au bon endroit quand le joueur arrive. Le pas reste de 17 cm, très inférieur à
+l'épaisseur d'un mur : aucun risque de traverser une façade.
+
+### Et le travail d'artisan sur les boucles chaudes
+
+- **Les matrices d'instances sont écrites à la main.** Un `Object3D` de service
+  convertissait un angle en quaternion puis recomposait 16 nombres, 1 050 fois
+  par image, pour une rotation autour d'un seul axe. Une matrice de rotation
+  en Y ne contient que quatre nombres variables ; le reste est écrit une fois
+  pour toutes (`instancing.ts`).
+- **`Math.hypot` → racine carrée** dans les boucles du cortège : mesuré
+  **13,6 fois plus rapide** sur 5 millions d'appels. `hypot` protège d'un
+  dépassement de capacité dont des distances de quelques dizaines d'unités sont
+  très loin.
+- **L'étalement du cortège était calculé deux fois** par image, une fois pour
+  rien. Il ne l'est plus qu'une, et au carré — une seule racine à la fin.
+- **Envoi partiel du tampon d'instances** : on ne transmet plus au GPU que la
+  plage réellement utilisée, au lieu des 38 ko du cortège complet.
+- **Les collisions** n'interrogent plus que les cases que le personnage touche
+  vraiment — une, parfois deux — au lieu des neuf qui l'entourent. C'est
+  correct par construction : un immeuble est inscrit dans toutes les cases que
+  son rectangle touche, donc aucun contact ne peut échapper au test.
+
+### 🐞 Le jeu ralentissait à mesure qu'on visitait la cité
+
+La grille de répulsion du cortège se vidait en parcourant **toutes** ses cases.
+Or elle en crée une pour chaque mètre carré que la foule traverse, et n'en
+retire jamais : après quelques secondes de course, c'étaient 2 500 cases vidées
+deux fois par image — et cela ne faisait que monter, pour toute la partie.
+
+On ne vide plus que les cases qu'on a remplies. Au passage, chaque fidèle
+n'examine plus que **cinq** cases voisines au lieu de neuf : une paire de cases
+adjacentes ne se rencontre alors qu'une fois, celle qu'on ne regarde pas nous
+regardera.
+
+| `Retinue.separate()`, 600 fidèles | ms / image |
+|---|---|
+| Avant | 0,617 |
+| Après | **0,336** |
+
+Ce raccourci du demi-voisinage est le genre de raisonnement qui est juste
+jusqu'à ce qu'il ne le soit plus, et dont le symptôme serait discret (des
+fidèles qui se traversent dans une seule direction). `tools/check-separation.ts`
+le vérifie donc à chaque `npm run bench` : deux fidèles voisins, dans les huit
+directions, doivent se repousser. **Les 8 sont couvertes.**
+
+### Le résultat
+
+| Partie réelle (60 s, cortège d'une trentaine) | Avant | Après |
 |---|---|---|
-| Triangles par image | 288 798 | **92 766** (−68 %) |
-| Temps d'image (banc, GPU logiciel) | 187 ms | **103 ms** |
-| dont **nos calculs** | 1,13 ms | 1,08 ms |
-| dont **dessin** | 186 ms | 102 ms |
-| Mortels dessinés (sur 450 vivants) | 450 | **~90** |
-| fps du banc en jeu normal | 17 | **37** |
+| joueur | 0,003 | 0,002 |
+| caméra | 0,007 | 0,010 |
+| mortels | 0,148 | **0,029** |
+| conversion | 0,005 | 0,006 |
+| cortège | 0,082 | **0,022** |
+| **total processeur** | **0,245 ms** | **0,070 ms** |
+| Mortels dessinés | 450 / 450 | **18 / 450** |
+| Triangles par image | 131 512 | **9 119** |
 
-Le verdict était sans appel : **186 ms de dessin contre 1,13 ms de calcul**.
-Notre code n'était pour rien dans le problème ; inutile d'aller l'optimiser.
+| Pire cas : cortège plein (600 fidèles) | Avant | Après |
+|---|---|---|
+| mortels | 0,186 | **0,033** |
+| conversion | 0,051 | 0,044 |
+| cortège | 1,341 | **0,687** |
+| **total processeur** | **1,584 ms** | **0,772 ms** |
+| Fidèles dessinés | 600 / 600 | **337 / 600** |
+| Triangles par image | 288 796 | **53 604** |
 
-### Les trois leviers
+Sur le banc web (Chromium, **GPU logiciel**, format téléphone 390 × 844) :
 
-1. **Corps de foule moins découpés** — 4 calottes → 2, **8 côtés conservés**.
-   Les deux réglages ne se valent pas : la caméra plonge de haut, donc c'est le
-   découpage *radial* qui dessine le contour. J'ai essayé 6 côtés, puis 5 :
-   les mortels proches deviennent des cailloux à facettes. Constaté en
-   capture, revenu en arrière.
-2. **Mortels hors champ non dessinés** — ils continuent de vivre, de marcher
-   et d'être convertissables ; seule leur géométrie ne part plus au GPU. La
-   distance n'est pas choisie au jugé mais **calculée** depuis la caméra : à
-   40 de hauteur, 18 de recul et 60° de champ, le point le plus lointain
-   visible est à 38 unités devant le joueur, pour 15 de demi-largeur — soit 40
-   en diagonale, arrondi à 55 pour la marge.
-3. **Anticrénelage coupé**, dans le renderer **et** sur `GLView`
-   (`msaaSamples={0}`). Ce dernier est propre à iOS, qui applique 4
-   échantillons par pixel par défaut. ⚠️ Le banc web ne peut pas le mesurer,
-   mais c'est un des coûts les plus lourds sur un écran de téléphone : à
-   vérifier sur le tien.
+| Images par seconde | Avant | Après |
+|---|---|---|
+| À l'arrêt | 8,5 | **12,1** |
+| En course | 8,5 | **11,7** |
 
-### ⚠️ Ce que j'ai refusé de faire
+⚠️ Ce dernier chiffre ne dit rien d'un vrai téléphone : le banc rend ses pixels
+sans carte graphique, et il ne voit ni `msaaSamples` ni l'anticrénelage
+matériel. Il confirme le sens de la marche, rien de plus. C'est justement pour
+cela que l'affichage de debug existe.
 
-Descendre à **39 000 triangles** était possible (1 calotte, 5 côtés) et faisait
-gagner 30 % de plus **sur le banc**. Je suis revenu en arrière : la perte
-visuelle était nette, et le banc tourne sur un GPU **logiciel** qui ne
-ressemble à aucun téléphone. Un GPU mobile avale 90 000 triangles sans
-sourciller. Optimiser pour le banc, c'est optimiser pour la mauvaise machine.
+### Les arbitrages entre les deux versions
 
-### 📊 Le jeu se mesure lui-même
+| Sujet | Retenu | Pourquoi |
+|---|---|---|
+| Découpage radial | **8 côtés** | Testé à 6 puis 5 : cailloux à facettes sur les mortels proches. Le gain ne valait que sur le GPU logiciel du banc. |
+| Tri hors champ | **tronc de vision** | Une distance en dur (55 u) doit être taillée pour le pire écran et recalculée à chaque changement de caméra ; le tronc s'adapte seul. Le calcul qui donnait 55 reste noté dans `crowd.cullMargin` comme vérification. |
+| Anticrénelage | **coupé** | Un des postes les plus lourds sur mobile, invisible pour le banc — donc facile à manquer si l'on ne mesure que le banc. |
+| Affichage de debug | **panneau détaillé, allumé au toucher** | Le coût par étape vaut mieux qu'un seul fps ; et un appui sur le compteur évite de recompiler, donc `debug.showStats` peut rester à `false` par défaut. |
+| Compte de triangles | **`renderer.info`** | Compté par Three.js lui-même, pas estimé par nous. |
+| Boucles processeur | **optimisées** | Une mesure ponctuelle disait « 1,13 ms, rien à gagner ». Elle ratait le fait que ce coût **montait avec la durée de la partie** (voir le bug ci-dessus). |
 
-`debug.showStats` affiche en bas à gauche : **images/seconde, taille du
-cortège, mortels dessinés et triangles**. C'est l'outil qui manquait — depuis
-la Milestone 1, je répète que mes fps ne valent rien parce que le banc n'a pas
-de GPU. Le jeu peut maintenant répondre à ma place, sur ton téléphone.
+### Ce qui a été mesuré, puis laissé tel quel
 
-> **À toi de jouer** : lance l'app, ramasse une grosse foule, et dis-moi les
-> chiffres du coin de l'écran. Ce sont les premiers qui vaudront quelque chose.
+L'inverse d'une optimisation est aussi une décision, et elle mérite d'être
+écrite :
 
-⚠️ **À passer à `false` avant publication** (Milestone 13).
+- **Descendre à 39 000 triangles** (1 calotte, 5 côtés) : possible, 30 % de
+  gain de plus **sur le banc**. Refusé, la perte visuelle était nette — et
+  optimiser pour un GPU logiciel, c'est optimiser pour la mauvaise machine.
+- **Découper la ville en quartiers pour la trier par morceaux** : elle ne pèse
+  que 3 196 triangles sur 53 604. Rien à gagner. (Le découpage en quartiers de
+  la M8 se fera donc pour le *jeu*, pas pour la performance.)
+- **Une grille en tableau plat plutôt qu'en table de hachage** pour la
+  répulsion : environ 0,15 ms gagnées sur 0,77, au prix d'un code nettement
+  moins lisible. Le budget est tenu.
+- **La conversion** (0,044 ms) : son filtre grossier suppose que le cortège
+  reste groupé autour du joueur. Le banc montre que cette hypothèse tombe dès
+  qu'un fidèle décroche (voir ci-dessous). Le coût mesuré ne justifie pas de le
+  remplacer aujourd'hui — mais il faudra y revenir en M11, avec les cortèges
+  rivaux.
+
+### ⚠️ Deux défauts de jeu que le banc a révélés (et qui restent entiers)
+
+Ils ne sont pas nés en M7 : les mêmes chiffres sortent du code d'avant. Le banc
+les a simplement rendus visibles, en jouant un trajet plus dur que celui de la
+M5 — un joueur qui longe les façades plutôt que le milieu des rues.
+
+1. **Un fidèle peut rester coincé contre une façade** une demi-seconde, et se
+   retrouver à **40 à 80 unités** derrière le cortège avant de revenir. La M5
+   avait mesuré 11,9 au pire sur son propre trajet ; ce n'était pas le pire
+   trajet. C'est un sujet de formation, pas de performance.
+2. **600 fidèles ne tiennent pas dans une rue de 11 unités de large.** Le
+   cortège s'étale sur environ 16 unités de chemin : il y a quatre fois trop de
+   monde pour la place disponible, d'où **45 à 48 % de fidèles superposés**
+   (contre 3 % avec une trentaine). Le plafond jouable est bien plus bas que
+   `retinue.maxSize`, ou bien il faudra que les fidèles s'écartent dans les
+   rues perpendiculaires.
+
+À traiter avec la cité de la M8 et les rivaux de la M11 — les deux changent
+justement la façon dont la foule occupe l'espace.
 
 ### Modifié
 
-- `src/config.ts` — section `render` (découpage, anticrénelage, distance de
-  dessin) et section `debug`.
-- `src/entities/Mortals.ts` — les emplacements du mesh sont remplis en continu
-  pour les seuls mortels visibles, `count` dit où s'arrêter.
-- `src/entities/Retinue.ts`, `src/core/createRenderer.ts` — découpage et
-  anticrénelage pilotés par la config.
-- `src/core/Game.ts` — `onStatsChange`, moyenne glissante des fps.
-- `src/ui/Hud.tsx`, `App.tsx` — affichage des compteurs, `msaaSamples={0}`.
+- `src/entities/Mortals.ts` — une seule boucle qui cadre, simule et dessine ;
+  plus rien d'alloué par image.
+- `src/entities/Retinue.ts` — grille de répulsion revue, racines carrées,
+  étalement calculé une seule fois, tri par instance à l'affichage.
+- `src/world/City.ts` — collisions restreintes aux cases réellement touchées,
+  `isFree()` sans allocation.
+- `src/core/Game.ts` — profileur branché sur les six étapes d'une image ; **la
+  caméra passe avant la foule** (c'est son champ qui décide de ce qu'on
+  dessine ; elle ne lit que la position et la vitesse du joueur, déjà à jour,
+  donc son comportement est inchangé) ; `getStats()`.
+- `src/core/createRenderer.ts` — anticrénelage piloté par `render.antialias`.
+- `src/config.ts` — sections `crowd`, `render`, `debug` et `profiler`,
+  `mortals.offscreenSlices`.
+- `src/ui/Hud.tsx`, `App.tsx` — le compteur devient un bouton qui affiche les
+  mesures ; le panneau vient les chercher, le jeu ne les pousse pas ;
+  `msaaSamples={0}` sur la surface 3D.
+- `package.json` — `npm run bench`.
 
-### Vérifié (banc de test web, Chromium, format téléphone 390 × 844)
+### Vérifié
 
-- [x] `npm run typecheck` — OK, aucune erreur console
-- [x] Mesures ci-dessus, cortège de 600
-- [x] **Aucun mortel n'apparaît en bord d'écran** malgré la distance de dessin
-      réduite (capture à l'appui)
-- [x] Silhouettes restées lisses (capture comparée avant/après)
-- [x] Aucune régression : compteur, relance, joystick sous le HUD, formation
-      (0 chevauchement, 0 fidèle dans un mur), conversion, bord du monde
+- [x] `npm run typecheck` — OK
+- [x] `npm run bench` — les deux scénarios, plus les 8 directions de la grille
+      de répulsion
+- [x] Banc web (Chromium, 390 × 844) : **aucune erreur console**, le jeu tourne,
+      convertit, le cortège suit
+- [x] **0 mortel et 0 fidèle dans un immeuble**, le joueur non plus
+- [x] Bord du monde à **98,4** — identique à la M6
+- [x] Le compteur affiche **0** au lancement et suit le score
+- [x] Le bouton **↻** remet le score à 0, vide le cortège et replace le joueur
+      en (0, 0)
+- [x] Le **joystick reste utilisable** sous le HUD (glissé de 15,9 unités)
+- [x] L'affichage de debug s'allume et s'éteint au toucher du compteur
+- [x] Rien ne manque en bord de cadre malgré le tri par instance (captures)
 
-**Cassé** — Rien.
+**Cassé** — Rien. Aucun réglage de jeu n'a changé : mêmes vitesses, mêmes
+distances, même ville. Seules les silhouettes ont deux calottes de moins, et
+l'anticrénelage est coupé.
 
 ---
 

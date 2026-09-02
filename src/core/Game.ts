@@ -21,13 +21,26 @@ import { Mortals } from '../entities/Mortals';
 import { Retinue } from '../entities/Retinue';
 import { Conversion } from '../systems/Conversion';
 import { PlayerTrail } from '../systems/PlayerTrail';
+import { ViewCulling } from '../systems/ViewCulling';
+import { Profiler, type ProfileSnapshot } from './Profiler';
 
-/** Compteurs de performance, affichés en développement. */
+/**
+ * Ce que le jeu sait dire de sa propre performance — lu par l'affichage de
+ * debug (Milestone 7) et par le banc de test.
+ */
 export interface GameStats {
-  fps: number;
-  /** Mortels réellement dessinés, sur les 450 vivants. */
+  profile: ProfileSnapshot;
+  /** Silhouettes envoyées au GPU, sur le total existant. */
   drawnMortals: number;
-  retinue: number;
+  mortals: number;
+  drawnFollowers: number;
+  followers: number;
+  /**
+   * Triangles réellement dessinés à la dernière image.
+   *
+   * Compté par Three.js lui-même (`renderer.info`), pas estimé par nous :
+   * c'est le chiffre que le GPU a vraiment reçu, ville comprise.
+   */
   triangles: number;
 }
 
@@ -49,6 +62,10 @@ export class Game {
   private readonly retinue: Retinue;
   private readonly conversion: Conversion;
   private readonly trail: PlayerTrail;
+  /** Le champ de la caméra : il décide de ce qu'on dessine et de ce qu'on simule. */
+  private readonly culling: ViewCulling;
+  /** Le coût d'une image, étape par étape. Voir `Profiler`. */
+  private readonly profiler: Profiler;
 
   /**
    * Prévenue quand le score change — c'est le seul lien du jeu vers
@@ -57,17 +74,9 @@ export class Game {
    */
   onFaithfulChange: ((faithful: number) => void) | null = null;
 
-  /** Prévenue avec les compteurs de performance (voir `debug.showStats`). */
-  onStatsChange: ((stats: GameStats) => void) | null = null;
-
   /** Dernier score publié, et quand. Sert à ne pas inonder React. */
   private publishedFaithful = -1;
   private lastPublishTime = 0;
-
-  /** Mesure des images par seconde, sur une moyenne glissante. */
-  private frameCount = 0;
-  private frameTimeSum = 0;
-  private lastStatsTime = 0;
   private readonly loop: Loop;
   private readonly presentFrame: () => void;
 
@@ -94,6 +103,8 @@ export class Game {
     // Le cortège suit le CHEMIN du dieu, pas sa position : c'est ce qui lui
     // fait contourner les immeubles au lieu de s'y coincer.
     this.trail = new PlayerTrail(this.player.position.x, this.player.position.y);
+    this.culling = new ViewCulling(CONFIG.crowd.cullMargin);
+    this.profiler = new Profiler(true, CONFIG.profiler.windowFrames);
 
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
 
@@ -106,42 +117,76 @@ export class Game {
 
   /** Une frame de jeu, du début à la fin. */
   private update(deltaTime: number): void {
+    this.profiler.frameStart();
+
     // 1. Que veut le joueur ? (joystick sur mobile, clavier sur le banc web)
     const intent = this.input.getMoveIntent();
 
     // 2. Déplacer le joueur.
     this.player.update(intent, deltaTime);
-
-    // 3. Faire vivre les mortels. On leur donne la position observée : ils
-    //    vivent tous, mais seuls les visibles sont dessinés.
-    this.mortals.update(deltaTime, this.player.position.x, this.player.position.y);
-
-    // 4. Convertir les mortels au contact, puis faire suivre le cortège.
     const { x, y: z } = this.player.position;
-    this.trail.update(x, z);
-    this.conversion.update(x, z);
-    this.retinue.update(deltaTime, x, z, this.trail);
+    this.profiler.mark('joueur');
 
-    // --- Milestone 10 : this.ability.update(deltaTime)    (la capacité divine)
-    //     Thème et contenu : voir UNIVERS.md
-
-    // 5. Suivre avec la caméra, en visant un peu devant le joueur.
+    // 3. Suivre avec la caméra, en visant un peu devant le joueur, puis
+    //    relever ce qu'elle cadre.
+    //
+    //    ⚠️ La caméra passe AVANT la foule depuis la Milestone 7 : c'est son
+    //    champ qui décide des silhouettes à dessiner et à faire marcher. La
+    //    calculer après reviendrait à trier avec le cadrage de l'image
+    //    précédente. Elle ne lit que la position et la vitesse du joueur,
+    //    toutes deux déjà à jour : le résultat est identique.
     const { speed } = CONFIG.player;
     this.cameraRig.update(
-      this.player.position.x,
-      this.player.position.y,
+      x,
+      z,
       deltaTime,
       this.player.velocity.x / speed,
       this.player.velocity.y / speed,
     );
+    this.culling.refresh(this.gameScene.camera);
+    this.profiler.mark('caméra');
 
-    // 5 bis. Annoncer le score et, en développement, les compteurs.
+    // 4. Faire vivre les mortels (ceux qu'on voit, surtout).
+    this.mortals.update(deltaTime, this.culling);
+    this.profiler.mark('mortels');
+
+    // 5. Convertir les mortels au contact, puis faire suivre le cortège.
+    this.trail.update(x, z);
+    this.conversion.update(x, z);
+    this.profiler.mark('conversion');
+
+    this.retinue.update(deltaTime, x, z, this.trail, this.culling);
+    this.profiler.mark('cortège');
+
+    // --- Milestone 10 : this.ability.update(deltaTime)    (la capacité divine)
+    //     Thème et contenu : voir UNIVERS.md
+
+    // 6. Annoncer le score, s'il a changé et pas trop souvent.
     this.publishFaithful();
-    this.publishStats(deltaTime);
 
-    // 6. Dessiner, puis envoyer l'image à l'écran du téléphone.
+    // 7. Dessiner, puis envoyer l'image à l'écran du téléphone.
     this.gameScene.render();
     this.presentFrame();
+    this.profiler.mark('rendu');
+
+    this.profiler.frameEnd();
+  }
+
+  /**
+   * Ce que coûte une image, moyenné sur `profiler.windowFrames`.
+   *
+   * Lu quelques fois par seconde par l'affichage de debug, jamais dans la
+   * boucle de jeu.
+   */
+  getStats(): GameStats {
+    return {
+      profile: this.profiler.snapshot(),
+      drawnMortals: this.mortals.drawnCount,
+      mortals: this.mortals.count,
+      drawnFollowers: this.retinue.drawnCount,
+      followers: this.retinue.size,
+      triangles: this.gameScene.renderer.info.render.triangles,
+    };
   }
 
   /**
@@ -165,34 +210,6 @@ export class Game {
     this.onFaithfulChange(faithful);
   }
 
-  /**
-   * Publie les compteurs de performance deux fois par seconde.
-   *
-   * La moyenne est glissante : afficher l'inverse du dernier delta ferait
-   * clignoter un nombre illisible.
-   */
-  private publishStats(deltaTime: number): void {
-    if (this.onStatsChange === null) return;
-
-    this.frameCount += 1;
-    this.frameTimeSum += deltaTime;
-
-    const now = performance.now();
-    if (now - this.lastStatsTime < 500) return;
-    this.lastStatsTime = now;
-
-    const fps = this.frameCount > 0 ? this.frameCount / this.frameTimeSum : 0;
-    this.frameCount = 0;
-    this.frameTimeSum = 0;
-
-    this.onStatsChange({
-      fps: Math.round(fps),
-      drawnMortals: this.mortals.drawnCount,
-      retinue: this.retinue.size,
-      triangles: this.gameScene.renderer.info.render.triangles,
-    });
-  }
-
   resize(width: number, height: number): void {
     this.gameScene.resize(width, height);
   }
@@ -208,6 +225,7 @@ export class Game {
     this.publishedFaithful = -1;
     this.lastPublishTime = 0;
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
+    this.profiler.reset();
   }
 
   /** Le score : le nombre de fidèles du cortège (affiché en Milestone 6). */

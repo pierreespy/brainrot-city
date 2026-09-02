@@ -122,6 +122,22 @@ export const CONFIG = {
      */
     spawnClearance: 7,
 
+    /**
+     * Sur combien d'images étaler la déambulation des mortels HORS CHAMP.
+     *
+     * La caméra ne cadre qu'une trentaine de mortels sur 450. Les autres
+     * n'ont aucune raison d'avancer 60 fois par seconde : ils avancent une
+     * image sur 4, d'un pas quatre fois plus long. Ils parcourent exactement
+     * la même distance — le temps qui leur est dû est accumulé, pas perdu —
+     * et se retrouvent au bon endroit quand le joueur arrive.
+     *
+     * ⚠️ Ne pas monter beaucoup plus haut. À 4, un mortel hors champ avance
+     * par pas de 17 cm ; c'est ce qui garantit qu'il ne traverse pas une
+     * façade (le pas doit rester très inférieur à l'épaisseur d'un mur), et
+     * qu'il ne « saute » pas visiblement en entrant dans le champ.
+     */
+    offscreenSlices: 4,
+
     /** Graine du placement initial : la même cité peuplée à chaque lancement. */
     seed: 77,
   },
@@ -213,6 +229,58 @@ export const CONFIG = {
     separationPasses: 2,
   },
 
+  /**
+   * La foule — ce que coûte UNE silhouette, mortels et fidèles confondus.
+   *
+   * ⚠️ Le poste de dépense numéro un du jeu. Une capsule de 4 × 8 segments
+   * pèse 272 triangles ; à 450 mortels plus 600 fidèles, cela fait 286 000
+   * triangles envoyés au GPU à chaque image, soit 99 % de la scène (la ville
+   * entière n'en compte que 2 500). C'est ici, et nulle part ailleurs, que se
+   * gagne le budget d'affichage.
+   */
+  crowd: {
+    /**
+     * Découpage des silhouettes de foule (mortels et fidèles).
+     *
+     * ⚠️ Le poste de dépense numéro un du jeu. En 4 × 8 segments, une capsule
+     * pèse **272 triangles** ; à 450 mortels plus 600 fidèles, cela fait
+     * 286 000 triangles envoyés au GPU à chaque image, soit 99 % de la scène
+     * (la ville entière n'en compte que 3 200).
+     *
+     * Les deux réglages ne se valent pas. La caméra plonge de haut, donc
+     * c'est le découpage RADIAL qui dessine le contour visible ; les
+     * calottes, vues de dessus, ne coûtent que des triangles. D'où 2 calottes
+     * au lieu de 4, mais 8 côtés conservés : **144 triangles**, sans perte
+     * visible.
+     *
+     * ⚠️ Descendre le radial à 6, et plus encore à 5, transforme les mortels
+     * proches de la caméra en cailloux à facettes (constaté en capture). Le
+     * gain ne valait que sur le GPU **logiciel** du banc de test ; un GPU de
+     * téléphone avale ces triangles-là sans sourciller.
+     */
+    capSegments: 2,
+    radialSegments: 8,
+
+    /**
+     * Marge, en unités, ajoutée au champ de la caméra pour décider ce qu'on
+     * dessine (voir `ViewCulling`).
+     *
+     * Elle absorbe le fait qu'une silhouette a une épaisseur, et que la
+     * caméra bouge entre le test et l'affichage. Trop petite, on verrait des
+     * mortels apparaître en bord d'écran ; trop grande, on redessine pour
+     * rien. 4 unités = deux fois la largeur d'un personnage.
+     *
+     * > Une VÉRIFICATION utile, si tu doutes du tri : avec un recul de 18,
+     * > une hauteur de 40 et 60° de champ, le point le plus lointain visible
+     * > est à 38 unités devant le joueur, et la demi-largeur du champ y vaut
+     * > 15 — soit 40 unités en diagonale sur un téléphone tenu à la verticale.
+     * > Le tronc de vision retrouve ce chiffre tout seul, et l'adapte quand
+     * > l'écran change de format ; c'est pour cela qu'aucune distance n'est
+     * > écrite en dur ici.
+     */
+    cullMargin: 4,
+  },
+
   player: {
     /** Unités par seconde. Monte à 30 pour voir la différence. */
     speed: 18,
@@ -281,44 +349,16 @@ export const CONFIG = {
    */
   render: {
     /**
-     * Découpage des silhouettes de foule (mortels et fidèles).
-     *
-     * Les deux réglages ne se valent pas. La caméra plonge de haut, donc
-     * c'est le découpage RADIAL qui dessine le contour visible ; les
-     * calottes, vues de dessus, ne coûtent que des triangles.
-     *
-     * D'où 2 calottes (au lieu de 4) mais 8 côtés (conservés) : ~150
-     * triangles par corps contre 275, sans perte visible.
-     *
-     * ⚠️ Descendre le radial à 6, et plus encore à 5, transforme les mortels
-     * proches de la caméra en cailloux à facettes (constaté en capture). Le
-     * gain ne valait que sur le GPU **logiciel** du banc de test ; un GPU de
-     * téléphone avale 90 000 triangles sans sourciller.
-     */
-    bodyCapSegments: 2,
-    bodyRadialSegments: 8,
-
-    /**
      * Anticrénelage. Il lisse les contours, mais fait travailler le GPU sur
      * chaque pixel de l'écran — c'est cher sur mobile, où l'écran est déjà
      * très dense. À réactiver seulement si les bords paraissent trop durs.
+     *
+     * ⚠️ Sur iOS, il ne suffit PAS de le couper ici : `GLView` applique de son
+     * côté un anticrénelage matériel à 4 échantillons, coupé dans `App.tsx`
+     * par `msaaSamples={0}`. Le banc de test web ne peut mesurer ni l'un ni
+     * l'autre — c'est un réglage à juger sur un vrai téléphone.
      */
     antialias: false,
-
-    /**
-     * Distance au-delà de laquelle un mortel n'est plus DESSINÉ (il continue
-     * de vivre, de marcher et d'être convertible).
-     *
-     * Valeur CALCULÉE à partir de la caméra, pas choisie au jugé : avec un
-     * recul de 18, une hauteur de 40 et 60° de champ, le point le plus
-     * lointain visible est à **38 unités devant le joueur**, et la
-     * demi-largeur du champ y vaut 15 — soit 40 unités en diagonale. On garde
-     * 55 de marge pour l'anticipation de caméra et les écrans plus larges.
-     *
-     * ⚠️ Si tu changes `camera.offset` ou `camera.fov`, recalcule cette
-     * valeur, sinon des mortels apparaîtront en bord d'écran.
-     */
-    mortalDrawDistance: 55,
   },
 
   /**
@@ -326,14 +366,19 @@ export const CONFIG = {
    */
   debug: {
     /**
-     * Affiche images/seconde et compteurs dans un coin de l'écran.
+     * Affiche images/seconde et coût de chaque étape dans un coin de l'écran.
      *
-     * C'est l'outil de la Milestone 7 : le banc de test tourne sur un GPU
-     * **logiciel** et ne dit rien des performances réelles. La seule mesure
-     * qui compte se prend sur un vrai téléphone, donc le jeu doit savoir se
-     * mesurer lui-même.
+     * C'est l'outil de la Milestone 7 : le banc de mesure tourne sur une
+     * machine de développement et ne dit rien des performances réelles. La
+     * seule mesure qui compte se prend sur un vrai téléphone, donc le jeu
+     * doit savoir se mesurer lui-même.
+     *
+     * Éteint par défaut, parce qu'il n'y a plus besoin de recompiler pour le
+     * voir : **toucher le compteur de fidèles l'allume et l'éteint**, dans
+     * Expo Go comme au banc web. Mettre `true` ici le montre dès le
+     * lancement.
      */
-    showStats: true,
+    showStats: false,
   },
 
   /** L'interface : ce qui est posé PAR-DESSUS la 3D. */
@@ -348,6 +393,23 @@ export const CONFIG = {
      * seconde, ce que l'œil lit déjà comme instantané.
      */
     scorePublishInterval: 120,
+  },
+
+  /**
+   * Le profileur : ce que coûte une image, étape par étape (Milestone 7).
+   *
+   * Il est branché en permanence — son coût est de huit lectures d'horloge
+   * par image — mais n'affiche rien tant qu'on ne le lui demande pas.
+   * **Touche le compteur de fidèles pour faire apparaître les mesures**, y
+   * compris sur le téléphone : c'est le seul moyen de savoir ce que coûte le
+   * jeu sur l'appareil du joueur plutôt que sur une machine de développement.
+   * (Pour qu'elles soient visibles dès le lancement : `debug.showStats`.)
+   */
+  profiler: {
+    /** Nombre d'images agrégées avant de publier une moyenne. */
+    windowFrames: 30,
+    /** Intervalle minimal entre deux publications vers l'interface, en ms. */
+    publishInterval: 500,
   },
 
   joystick: {

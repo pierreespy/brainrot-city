@@ -12,31 +12,35 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { GameStats } from '../core/Game';
 
 interface Props {
   /** Le nombre de fidèles du cortège. */
   faithful: number;
   onRestart: () => void;
-  /** Compteurs de performance, ou `null` si l'affichage est coupé. */
-  stats: GameStats | null;
+  /**
+   * Toucher le compteur affiche les mesures de performance (Milestone 7).
+   *
+   * Il n'y a pas de bouton dédié : l'écran d'un téléphone est petit, et une
+   * commande de debug n'a pas à occuper une place que le jeu utilisera.
+   */
+  onToggleStats: () => void;
 }
 
-export function Hud({ faithful, onRestart, stats }: Props) {
+export function Hud({ faithful, onRestart, onToggleStats }: Props) {
   return (
     // `box-none` : cette couche laisse passer les doigts vers le joystick,
     // sauf sur ses propres boutons. Sans cela, l'interface avalerait tout
     // l'écran et le jeu deviendrait injouable.
     <SafeAreaView style={styles.root} pointerEvents="box-none">
       <View style={styles.topRow} pointerEvents="box-none">
-        <View style={styles.score} pointerEvents="none">
+        <Pressable testID="score-toggle" onPress={onToggleStats} style={styles.score}>
           <Text style={styles.scoreValue} testID="score">
             {faithful}
           </Text>
           <Text style={styles.scoreLabel}>
             {faithful > 1 ? 'fidèles' : 'fidèle'}
           </Text>
-        </View>
+        </Pressable>
 
         <Pressable
           testID="restart"
@@ -47,21 +51,6 @@ export function Hud({ faithful, onRestart, stats }: Props) {
           <Text style={styles.restartIcon}>↻</Text>
         </Pressable>
       </View>
-
-      {/*
-        Compteurs de développement. La seule mesure qui vaille se prend sur un
-        vrai téléphone : le jeu doit donc pouvoir se mesurer lui-même.
-        Coupé par `debug.showStats` avant publication.
-      */}
-      {stats !== null && (
-        <View style={styles.stats} pointerEvents="none">
-          <Text style={styles.statsText} testID="stats">
-            {stats.fps} fps · {stats.retinue} fidèles · {stats.drawnMortals} mortels
-            {' · '}
-            {(stats.triangles / 1000).toFixed(0)}k triangles
-          </Text>
-        </View>
-      )}
 
       {/*
         Emplacement RÉSERVÉ à la capacité divine (Milestone 10).
@@ -125,15 +114,4 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   abilityIcon: { fontSize: 26, opacity: 0.25 },
-
-  stats: {
-    position: 'absolute',
-    left: 16,
-    bottom: 20,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  statsText: { color: 'rgba(255, 255, 255, 0.65)', fontSize: 11, fontWeight: '600' },
 });
