@@ -14,10 +14,19 @@
 Le jeu s'appelle **Olympus** (décidé le 2026-09-02, en remplacement de
 « Brainrot City », qui ne collait plus au thème).
 
-Sur les stores, il est prévu de l'accompagner d'un sous-titre qui dit le
-genre — par exemple **« Olympus : Divine Rush »** — car « Olympus » seul est
-un mot **très disputé** dans les jeux mobiles : c'est le compromis entre un
-nom court et la possibilité d'être trouvé.
+**Vérifié le 2026-09-02 sur l'App Store** : beaucoup de noms *composés* avec
+« Olympus », mais **aucune app nommée « Olympus » tout court**. Comme Apple
+impose l'unicité du nom d'app, le nom court est donc réservable — c'est lui
+qu'on prend.
+
+Le genre passera dans le **sous-titre** (champ distinct de 30 caractères, lui
+aussi indexé par la recherche), du type « Divine crowd rush ». On garde ainsi
+un nom court **et** les mots-clés : « Olympus » seul ne dit pas que c'est un
+jeu, encore moins un jeu de foule.
+
+> ⚠️ Reste à vérifier : l'absence de **marque déposée** en classes 9 et 41
+> (INPI, EUIPO). L'App Store ne contrôle que l'unicité du nom, pas les
+> marques — et Olympus Corporation détient « Olympus » en classe 9.
 
 L'identifiant technique de l'app est **`com.pierreespy.olympus`**. Il est
 **définitif dès la première publication** sur les stores : ne plus y toucher.
