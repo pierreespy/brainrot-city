@@ -40,6 +40,17 @@ export class Game {
   private readonly retinue: Retinue;
   private readonly conversion: Conversion;
   private readonly trail: PlayerTrail;
+
+  /**
+   * Prévenue quand le score change — c'est le seul lien du jeu vers
+   * l'interface, et il va dans ce sens uniquement : le jeu ne sait pas ce
+   * qu'est un HUD, il annonce un nombre.
+   */
+  onFaithfulChange: ((faithful: number) => void) | null = null;
+
+  /** Dernier score publié, et quand. Sert à ne pas inonder React. */
+  private publishedFaithful = -1;
+  private lastPublishTime = 0;
   private readonly loop: Loop;
   private readonly presentFrame: () => void;
 
@@ -106,9 +117,33 @@ export class Game {
       this.player.velocity.y / speed,
     );
 
+    // 5 bis. Annoncer le score, s'il a changé et pas trop souvent.
+    this.publishFaithful();
+
     // 6. Dessiner, puis envoyer l'image à l'écran du téléphone.
     this.gameScene.render();
     this.presentFrame();
+  }
+
+  /**
+   * Publie le score vers l'interface.
+   *
+   * Deux garde-fous : on ne publie que si le nombre a **changé**, et jamais
+   * plus souvent que `hud.scorePublishInterval`. Sans eux, chaque image
+   * déclencherait un rendu React, pour afficher le même nombre.
+   */
+  private publishFaithful(): void {
+    if (this.onFaithfulChange === null) return;
+
+    const faithful = this.retinue.faithfulCount;
+    if (faithful === this.publishedFaithful) return;
+
+    const now = performance.now();
+    if (now - this.lastPublishTime < CONFIG.hud.scorePublishInterval) return;
+
+    this.publishedFaithful = faithful;
+    this.lastPublishTime = now;
+    this.onFaithfulChange(faithful);
   }
 
   resize(width: number, height: number): void {
@@ -121,6 +156,10 @@ export class Game {
     this.retinue.clear();
     this.mortals.reset();
     this.trail.reset(this.player.position.x, this.player.position.y);
+    // Le compteur doit retomber à zéro tout de suite, sans attendre le
+    // prochain intervalle de publication.
+    this.publishedFaithful = -1;
+    this.lastPublishTime = 0;
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
   }
 

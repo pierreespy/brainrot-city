@@ -113,6 +113,15 @@ export const CONFIG = {
      */
     headingJitter: 0.35,
 
+    /**
+     * Rayon laissé vide autour du point de départ, à la naissance.
+     *
+     * Sans lui, un mortel apparaissait parfois sous les pieds de la divinité
+     * et était converti à la première image : la partie commençait à « 1
+     * fidèle » au lieu de zéro.
+     */
+    spawnClearance: 7,
+
     /** Graine du placement initial : la même cité peuplée à chaque lancement. */
     seed: 77,
   },
@@ -260,6 +269,20 @@ export const CONFIG = {
      * la relançait — deux mouvements parasites pour un simple aller-retour.
      */
     lookAheadDeadZone: 0.15,
+  },
+
+  /** L'interface : ce qui est posé PAR-DESSUS la 3D. */
+  hud: {
+    /**
+     * Intervalle minimal entre deux publications du score, en millisecondes.
+     *
+     * ⚠️ Le cœur du problème de la Milestone 6. Le jeu tourne à 60 images par
+     * seconde ; prévenir React à chaque image déclencherait 60 rendus
+     * d'interface par seconde pour afficher un nombre. On ne publie donc que
+     * si le score a CHANGÉ, et au plus toutes les 120 ms — soit 8 fois par
+     * seconde, ce que l'œil lit déjà comme instantané.
+     */
+    scorePublishInterval: 120,
   },
 
   joystick: {

@@ -48,6 +48,13 @@ function createRandom(seed: number): () => number {
   };
 }
 
+/** Zone tenue libre autour du point de départ, à la naissance de la cité. */
+const START_CLEARANCE = {
+  x: 0,
+  z: 0,
+  distance: CONFIG.mortals.spawnClearance,
+};
+
 export class Mortals {
   private readonly scene: THREE.Scene;
   private readonly city: Collider;
@@ -87,7 +94,7 @@ export class Mortals {
 
   private spawnAll(): void {
     for (let i = 0; i < CONFIG.mortals.count; i += 1) {
-      const spot = this.findFreeSpot();
+      const spot = this.findFreeSpot(START_CLEARANCE);
       this.mortals.push({
         type: 'citizen',
         x: spot.x,
@@ -264,7 +271,7 @@ export class Mortals {
   /** Repeuple la cité de zéro (utilisé par le restart). */
   reset(): void {
     for (const mortal of this.mortals) {
-      const spot = this.findFreeSpot();
+      const spot = this.findFreeSpot(START_CLEARANCE);
       mortal.x = spot.x;
       mortal.z = spot.z;
       mortal.angle = this.pickHeading();

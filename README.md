@@ -10,11 +10,12 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 5 terminée** — app Expo fonctionnelle, ville
+> **État actuel : Milestone 6 terminée** — app Expo fonctionnelle, ville
 > générée (rues, trottoirs, 124 immeubles), collisions contre les façades,
 > **450 mortels qui déambulent**, **conversion au contact** qui se propage, et
 > un **cortège de plusieurs centaines de fidèles** qui suit le chemin du dieu
-> en foule cohérente. Joystick tactile et caméra de suivi avec anticipation.
+> en foule cohérente, **compteur et bouton de relance**. Joystick tactile et
+> caméra de suivi avec anticipation.
 
 ---
 
@@ -120,7 +121,8 @@ imprimé dessus.
     │       └── InputManager.ts  Regroupe les sources disponibles
     │
     ├── ui/
-    │   └── Joystick.tsx   Le joystick virtuel (composant React Native)
+    │   ├── Joystick.tsx   Le joystick virtuel (composant React Native)
+    │   └── Hud.tsx        ⭐ Compteur de fidèles, relance, place de la capacité
     │
     └── world/
         ├── City.ts        ⭐ La ville : rues, trottoirs, immeubles + collisions
@@ -245,6 +247,30 @@ matrices), soit 7 % du budget d'une frame à 60 Hz. La répulsion compare chaque
 fidèle à ses seuls voisins de grille — 9 cases — et non aux 600 autres, ce qui
 ferait 180 000 paires.
 
+### Le HUD
+
+Le compteur, le bouton de relance et **l'emplacement réservé à la capacité
+divine** (Milestone 10) sont des composants React Native posés par-dessus la
+3D — du texte net, et un coût quasi nul.
+
+Quasi nul **à une condition** : ne pas redessiner l'interface à chaque image.
+Le jeu tourne à 60 images par seconde ; prévenir React à chacune déclencherait
+60 rendus par seconde pour afficher un nombre. Le jeu ne publie donc son score
+que s'il a **changé**, et au plus toutes les 120 ms.
+
+> Mesuré : pendant 1,6 seconde de conversions en rafale, le texte du compteur
+> a été mis à jour **10 fois** — contre 96 si l'on publiait à chaque image, et
+> l'affichage reste identique au score réel du jeu.
+
+Le lien va dans un seul sens : le jeu expose `onFaithfulChange` et annonce un
+nombre. Il ne sait pas ce qu'est un HUD, ce qui permet de redessiner
+l'interface sans jamais toucher au moteur.
+
+**L'ordre des couches compte.** Le joystick est déclaré *avant* le HUD, car en
+React Native la dernière couche déclarée reçoit le doigt : c'est ce qui rend le
+bouton de relance cliquable tout en laissant le reste de l'écran au joystick
+(vérifié au banc de test — un glissé sous le HUD déplace bien le joueur).
+
 ### La caméra
 
 Elle suit le joueur avec du retard (`camera.smoothing`) et vise **un peu
@@ -350,8 +376,8 @@ fois qu'il y a un jeu à habiller.
 | 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
 | 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
 | 5 | Système de cortège (formation, suivi) | ✅ Terminée |
-| 6 | HUD : compteur de fidèles + relance | ⬜ À venir |
-| 7 | Première passe d'optimisation | ⬜ |
+| 6 | HUD : compteur de fidèles + relance | ✅ Terminée |
+| 7 | Première passe d'optimisation | ⬜ À venir |
 | 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ⬜ |
 | 9 | 🏛️ **Le panthéon** : dieux jouables (données, apparence, sélection) | ⬜ |
 | 10 | ⚡ **Capacités divines** : une par dieu, jauge et bouton | ⬜ |

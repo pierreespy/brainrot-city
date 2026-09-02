@@ -9,9 +9,9 @@
  * Tout le reste du jeu vit dans src/ et ignore totalement React Native.
  */
 
-import { useCallback, useRef } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback, useRef, useState } from 'react';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { PixelRatio } from 'react-native';
@@ -20,10 +20,15 @@ import { Game } from './src/core/Game';
 import { createRenderer } from './src/core/createRenderer';
 import { InputManager } from './src/systems/input/InputManager';
 import { Joystick } from './src/ui/Joystick';
+import { Hud } from './src/ui/Hud';
 
 export default function App() {
   const gameRef = useRef<Game | null>(null);
   const { width, height } = useWindowDimensions();
+
+  // Le seul état React de l'app. Le jeu le pousse ici quand il change, au
+  // plus 8 fois par seconde (voir `hud.scorePublishInterval`).
+  const [faithful, setFaithful] = useState(0);
 
   // L'entrée existe AVANT le jeu : le joystick est donc utilisable dès la
   // première image, même si la surface 3D n'est pas encore initialisée.
@@ -31,6 +36,11 @@ export default function App() {
   const inputRef = useRef<InputManager | null>(null);
   if (inputRef.current === null) inputRef.current = new InputManager();
   const input = inputRef.current;
+
+  const onRestart = useCallback(() => {
+    gameRef.current?.restart();
+    setFaithful(0);
+  }, []);
 
   const onContextCreate = useCallback((gl: ExpoWebGLRenderingContext) => {
     // Évite de recréer un second jeu si la surface est réinitialisée
@@ -41,6 +51,7 @@ export default function App() {
     const { renderer, width: w, height: h, presentFrame } = createRenderer(gl, pixelRatio);
 
     const game = new Game(renderer, w, h, presentFrame, input);
+    game.onFaithfulChange = setFaithful;
     gameRef.current = game;
     game.start();
 
@@ -61,18 +72,12 @@ export default function App() {
           onContextCreate={onContextCreate}
         />
 
-        {/* Couche d'interface, posée par-dessus la 3D. */}
-        <SafeAreaView style={styles.hud} pointerEvents="box-none">
-          <View style={styles.panel} pointerEvents="none">
-            <Text style={styles.title}>Divine City</Text>
-            <Text style={styles.hint}>
-              Glisse ton doigt en bas de l&apos;écran pour te déplacer
-            </Text>
-          </View>
-        </SafeAreaView>
-
-        {/* Le joystick écrit directement dans l'entrée du jeu. */}
+        {/* Le joystick écrit directement dans l'entrée du jeu. Il est posé
+            AVANT le HUD pour que les boutons de celui-ci restent cliquables :
+            en React Native, la dernière couche déclarée reçoit le doigt. */}
         <Joystick touch={input.touch} />
+
+        <Hud faithful={faithful} onRestart={onRestart} />
       </View>
     </SafeAreaProvider>
   );
@@ -80,15 +85,4 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#12141c' },
-  hud: { ...StyleSheet.absoluteFillObject },
-  panel: {
-    alignSelf: 'flex-start',
-    margin: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-  },
-  title: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  hint: { color: 'rgba(255, 255, 255, 0.75)', fontSize: 12, marginTop: 3 },
 });

@@ -9,6 +9,83 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 📊 Milestone 6 : le HUD
+
+**Résumé** — Le score s'affiche enfin : **compteur de fidèles**, **bouton de
+relance**, et l'**emplacement réservé à la capacité divine** de la Milestone 10.
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/ui/Hud.tsx` | ⭐ Compteur, relance, emplacement de la capacité |
+
+### Le vrai sujet : ne pas redessiner l'interface 60 fois par seconde
+
+Le jeu tourne à 60 images par seconde. Prévenir React à chaque image
+déclencherait 60 rendus d'interface par seconde… pour afficher un nombre.
+
+Le jeu ne publie donc son score que s'il a **changé**, et au plus toutes les
+120 ms (`hud.scorePublishInterval`) — 8 fois par seconde, ce que l'œil lit
+comme instantané.
+
+| Mesure, pendant 1,6 s de conversions en rafale | Valeur |
+|---|---|
+| Mises à jour réelles du texte | **10** |
+| Ce qu'aurait donné une publication par image | 96 |
+| Score affiché contre score réel du jeu | **identiques** |
+
+Le lien va dans un seul sens : `Game.onFaithfulChange` annonce un nombre, et
+le jeu ignore ce qu'est un HUD. L'interface peut donc être redessinée sans
+jamais toucher au moteur.
+
+### L'emplacement de la capacité est réservé DÈS MAINTENANT
+
+C'était la contrainte notée en adoptant le thème : décider de la place du
+bouton après coup obligerait à redessiner tout le HUD, et le pouce du joueur
+aura déjà pris ses habitudes. Il est donc affiché **éteint et non cliquable**,
+en bas à droite, en attendant la Milestone 10.
+
+### ⚠️ L'ordre des couches, qui n'est pas un détail
+
+Le joystick est déclaré **avant** le HUD dans `App.tsx` : en React Native, la
+dernière couche déclarée reçoit le doigt. C'est ce qui rend le bouton de
+relance cliquable **tout en** laissant le reste de l'écran au joystick.
+Vérifié au banc : un glissé sous le HUD déplace bien le joueur de 28 unités.
+
+### 🐞 Corrigé au passage : la partie commençait à 1 fidèle
+
+Un mortel naissait parfois sous les pieds de la divinité et se faisait
+convertir à la première image. `mortals.spawnClearance` tient désormais une
+zone de 7 unités libre autour du point de départ. Le compteur affiche bien
+**0** au lancement.
+
+### Modifié
+
+- `src/core/Game.ts` — `onFaithfulChange`, publication filtrée, remise à zéro
+  immédiate du compteur au `restart()`.
+- `App.tsx` — un seul état React (le score), le HUD et la relance branchés ;
+  l'ancien panneau titre/consigne disparaît au profit du HUD.
+- `src/config.ts` — section `hud`, `mortals.spawnClearance`.
+
+### Vérifié (banc de test web, Chromium, format téléphone 390 × 844)
+
+- [x] `npm run typecheck` — OK, aucune erreur console
+- [x] Le compteur affiche **0** au lancement, puis suit exactement le score
+      réel (750 contre 750)
+- [x] **10 mises à jour** du texte en 1,6 s de conversions, contre 96 possibles
+- [x] Le bouton **↻** remet le score à 0, vide le cortège et replace le joueur
+      en (0, 0)
+- [x] Le **joystick reste utilisable** sous le HUD
+- [x] Aucune régression : formation (retard max 11,0 ; 13 chevauchements ; 0
+      fidèle dans un mur), joueur bloqué à `x = 4,9`, bord du monde à 98,4
+
+**Cassé** — L'ancien panneau « titre + consigne » du coin supérieur gauche a
+disparu, remplacé par le compteur. La consigne de déplacement n'est plus
+affichée : à réintroduire comme tutoriel en Milestone 12 si besoin.
+
+---
+
 ## 2026-09-02 — Claude — 🏛️ Milestone 5 : la formation du cortège
 
 **Résumé** — Le cortège n'est plus un tas de fidèles qui poussent contre les
@@ -905,8 +982,8 @@ npm run dev              # ← n'existe plus
 | 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
 | 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
 | 5 | Système de cortège (formation, suivi) | ✅ Terminée |
-| 6 | HUD : compteur de fidèles + relance | ⬜ À venir |
-| 7 | Première passe d'optimisation | ⬜ |
+| 6 | HUD : compteur de fidèles + relance | ✅ Terminée |
+| 7 | Première passe d'optimisation | ⬜ À venir |
 | 8 | 🏛️ La cité grecque : quartiers, marbre, temples, repères | ⬜ |
 | 9 | 🏛️ Le panthéon : dieux jouables | ⬜ |
 | 10 | ⚡ Capacités divines : une par dieu | ⬜ |
