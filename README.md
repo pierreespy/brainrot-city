@@ -10,10 +10,11 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 4 terminée** — app Expo fonctionnelle, ville
+> **État actuel : Milestone 5 terminée** — app Expo fonctionnelle, ville
 > générée (rues, trottoirs, 124 immeubles), collisions contre les façades,
-> **450 mortels qui déambulent**, **conversion au contact** et cortège qui
-> grandit, joueur au joystick tactile et caméra de suivi avec anticipation.
+> **450 mortels qui déambulent**, **conversion au contact** qui se propage, et
+> un **cortège de plusieurs centaines de fidèles** qui suit le chemin du dieu
+> en foule cohérente. Joystick tactile et caméra de suivi avec anticipation.
 
 ---
 
@@ -111,6 +112,7 @@ imprimé dessus.
     ├── systems/
     │   ├── CameraRig.ts   Caméra qui suit le joueur en douceur
     │   ├── Conversion.ts  Le contact : un mortel quitte la cité pour le cortège
+    │   ├── PlayerTrail.ts ⭐ La trace du dieu : c'est ELLE que le cortège suit
     │   └── input/
     │       ├── InputSource.ts   Le contrat commun (une direction x/z)
     │       ├── TouchInput.ts    Direction venue du joystick
@@ -209,10 +211,39 @@ Trois fichiers, chacun avec un seul rôle :
   grefferont les capacités qui convertissent (Foudre, Charme) : elles ne
   changeront que le rayon ou le point de conversion.
 
-> ⚠️ **Le suivi du cortège est provisoire.** Chaque fidèle vise un point du
-> disque autour du joueur, sans se soucier de ses voisins ni des détours : il
-> peut rester coincé derrière un immeuble. La vraie formation est le sujet de
-> la Milestone 5, et **seule la méthode `Retinue.update()` sera remplacée**.
+### La formation du cortège
+
+Elle repose sur **deux mécanismes indépendants**, et c'est leur combinaison qui
+donne une foule plutôt qu'une file ou un tas.
+
+**1. Suivre le chemin, pas le joueur.** Le dieu laisse une trace
+(`PlayerTrail`) : un point tous les 35 cm, avec la distance parcourue. Chaque
+fidèle vise le point situé à `lagMin + lagStep × √rang` derrière lui **sur
+cette trace**. Le cortège emprunte donc les mêmes rues et contourne les mêmes
+angles.
+
+> C'est ce qui a supprimé les traînards. Avant, chacun visait la *position* du
+> dieu en ligne droite et poussait contre les façades : jusqu'à **33 unités**
+> de retard mesurées. Après : **8 au plus**.
+
+La racine carrée du rang est délibérée : un cortège de 500 doit **s'épaissir**,
+pas s'étirer sur 250 mètres.
+
+**2. Se repousser entre voisins.** Sans cela, tous se poseraient sur le même
+point du chemin. Deux détails font toute la différence :
+
+- un fidèle **cesse de chasser sa cible** dès qu'il en est à moins de
+  `arriveRadius` — c'est ce qui laisse à la répulsion la place d'étaler la
+  foule (sans ce réglage : 30 % des paires superposées ; avec : 2,6 %) ;
+- les nouveaux arrivants naissent avec un **léger écart aléatoire**, sinon
+  deux conversions simultanées créaient deux fidèles au même point exact, et
+  la répulsion n'avait aucune direction où pousser.
+
+**Le coût**, mesuré au banc de test avec **600 fidèles** : `Retinue.update()`
+prend **1,22 ms** par frame, tout compris (chemin, répulsion, collisions,
+matrices), soit 7 % du budget d'une frame à 60 Hz. La répulsion compare chaque
+fidèle à ses seuls voisins de grille — 9 cases — et non aux 600 autres, ce qui
+ferait 180 000 paires.
 
 ### La caméra
 
@@ -318,8 +349,8 @@ fois qu'il y a un jeu à habiller.
 | 2 | Ville simple + caméra | ✅ Terminée |
 | 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
 | 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
-| 5 | Système de cortège (formation, suivi) | ⬜ À venir |
-| 6 | HUD : compteur de fidèles + relance | ⬜ |
+| 5 | Système de cortège (formation, suivi) | ✅ Terminée |
+| 6 | HUD : compteur de fidèles + relance | ⬜ À venir |
 | 7 | Première passe d'optimisation | ⬜ |
 | 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ⬜ |
 | 9 | 🏛️ **Le panthéon** : dieux jouables (données, apparence, sélection) | ⬜ |

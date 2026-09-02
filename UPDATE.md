@@ -9,6 +9,100 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-02 — Claude — 🏛️ Milestone 5 : la formation du cortège
+
+**Résumé** — Le cortège n'est plus un tas de fidèles qui poussent contre les
+murs : c'est une **foule cohérente** qui repasse par le chemin du dieu et dont
+les membres s'écartent les uns des autres. Testé jusqu'à **600 fidèles**.
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/systems/PlayerTrail.ts` | ⭐ La trace du dieu : un point tous les 35 cm |
+
+### Les deux défauts connus, et leur remède
+
+**1. Les traînards.** Chaque fidèle visait la *position* du dieu en ligne
+droite : dès qu'un immeuble se trouvait entre les deux, il poussait contre la
+façade et décrochait — **33 unités de retard** mesurées en M4.
+
+> Un cortège ne doit pas viser où est son dieu, mais **repasser par où il est
+> passé**. Chaque fidèle suit désormais un point situé à
+> `lagMin + lagStep × √rang` derrière lui **sur sa trace**.
+
+| | Avant (M4) | Après (M5) |
+|---|---|---|
+| Pire retard sur tout un parcours | **32,9 unités** | **11,9** |
+| Retard médian | 3,2 | 4,9 |
+
+**2. L'empilement.** Tous visaient le même point, donc s'y superposaient.
+Deux réglages, trouvés par la mesure :
+
+- `arriveRadius` — un fidèle **cesse de chasser sa cible** dès qu'il en est
+  assez près, ce qui laisse à la répulsion la place d'étaler la foule ;
+- les nouveaux arrivants naissent avec un **léger écart aléatoire** : sans
+  lui, deux conversions simultanées créaient deux fidèles au **même point
+  exact**, et la répulsion n'avait aucune direction où pousser.
+
+| Paires de fidèles superposées | Taux |
+|---|---|
+| Première version (sans les deux réglages) | **30 %** |
+| Avec `arriveRadius` + deux passes de répulsion | 5,6 % |
+| Avec l'écart à la naissance | **2,6 %** (à 600 fidèles) |
+
+### Le coût, mesuré à 600 fidèles
+
+| Mesure | Valeur |
+|---|---|
+| `Retinue.update()` — chemin, répulsion, collisions, matrices | **1,22 ms/frame** |
+| Mortels + conversion | 0,16 ms/frame |
+| **Total de nos boucles** | **1,37 ms** sur les 16,7 ms d'une frame à 60 Hz |
+
+Trois précautions expliquent ce chiffre :
+
+- **Un seul parcours de la trace pour tout le cortège.** Les retards allant
+  croissant avec le rang, un curseur avance dans la trace au fil des fidèles
+  au lieu de la relire 600 fois.
+- **La répulsion passe par une grille** dont la case vaut exactement la
+  distance de répulsion : chaque fidèle n'est comparé qu'à ses voisins de 9
+  cases, jamais aux 599 autres (180 000 paires évitées).
+- **Rien n'est alloué par frame** : grille, seaux et vecteurs de travail sont
+  réutilisés d'une image à l'autre.
+
+### Modifié
+
+- `src/entities/Retinue.ts` — `update()` réécrite en trois temps : suivre le
+  chemin, se repousser, ne finir ni dans un mur ni hors de la cité.
+- `src/config.ts` — section `retinue` refondue (`trail*`, `lag*`,
+  `arriveRadius`, `separation*`), chaque valeur commentée avec ce qu'elle
+  casse si on la change.
+- `src/core/Game.ts` — la trace est mise à jour à l'étape 4 et remise à zéro
+  par `restart()`.
+
+### Vérifié (banc de test web, Chromium, format téléphone 390 × 844)
+
+- [x] `npm run typecheck` — OK, aucune erreur console
+- [x] **Retard maximal 11,9 unités** sur 50 changements de direction, contre
+      32,9 en M4
+- [x] **2,6 % de paires superposées** à 600 fidèles, contre 30 % au premier jet
+- [x] **0 fidèle dans un mur**, en surveillance continue
+- [x] **Coûts ci-dessus**, mesurés avec un cortège de 600
+- [x] La foule tient la rue et contourne les immeubles (capture à l'appui)
+- [x] Aucune régression : joueur bloqué à `x = 4,9`, glissement, bord du
+      monde, 450 mortels toujours vivants, `restart()` remet tout à zéro
+
+### ⚠️ Ce qui reste
+
+- **Le score n'est toujours pas affiché** : c'est le HUD de la Milestone 6.
+- Les fps du banc (17) restent dictés par son **GPU logiciel**, pas par notre
+  code : 1,37 ms de calcul contre 16,7 ms disponibles. La mesure qui compte
+  reste celle du téléphone.
+
+**Cassé** — Rien.
+
+---
+
 ## 2026-09-02 — Claude — ⚡ La conversion fait boule de neige
 
 **Demandé** — Un mortel doit être converti quand il est touché **par la
@@ -810,8 +904,8 @@ npm run dev              # ← n'existe plus
 | 2 | Ville simple + caméra | ✅ Terminée |
 | 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
 | 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
-| 5 | Système de cortège (formation, suivi) | ⬜ À venir |
-| 6 | HUD : compteur de fidèles + relance | ⬜ |
+| 5 | Système de cortège (formation, suivi) | ✅ Terminée |
+| 6 | HUD : compteur de fidèles + relance | ⬜ À venir |
 | 7 | Première passe d'optimisation | ⬜ |
 | 8 | 🏛️ La cité grecque : quartiers, marbre, temples, repères | ⬜ |
 | 9 | 🏛️ Le panthéon : dieux jouables | ⬜ |

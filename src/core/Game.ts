@@ -20,6 +20,7 @@ import { City } from '../world/City';
 import { Mortals } from '../entities/Mortals';
 import { Retinue } from '../entities/Retinue';
 import { Conversion } from '../systems/Conversion';
+import { PlayerTrail } from '../systems/PlayerTrail';
 
 export class Game {
   /**
@@ -38,6 +39,7 @@ export class Game {
   private readonly mortals: Mortals;
   private readonly retinue: Retinue;
   private readonly conversion: Conversion;
+  private readonly trail: PlayerTrail;
   private readonly loop: Loop;
   private readonly presentFrame: () => void;
 
@@ -61,6 +63,9 @@ export class Game {
     this.mortals = new Mortals(this.gameScene.scene, this.city);
     this.retinue = new Retinue(this.gameScene.scene, this.city);
     this.conversion = new Conversion(this.mortals, this.retinue);
+    // Le cortège suit le CHEMIN du dieu, pas sa position : c'est ce qui lui
+    // fait contourner les immeubles au lieu de s'y coincer.
+    this.trail = new PlayerTrail(this.player.position.x, this.player.position.y);
 
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
 
@@ -84,8 +89,9 @@ export class Game {
 
     // 4. Convertir les mortels au contact, puis faire suivre le cortège.
     const { x, y: z } = this.player.position;
+    this.trail.update(x, z);
     this.conversion.update(x, z);
-    this.retinue.update(deltaTime, x, z);
+    this.retinue.update(deltaTime, x, z, this.trail);
 
     // --- Milestone 10 : this.ability.update(deltaTime)    (la capacité divine)
     //     Thème et contenu : voir UNIVERS.md
@@ -114,6 +120,7 @@ export class Game {
     this.player.reset();
     this.retinue.clear();
     this.mortals.reset();
+    this.trail.reset(this.player.position.x, this.player.position.y);
     this.cameraRig.snapTo(this.player.position.x, this.player.position.y);
   }
 

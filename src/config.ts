@@ -138,9 +138,13 @@ export const CONFIG = {
   /**
    * Le cortège : les fidèles qui suivent le joueur.
    *
-   * ⚠️ Le SUIVI ci-dessous est provisoire (voir README). La formation
-   * véritable est le sujet de la Milestone 5 ; ces réglages n'ont pour but
-   * que de rendre la conversion visible dès maintenant.
+   * Deux mécanismes, indépendants, se combinent :
+   *
+   * 1. **Le chemin** (`trail*`, `lag*`) — chaque fidèle vise un point situé à
+   *    N mètres derrière le joueur SUR SON CHEMIN, pas sa position. C'est ce
+   *    qui empêche les traînards de se coincer derrière un immeuble.
+   * 2. **L'écartement** (`separation*`) — les fidèles se repoussent, ce qui
+   *    transforme la file indienne en foule.
    */
   retinue: {
     /**
@@ -150,17 +154,54 @@ export const CONFIG = {
     maxSize: 600,
     color: 0x7dd3fc,
     /** Les fidèles vont un peu plus vite que le joueur, sinon ils décrochent. */
-    speedFactor: 1.08,
+    speedFactor: 1.12,
+
+    /** Un point de chemin tous les 35 cm : assez fin, et le tableau reste court. */
+    trailPointSpacing: 0.35,
     /**
-     * Distance du premier fidèle au joueur.
-     *
-     * ⚠️ Ne pas descendre : à 1,5 les fidèles collaient la divinité au point
-     * de la cacher dans sa propre foule (constaté en capture). Le joueur doit
-     * toujours pouvoir se repérer à l'écran.
+     * Longueur de chemin mémorisée, en unités. Doit couvrir le retard du
+     * dernier fidèle : `lagMin + lagStep × √maxSize` ≈ 2,4 + 0,55 × 24 ≈ 16,
+     * avec une marge confortable.
      */
-    minDistance: 2.4,
-    /** Étalement : plus c'est grand, plus le cortège est large. */
-    spacing: 0.5,
+    trailMaxLength: 60,
+
+    /**
+     * Retard du premier fidèle sur le chemin du joueur.
+     *
+     * ⚠️ Ne pas descendre : trop court, les fidèles collent la divinité au
+     * point de la cacher dans sa propre foule (constaté en capture).
+     */
+    lagMin: 2.4,
+    /**
+     * Étalement du cortège le long du chemin. La racine carrée du rang évite
+     * qu'un cortège de 500 s'étire sur 250 mètres.
+     */
+    lagStep: 0.55,
+
+    /**
+     * Distance à la cible en dessous de laquelle un fidèle **cesse de la
+     * chasser**.
+     *
+     * ⚠️ Réglage clé. Sans elle, chaque fidèle se posait exactement sur son
+     * point du chemin — et comme les rangs voisins partagent presque le même
+     * point, ils s'empilaient : 121 paires superposées, mesurées. En les
+     * laissant s'arrêter « à peu près » à leur place, la répulsion a la place
+     * de les étaler en foule.
+     */
+    arriveRadius: 0.75,
+
+    /** Distance en dessous de laquelle deux fidèles se repoussent. */
+    separation: 1.05,
+    /**
+     * Part du chevauchement corrigée par frame (0 à 1). Trop haut, la foule
+     * vibre ; trop bas, elle s'interpénètre.
+     */
+    separationStrength: 1,
+    /**
+     * Nombre de passes de répulsion par frame. Deux passes valent bien mieux
+     * qu'une force doublée : la foule se démêle sans vibrer.
+     */
+    separationPasses: 2,
   },
 
   player: {
