@@ -1,4 +1,4 @@
-# L'univers de Gods Rush — mythologie grecque
+# L'univers de Divine City — mythologie grecque
 
 > Document de référence du **thème**. Le « quoi » et le « pourquoi » du
 > contenu ; le « comment » technique reste dans [`README.md`](./README.md),
@@ -11,22 +11,22 @@
 
 ## Le nom
 
-Le jeu s'appelle **Gods Rush** (décidé le 2026-09-02, après « Brainrot City »
-puis « Olympus »).
+Le jeu s'appelle **Divine City** (décidé le 2026-09-02, après « Brainrot
+City », « Olympus » et « Gods Rush »).
 
-Le nom dit les deux choses à la fois : **Gods** pour le panthéon jouable et ses
-capacités, **Rush** pour le genre — c'est le mot que les joueurs de *crowd
-runner* reconnaissent et cherchent. « Olympus » seul, quoique disponible, ne
-disait rien du genre de jeu.
+Le nom réunit les deux moitiés du jeu : **Divine** pour le panthéon jouable et
+ses capacités, **City** pour la cité que l'on parcourt et qui est le terrain de
+jeu. Il garde aussi la structure « … City » du tout premier nom, ce qui n'est
+pas anodin : c'est la famille de noms du genre (*Crowd City*).
 
-L'identifiant technique de l'app est **`com.pierreespy.godsrush`**. Il est
+L'identifiant technique de l'app est **`com.pierreespy.divinecity`**. Il est
 **définitif dès la première publication** sur les stores : ne plus y toucher.
 
 > ⚠️ Restent à vérifier avant publication : le nom exact sur l'App Store
 > (Apple impose l'unicité du nom d'app) et l'absence de **marque déposée** en
-> classes 9 et 41 (INPI, EUIPO). Attention, « Rush » est un mot très employé
-> dans les jeux mobiles : il faut chercher les voisins immédiats, pas
-> seulement la correspondance exacte.
+> classes 9 et 41 (INPI, EUIPO). Chercher aussi les **voisins immédiats**
+> (« Divine City 3D », « Divinity City »…) : un nom libre mais trop proche
+> d'un jeu existant se fait écraser dans les résultats de recherche.
 
 ## Le pitch
 

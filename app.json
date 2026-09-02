@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Gods Rush",
-    "slug": "gods-rush",
+    "name": "Divine City",
+    "slug": "divine-city",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -13,10 +13,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pierreespy.godsrush"
+      "bundleIdentifier": "com.pierreespy.divinecity"
     },
     "android": {
-      "package": "com.pierreespy.godsrush",
+      "package": "com.pierreespy.divinecity",
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "backgroundColor": "#12141c"

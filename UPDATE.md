@@ -9,7 +9,51 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
-## 2026-09-02 — Claude — 🏷️ Nom définitif : **Gods Rush**
+## 2026-09-02 — Claude — 🏷️ Nom : **Divine City**
+
+**Résumé** — Le jeu s'appelle **Divine City**. C'est le quatrième nom de la
+journée (« Brainrot City » → « Olympus » → « Gods Rush » → **Divine City**) ;
+aucun des précédents n'a été publié, donc aucun n'a laissé de trace ailleurs
+que dans ce journal.
+
+**Pourquoi ce nom** — Il réunit les deux moitiés du jeu : *Divine* pour le
+panthéon jouable et ses capacités, *City* pour la cité qui est le terrain de
+jeu. Il reprend aussi la structure « … City » de *Crowd City*, la référence du
+genre — un joueur qui lit le nom sait à quoi s'attendre.
+
+### Modifié
+
+| Fichier | Changement |
+|---|---|
+| `app.json` | `name` → **Divine City**, `slug` → `divine-city`, identifiant de bundle |
+| `package.json` | `name` → `divine-city` |
+| `App.tsx` | Titre affiché dans le HUD |
+| `README.md`, `UNIVERS.md` | Titre et section « Le nom » |
+
+**Identifiant de bundle** — désormais **`com.pierreespy.divinecity`** (iOS et
+Android). Toujours sans conséquence, rien n'étant publié — mais c'est la
+dernière fenêtre pour en changer sans douleur.
+
+### ⚠️ Restent à vérifier avant publication
+
+- **Le nom sur l'App Store** (Apple impose l'unicité du nom d'app) et les
+  **marques déposées** en classes 9 et 41 (INPI, EUIPO).
+- Les **voisins immédiats** (« Divine City 3D », « Divinity City »…) : un nom
+  libre mais trop proche d'un jeu existant se fait écraser dans les résultats.
+
+### Vérifié
+
+- [x] `npm run typecheck` — OK
+- [x] Bundle web régénéré, **aucune erreur console**
+- [x] Le HUD affiche **Divine City** (capture vérifiée)
+- [x] Aucune régression : 124 immeubles, blocage, glissement, bord du monde
+
+**Cassé** — Rien. L'app apparaîtra de nouveau comme **nouvelle** dans Expo Go,
+l'identifiant ayant changé.
+
+---
+
+## 2026-09-02 — Claude — 🏷️ Nom : **Gods Rush**
 
 **Résumé** — Le jeu s'appelle **Gods Rush**. Ce bloc remplace celui du dessous,
 qui actait « Olympus » : ce dernier n'aura jamais été publié.

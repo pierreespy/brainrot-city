@@ -64,7 +64,7 @@ export default function App() {
         {/* Couche d'interface, posée par-dessus la 3D. */}
         <SafeAreaView style={styles.hud} pointerEvents="box-none">
           <View style={styles.panel} pointerEvents="none">
-            <Text style={styles.title}>Gods Rush</Text>
+            <Text style={styles.title}>Divine City</Text>
             <Text style={styles.hint}>
               Glisse ton doigt en bas de l&apos;écran pour te déplacer
             </Text>
