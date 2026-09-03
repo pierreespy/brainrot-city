@@ -1,0 +1,31 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 844, "title": "Menu — 3 onglets (cliquable)", "is_interactive": true },
+    { "file": "Reglages.dc.html", "x": 490, "y": 0, "w": 390, "h": 844, "title": "Paramètres" },
+    { "file": "FicheDieu.dc.html", "x": 980, "y": 0, "w": 390, "h": 844, "title": "Fiche d'un dieu" }
+  ],
+  "annotations": [
+    {
+      "id": "note-main",
+      "x": 0,
+      "y": -150,
+      "w": 390,
+      "text": "Les trois onglets sont cliquables : Jouer, Magasin, Dieux.\nCouleurs, capacités, durées et recharges viennent de roster.ts (M12)."
+    },
+    {
+      "id": "note-reglages",
+      "x": 490,
+      "y": -150,
+      "w": 390,
+      "text": "Ouvert par l'engrenage de l'onglet Jouer.\nLa qualité graphique est le réglage prévu en M39."
+    },
+    {
+      "id": "note-fiche",
+      "x": 980,
+      "y": -150,
+      "w": 390,
+      "text": "Ouverte en touchant un dieu possédé.\nLes apparences sont le contenu du magasin côté cosmétique."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

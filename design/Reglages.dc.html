@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Manrope, system-ui, sans-serif; }
+    a { color: #7dd3fc; } a:hover { color: #bae6fd; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #0e161a; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;">
+
+  <!-- L'écran Jouer, assombri derrière la feuille : on ne quitte pas le menu,
+       on pose un panneau dessus. -->
+  <div style="position: absolute; inset: 0; padding: 56px 20px 0 20px; opacity: 0.22;">
+    <div style="text-align: center; padding-top: 90px;">
+      <div style="font-family: Cinzel, Georgia, serif; font-size: 35px; font-weight: 700; color: #efe9db; letter-spacing: 2.5px; line-height: 1.1;">DIVINE<br>CITY</div>
+    </div>
+  </div>
+  <div style="position: absolute; inset: 0; background: rgba(4,8,10,0.72);"></div>
+
+  <div style="position: relative; background: #16222a; border-radius: 26px 26px 0 0; padding: 10px 20px 30px 20px; border-top: 1px solid rgba(239,233,219,0.12);">
+
+    <div style="width: 38px; height: 4px; border-radius: 2px; background: rgba(239,233,219,0.22); margin: 0 auto 18px auto;"></div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px;">
+      <div style="font-family: Cinzel, Georgia, serif; font-size: 24px; font-weight: 700; color: #efe9db; letter-spacing: 1.2px;">Paramètres</div>
+      <div style="width: 44px; height: 44px; border-radius: 22px; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#efe9db" stroke-width="2" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6 6 18"></path>
+        </svg>
+      </div>
+    </div>
+
+    <div style="margin-top: 16px; color: rgba(239,233,219,0.5); font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;">Son</div>
+    <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 2px; border-radius: 14px; overflow: hidden; background: rgba(0,0,0,0.45);">
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 16px; min-height: 54px;">
+        <span style="color: #efe9db; font-size: 15px; font-weight: 600;">Musique</span>
+        <div style="width: 50px; height: 30px; border-radius: 15px; background: #7dd3fc; padding: 3px; display: flex; justify-content: flex-end;">
+          <div style="width: 24px; height: 24px; border-radius: 12px; background: #0e161a;"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 16px; min-height: 54px;">
+        <span style="color: #efe9db; font-size: 15px; font-weight: 600;">Effets sonores</span>
+        <div style="width: 50px; height: 30px; border-radius: 15px; background: #7dd3fc; padding: 3px; display: flex; justify-content: flex-end;">
+          <div style="width: 24px; height: 24px; border-radius: 12px; background: #0e161a;"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 16px; min-height: 54px;">
+        <span style="color: #efe9db; font-size: 15px; font-weight: 600;">Vibrations</span>
+        <div style="width: 50px; height: 30px; border-radius: 15px; background: rgba(239,233,219,0.16); padding: 3px; display: flex; justify-content: flex-start;">
+          <div style="width: 24px; height: 24px; border-radius: 12px; background: rgba(239,233,219,0.55);"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 22px; color: rgba(239,233,219,0.5); font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;">Affichage</div>
+    <div style="margin-top: 10px; padding: 15px 16px; border-radius: 14px; background: rgba(0,0,0,0.45);">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="color: #efe9db; font-size: 15px; font-weight: 600;">Qualité graphique</span>
+        <span style="color: rgba(239,233,219,0.55); font-size: 12px; font-weight: 600;">Auto</span>
+      </div>
+      <div style="margin-top: 12px; display: flex; gap: 8px;">
+        <div style="flex-grow: 1; height: 38px; border-radius: 10px; background: #7dd3fc; display: flex; align-items: center; justify-content: center;">
+          <span style="color: #0e161a; font-size: 13px; font-weight: 800;">Auto</span>
+        </div>
+        <div style="flex-grow: 1; height: 38px; border-radius: 10px; background: rgba(239,233,219,0.08); display: flex; align-items: center; justify-content: center;">
+          <span style="color: rgba(239,233,219,0.7); font-size: 13px; font-weight: 700;">Basse</span>
+        </div>
+        <div style="flex-grow: 1; height: 38px; border-radius: 10px; background: rgba(239,233,219,0.08); display: flex; align-items: center; justify-content: center;">
+          <span style="color: rgba(239,233,219,0.7); font-size: 13px; font-weight: 700;">Haute</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 22px; color: rgba(239,233,219,0.5); font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;">Compte</div>
+    <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 2px; border-radius: 14px; overflow: hidden; background: rgba(0,0,0,0.45);">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 16px; min-height: 54px;">
+        <span style="color: #efe9db; font-size: 15px; font-weight: 600;">Restaurer mes achats</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(239,233,219,0.4)" stroke-width="2" stroke-linecap="round"><path d="m9.5 5.5 7 6.5-7 6.5"></path></svg>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 16px; min-height: 54px;">
+        <span style="color: #efe9db; font-size: 15px; font-weight: 600;">Langue</span>
+        <span style="color: rgba(239,233,219,0.55); font-size: 13px; font-weight: 600;">Français</span>
+      </div>
+      <div style="display: flex; align-items: center; padding: 15px 16px; min-height: 54px;">
+        <span style="color: #c4694a; font-size: 15px; font-weight: 700;">Réinitialiser la progression</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 18px; text-align: center; color: rgba(239,233,219,0.32); font-size: 11px; font-weight: 600;">Divine City · version [NUMÉRO]</div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

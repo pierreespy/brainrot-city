@@ -9,3 +9,7 @@ web-build/
 # Natif (généré par expo prebuild / EAS)
 /ios
 /android
+
+# Maquettes : le canvas assemblé (2,4 Mo d'éditeur embarqué) est REGÉNÉRÉ
+# à partir des .dc.html et de canvas.json. Seules les sources sont suivies.
+/design/menu-divine-city.html
