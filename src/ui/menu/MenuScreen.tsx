@@ -20,11 +20,19 @@
  * glisser. Le contenu suit le doigt image par image, et le trait de la barre
  * d'onglets avance avec lui — d'où le `Animated.ScrollView` et la valeur
  * `scrollX` ci-dessous, plutôt qu'un simple `useState` d'onglet actif.
+ *
+ * ⚠️ Le fond (le temple) est UNIQUE et FIXE, posé une fois derrière le ruban
+ * — pas une image par onglet. Une image par onglet montrerait sa jonction
+ * pile au moment du glissement, le pire moment pour une coupure visible.
+ * Deux voiles en dégradé (haut et bas) l'assombrissent juste assez pour que
+ * le texte posé dessus (la bourse, l'accroche de l'onglet Jouer) reste
+ * lisible, sans jamais le cacher au milieu de l'écran.
  */
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Animated,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -32,6 +40,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { GodId } from '../../entities/gods/roster';
 import type { Progression } from '../../meta/progression';
 import { GodsTab } from './GodsTab';
@@ -142,6 +151,20 @@ export function MenuScreen({
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+      {/* Le fond : une seule image plein écran, immobile — elle ne fait pas
+          partie du ruban et ne bouge donc jamais pendant le glissement. */}
+      <Image
+        source={require('../../../assets/wallpaper.jpg')}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={[COLORS.ground, 'transparent', 'transparent', COLORS.ground]}
+        locations={[0, 0.22, 0.72, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+
       <View style={styles.header}>
         <Purse drachmas={state.drachmas} />
       </View>
@@ -307,7 +330,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    backgroundColor: COLORS.ground,
+    // Transparent, à dessein : le voile en dégradé posé sur le fond rejoint
+    // déjà `COLORS.ground` à cette hauteur de l'écran, sans coupure.
+    backgroundColor: 'transparent',
     paddingTop: SPACE.sm,
   },
   tab: {

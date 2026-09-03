@@ -9,6 +9,38 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🖼️ Le fond du menu : le temple, fixe derrière le ruban
+
+**Résumé** — Le menu avait un fond uni (`#12141c`). Il a maintenant une image
+(`assets/wallpaper.jpg`, générée par IA sur un prompt donné dans cette
+session) : un temple grec au soleil couchant, sur une colline au-dessus d'une
+cité côtière.
+
+**Un seul fond, pas trois.** L'image est posée UNE FOIS derrière le
+`Animated.ScrollView` du ruban, jamais dedans : elle ne fait donc pas partie
+de ce qui glisse, et reste parfaitement immobile pendant qu'on passe d'un
+onglet à l'autre. Une image par onglet aurait montré sa jonction pile au
+milieu du geste — le pire moment pour une coupure visible.
+
+**Lisibilité.** Deux voiles en dégradé (`expo-linear-gradient`, nouvelle
+dépendance SDK 54) assombrissent le haut (la bourse, l'accroche « Divine
+City ») et le bas (la barre d'onglets) jusqu'à `COLORS.ground`, en laissant le
+centre de l'image visible. Les cartes, déjà opaques (`COLORS.panel`), n'ont
+pas eu besoin d'être retouchées. Le fond `COLORS.ground` de la barre d'onglets
+est passé en transparent : le dégradé y arrive déjà à la même couleur, la
+jonction ne se voit pas.
+
+**Fichiers touchés** — `src/ui/menu/MenuScreen.tsx`, `assets/wallpaper.jpg`
+(ajouté par l'utilisateur), `package.json` / `package-lock.json`
+(`expo-linear-gradient`), `UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe. Capture d'écran sur le banc web
+(390×844) : le fond, le dégradé et le trait de la barre d'onglets rendent
+comme prévu sur l'onglet Jouer et après un glissement vers Magasin, sans
+erreur console.
+
+---
+
 ## 2026-09-03 — Claude — 🎠 Le menu devient un ruban : Magasin · Jouer · Dieux
 
 **Résumé** — Deux changements sur la coquille du menu, demandés ensemble.
