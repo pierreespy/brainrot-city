@@ -9,6 +9,40 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🐛 Le correctif WebGL précédent ne suffisait pas sur téléphone : nouvelle approche
+
+**Résumé** — Le correctif précédent (effacer le global
+`WebGLRenderingContext` avant de construire `THREE.WebGLRenderer`) ne
+marchait pas sur un vrai téléphone : le crash `WebGL 1 is not supported
+since r163` revenait à l'identique. Cause probable : ce global est installé
+par expo-gl **non configurable**, donc `delete` échoue silencieusement —
+rien à voir avec un cache de bundle, le symptôme est resté identique après
+rechargement complet.
+
+**Nouvelle approche : cacher la chaîne de prototypes, pas le global.**
+Three.js interroge `instanceof`, qui interroge lui-même
+`Object.getPrototypeOf` — donc un `Proxy` autour du contexte, avec un
+`getPrototypeOf` qui répond `Object.prototype`, fait échouer le test SANS
+toucher à quoi que ce soit de global. Chaque méthode est reliée (`bind`) au
+`gl` d'origine avant d'être renvoyée, sinon les appels natifs — qui
+s'attendent à recevoir `gl` comme `this` — casseraient en recevant le Proxy
+à la place.
+
+**Le détail qui comptait : ce Proxy devient `_gl` DANS Three.js**, donc il
+encaisse chaque appel WebGL de chaque image, pas seulement la construction
+du renderer. Sans mise en cache des méthodes déjà liées, on aurait créé une
+fonction liée à CHAQUE `gl.uniform...`/`gl.bindTexture`/etc. — des milliers
+de fois par seconde. Un `Map` s'en charge.
+
+**Fichiers touchés** — `src/core/createRenderer.ts`, `UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe. Banc web : menu et partie
+s'affichent sans erreur console (comme avant — ce test ne peut toujours pas
+reproduire le bug d'origine, spécifique au contexte natif). **Reste à
+confirmer sur téléphone via Expo Go**, seul test qui vaille ici.
+
+---
+
 ## 2026-09-03 — Claude — 🐛 Corrige le crash « WebGL 1 is not supported » sur téléphone
 
 **Résumé** — Le jeu plantait au lancement sur téléphone (Expo Go, iOS)

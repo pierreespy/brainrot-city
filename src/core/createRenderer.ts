@@ -48,33 +48,51 @@ export function createRenderer(
     getContext: () => gl,
   } as unknown as HTMLCanvasElement;
 
-  // ⚠️ expo-gl installe un global `WebGLRenderingContext` (nom hérité de
-  // avant son passage à WebGL2), et le contexte qu'il donne EST une
-  // instance de ce global — alors qu'il implémente déjà l'API WebGL2
-  // (`ExpoWebGLRenderingContext extends WebGL2RenderingContext`). Depuis la
-  // r163, Three.js refuse tout `context` reconnu comme `WebGLRenderingContext`,
-  // sans vérifier ce qu'il sait réellement faire. On efface ce global, rien
-  // que le temps de construire le renderer, pour ne pas déclencher ce faux
-  // positif — le contexte, lui, ne change pas.
-  const legacyWebGL1Global = (globalThis as { WebGLRenderingContext?: unknown })
-    .WebGLRenderingContext;
-  delete (globalThis as { WebGLRenderingContext?: unknown }).WebGLRenderingContext;
+  // ⚠️ expo-gl fait hériter son `WebGL2RenderingContext` de son
+  // `WebGLRenderingContext` (« pour coller au spec »), donc `gl instanceof
+  // WebGLRenderingContext` vaut TRUE même pour un contexte WebGL2 — voir le
+  // CHANGELOG d'expo-gl. Depuis la r163, Three.js refuse justement tout
+  // `context` reconnu comme tel, sans vérifier ce qu'il sait réellement
+  // faire. Une première version de ce fichier essayait d'effacer le global
+  // `WebGLRenderingContext` juste avant : ça n'a pas suffi sur téléphone —
+  // vraisemblablement installé non configurable, contrairement à un simple
+  // objet JS.
+  //
+  // Le contournement qui tient, cette fois : cacher la chaîne de
+  // prototypes plutôt que le global. Un Proxy dont `getPrototypeOf` ment
+  // fait échouer l'`instanceof` (c'est exactement lui que `instanceof`
+  // interroge, quoi qu'il arrive au global), et chaque méthode est RELIÉE à
+  // `gl`, l'objet natif d'origine — sinon les appels natifs, qui s'attendent
+  // à recevoir `gl` comme `this`, casseraient en recevant le Proxy à la
+  // place.
+  //
+  // ⚠️ Ce Proxy devient `_gl` À L'INTÉRIEUR de Three.js : c'est lui qui
+  // encaisse CHAQUE appel WebGL de CHAQUE image, pas seulement la
+  // construction. On met donc en cache les méthodes déjà liées — sans quoi
+  // on créerait une fonction liée par appel de `gl.uniform...` ou
+  // `gl.bindTexture`, des milliers de fois par seconde.
+  const boundMethods = new Map<PropertyKey, (...args: unknown[]) => unknown>();
+  const contextForThree = new Proxy(gl, {
+    getPrototypeOf: () => Object.prototype,
+    get: (target, prop) => {
+      const value = Reflect.get(target, prop, target);
+      if (typeof value !== 'function') return value;
+      let bound = boundMethods.get(prop);
+      if (bound === undefined) {
+        bound = (value as (...args: unknown[]) => unknown).bind(target);
+        boundMethods.set(prop, bound);
+      }
+      return bound;
+    },
+  });
 
   const renderer = new THREE.WebGLRenderer({
     canvas: canvasShim,
-    context: gl as unknown as WebGLRenderingContext,
+    context: contextForThree as unknown as WebGLRenderingContext,
     // Coupé par défaut : l'anticrénelage fait travailler le GPU sur chaque
     // pixel, et les écrans de téléphone sont assez denses pour s'en passer.
     antialias: CONFIG.render.antialias,
   });
-
-  // On remet le global en place : seul le constructeur de Three.js avait
-  // besoin de ne pas le voir, le reste de l'app (et le web, qui n'y touche
-  // jamais) doit le retrouver intact.
-  if (legacyWebGL1Global !== undefined) {
-    (globalThis as { WebGLRenderingContext?: unknown }).WebGLRenderingContext =
-      legacyWebGL1Global;
-  }
 
   // drawingBufferWidth est DÉJÀ en pixels physiques. Si on laissait Three.js
   // appliquer en plus le pixelRatio, on rendrait 2 à 3 fois trop de pixels
