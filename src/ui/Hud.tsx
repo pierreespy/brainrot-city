@@ -20,7 +20,7 @@ interface Props {
   district: string;
   onRestart: () => void;
   /**
-   * Toucher le compteur affiche les mesures de performance (Milestone 7).
+   * Toucher le compteur affiche les mesures de performance (Milestone 9).
    *
    * Il n'y a pas de bouton dédié : l'écran d'un téléphone est petit, et une
    * commande de debug n'a pas à occuper une place que le jeu utilisera.
@@ -55,7 +55,7 @@ export function Hud({ faithful, district, onRestart, onToggleStats }: Props) {
       </View>
 
       {/*
-        Le quartier traversé (Milestone 8). Il s'affiche sous le compteur,
+        Le quartier traversé (Milestone 11). Il s'affiche sous le compteur,
         discrètement : c'est un repère, pas une information à surveiller.
       */}
       {district !== '' && (
@@ -67,7 +67,7 @@ export function Hud({ faithful, district, onRestart, onToggleStats }: Props) {
       )}
 
       {/*
-        Emplacement RÉSERVÉ à la capacité divine (Milestone 10).
+        Emplacement RÉSERVÉ à la capacité divine (Milestone 19).
         Il est affiché éteint dès maintenant, à dessein : décider de sa place
         après coup obligerait à redessiner tout le HUD, et le pouce du joueur
         a déjà pris ses habitudes. Il n'est pas cliquable tant qu'aucune

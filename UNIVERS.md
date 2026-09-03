@@ -51,7 +51,7 @@ vocabulaire, l'habillage et le contenu :
 
 ## La cité
 
-> **État : bâtie en Milestone 8.** Les six quartiers ci-dessous existent dans
+> **État : bâtie en Milestone 11.** Les six quartiers ci-dessous existent dans
 > le jeu. Ce qui suit reste la référence du « pourquoi » ; le « comment » est
 > dans [`README.md`](./README.md) et le plan dans `src/world/districts.ts`.
 
@@ -106,8 +106,9 @@ courir plutôt que de ratisser au hasard.
 | **Prêtresse** | 1 fidèle + recharge la capacité | Rare, immobile près des temples |
 | **Philosophe** | 1 fidèle | **Fuit** le cortège : il faut le coincer |
 
-> Départ prudent : la Milestone 3 ne fera **que des citoyens**. Les autres
-> types arrivent avec le thème, une fois la boucle de base jouable.
+> Départ prudent : la Milestone 4 ne fera **que des citoyens**. Les autres
+> types arrivent avec le panthéon (M16-M18), une fois la boucle de base
+> jouable.
 
 ---
 
@@ -171,5 +172,15 @@ monde) et un sens aux capacités d'Athéna, d'Arès et d'Hadès.
 - **Le style des personnages** — silhouettes stylisées ou plus détaillées.
   Contrainte technique ferme : des **milliers** de mortels affichés, donc des
   modèles très légers et un seul mesh instancié.
+  > **Comment produire ces graphismes (personnages, décors) en haute
+  > qualité ?** Claude Code ne fabrique pas lui-même des modèles ou textures
+  > 3D détaillés à partir d'une image de référence — seulement du code et de
+  > la géométrie procédurale (comme les capsules et cylindres colorés
+  > actuels). La bonne combinaison : utiliser un **outil de génération
+  > d'images/3D dédié** (Midjourney, Nano Banana, Meshy, etc.) pour produire
+  > le concept art ou les modèles à partir de ta référence, puis les
+  > intégrer et les simplifier dans le jeu — en respectant la contrainte des
+  > milliers d'instances à l'écran (mesh bas-poly, texture unique ou couleurs
+  > plates). C'est le sujet de la **M40**.
 - **Le mode de jeu** — partie chronométrée, survie, ou objectif de conversion.
 - **La monétisation** — publicité, achat des dieux, ou rien.

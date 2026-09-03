@@ -11,13 +11,13 @@
  *    ce qui permet d'en afficher des centaines.
  *
  * 2. **Un seul InstancedMesh.** 450 mortels = 1 appel GPU, comme les 124
- *    immeubles de la Milestone 2.
+ *    immeubles de la Milestone 3.
  *
  * 3. **Un TYPE par mortel dès maintenant**, même s'il n'y a que des citoyens.
  *    Hoplites, prêtresses et philosophes sont prévus (voir UNIVERS.md) et
  *    n'auront qu'une ligne à ajouter au catalogue de `config.ts`.
  *
- * 4. **On ne paie que ce qui se voit** (Milestone 7). La caméra ne cadre
+ * 4. **On ne paie que ce qui se voit** (Milestone 9). La caméra ne cadre
  *    qu'une quarantaine d'unités devant le joueur : sur 450 mortels, une
  *    trentaine seulement sont à l'écran. Les autres ne sont ni dessinés, ni
  *    déplacés à chaque image — voir `update()`.
@@ -206,7 +206,7 @@ export class Mortals {
   // ---------------------------------------------------------------- vie
 
   /**
-   * Une image de vie citadine — et le poste où la Milestone 7 a le plus gagné.
+   * Une image de vie citadine — et le poste où la Milestone 9 a le plus gagné.
    *
    * Un seul parcours du tableau fait les trois choses d'un coup, parce que
    * les trois dépendent de la même question : **ce mortel est-il à l'écran ?**

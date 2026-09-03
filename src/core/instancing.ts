@@ -21,7 +21,7 @@
  *
  * ⚠️ Ce raccourci suppose une **échelle de 1** et une rotation **autour de Y
  * uniquement**. Le jour où un hoplite sera plus grand qu'un citoyen
- * (Milestone 8), il faudra aussi écrire les termes d'échelle : ce sont les
+ * (Milestone 11), il faudra aussi écrire les termes d'échelle : ce sont les
  * cases 0, 5 et 10, multipliées par le facteur voulu.
  */
 

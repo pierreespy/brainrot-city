@@ -50,7 +50,7 @@ export const CONFIG = {
     /**
      * Chaque pâté est découpé en `lotsPerBlock` × `lotsPerBlock` parcelles.
      *
-     * ⚠️ Passé de 2 à 3 en Milestone 8, pour une raison purement visuelle :
+     * ⚠️ Passé de 2 à 3 en Milestone 11, pour une raison purement visuelle :
      * avec 2, un pâté n'était que quatre maisons de 11 unités de côté, donc
      * **quatre énormes toits rouges** vus d'en haut. À 3, la Céramique
      * redevient un tissu de petites toitures — ce qu'annonce son nom.
@@ -59,11 +59,11 @@ export const CONFIG = {
     /**
      * Profondeur d'une maison, en multiples de sa parcelle.
      *
-     * ⚠️ Vaut exactement 1 depuis la Milestone 8, et il y a deux raisons de
+     * ⚠️ Vaut exactement 1 depuis la Milestone 11, et il y a deux raisons de
      * ne pas y toucher :
      *
      * - **en dessous de 1**, les maisons laisseraient des trous entre elles
-     *   et la cité deviendrait traversable en diagonale (Milestone 2) ;
+     *   et la cité deviendrait traversable en diagonale (Milestone 3) ;
      * - **au-dessus de 1**, elles se CHEVAUCHENT. Deux obstacles qui se
      *   recouvrent se repoussent l'un l'autre : un personnage coincé dans
      *   leur intersection est renvoyé de l'un vers l'autre indéfiniment, et
@@ -96,7 +96,7 @@ export const CONFIG = {
     warehouseHeight: { min: 3, max: 5.5 },
 
     /**
-     * Le toit de tuiles — l'apport visuel décisif de la Milestone 8.
+     * Le toit de tuiles — l'apport visuel décisif de la Milestone 11.
      *
      * ⚠️ Ce n'est pas de la décoration. La caméra plonge de 40 unités de
      * haut : d'une maison, on voit surtout **son toit**. C'est la tuile, pas
@@ -116,7 +116,7 @@ export const CONFIG = {
 
     /**
      * Le pavage au milieu des rues. Il remplace les bandes blanches de la
-     * Milestone 2 : une cité grecque n'a pas de marquage routier, mais elle
+     * Milestone 3 : une cité grecque n'a pas de marquage routier, mais elle
      * a des dalles — et sans repère au sol, on ne sent plus qu'on avance.
      */
     pavingSize: 2.4,
@@ -129,7 +129,7 @@ export const CONFIG = {
   },
 
   /**
-   * Les mortels — les PNJ que l'on convertit (Milestone 4).
+   * Les mortels — les PNJ que l'on convertit (Milestone 5).
    *
    * ⚠️ Un mortel a un **type** dès maintenant, alors qu'il n'en existe qu'un
    * seul (le citoyen). C'est volontaire : hoplites, prêtresses et philosophes
@@ -153,14 +153,14 @@ export const CONFIG = {
 
     /**
      * Le catalogue des types. Un type = une ligne, comme pour les dieux.
-     * `value` est le nombre de fidèles gagnés à la conversion (Milestone 4).
+     * `value` est le nombre de fidèles gagnés à la conversion (Milestone 5).
      */
     types: {
       citizen: {
         label: 'Citoyen',
         /**
-         * ⚠️ Assombri en Milestone 8. Le beige clair d'origine se lisait très
-         * bien sur l'asphalte gris de la Milestone 2 ; sur le marbre et la
+         * ⚠️ Assombri en Milestone 11. Le beige clair d'origine se lisait très
+         * bien sur l'asphalte gris de la Milestone 3 ; sur le marbre et la
          * terre battue de la cité grecque, les mortels disparaissaient dans
          * le décor. Une foule doit se voir : c'est elle qu'on vient chercher.
          */
@@ -412,7 +412,7 @@ export const CONFIG = {
   },
 
   /**
-   * Réglages de rendu — le sujet de la Milestone 7.
+   * Réglages de rendu — le sujet de la Milestone 9.
    *
    * Mesure de départ (banc de test, 600 fidèles + 450 mortels) : **288 798
    * triangles par image**, 187 ms de temps d'image dont **186 ms de dessin**
@@ -434,13 +434,13 @@ export const CONFIG = {
   },
 
   /**
-   * Outils de développement. À couper avant publication (Milestone 13).
+   * Outils de développement. À couper avant publication (Milestone 50).
    */
   debug: {
     /**
      * Affiche images/seconde et coût de chaque étape dans un coin de l'écran.
      *
-     * C'est l'outil de la Milestone 7 : le banc de mesure tourne sur une
+     * C'est l'outil de la Milestone 9 : le banc de mesure tourne sur une
      * machine de développement et ne dit rien des performances réelles. La
      * seule mesure qui compte se prend sur un vrai téléphone, donc le jeu
      * doit savoir se mesurer lui-même.
@@ -458,7 +458,7 @@ export const CONFIG = {
     /**
      * Intervalle minimal entre deux publications du score, en millisecondes.
      *
-     * ⚠️ Le cœur du problème de la Milestone 6. Le jeu tourne à 60 images par
+     * ⚠️ Le cœur du problème de la Milestone 8. Le jeu tourne à 60 images par
      * seconde ; prévenir React à chaque image déclencherait 60 rendus
      * d'interface par seconde pour afficher un nombre. On ne publie donc que
      * si le score a CHANGÉ, et au plus toutes les 120 ms — soit 8 fois par
@@ -468,7 +468,7 @@ export const CONFIG = {
   },
 
   /**
-   * Le profileur : ce que coûte une image, étape par étape (Milestone 7).
+   * Le profileur : ce que coûte une image, étape par étape (Milestone 9).
    *
    * Il est branché en permanence — son coût est de huit lectures d'horloge
    * par image — mais n'affiche rien tant qu'on ne le lui demande pas.

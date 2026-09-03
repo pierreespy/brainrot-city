@@ -1,9 +1,9 @@
 /**
  * Profiler.ts — combien coûte une image, étape par étape.
  *
- * C'est l'outil de la Milestone 7, et il vient AVANT les optimisations :
+ * C'est l'outil de la Milestone 9, et il vient AVANT les optimisations :
  * sans mesure, optimiser revient à deviner. Le journal du projet en garde la
- * trace — la grille de collision de la Milestone 2, réécrite pour ne plus
+ * trace — la grille de collision de la Milestone 3, réécrite pour ne plus
  * fabriquer de chaînes, n'a rien changé aux fps, parce que le coût était
  * ailleurs.
  *

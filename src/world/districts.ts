@@ -1,7 +1,7 @@
 /**
  * districts.ts — le plan de la cité : quel quartier occupe quel pâté.
  *
- * C'est le remède au défaut de jeu constaté en Milestone 2, et écrit noir sur
+ * C'est le remède au défaut de jeu constaté en Milestone 3, et écrit noir sur
  * blanc dans [`UNIVERS.md`](../../UNIVERS.md) : la grille était **uniforme**,
  * donc tous les carrefours se ressemblaient — on s'y perdait et on ne mesurait
  * pas sa progression.

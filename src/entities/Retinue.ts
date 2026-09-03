@@ -383,7 +383,7 @@ export class Retinue {
     return false;
   }
 
-  /** Le score affiché au joueur (Milestone 6). */
+  /** Le score affiché au joueur (Milestone 8). */
   get faithfulCount(): number {
     return this.faithful;
   }

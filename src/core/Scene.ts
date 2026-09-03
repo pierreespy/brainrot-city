@@ -20,7 +20,7 @@ export class GameScene {
     this.renderer.shadowMap.enabled = false; // Coûteux, inutile à ce stade.
 
     this.scene = new THREE.Scene();
-    // Un ciel de Méditerranée : depuis la Milestone 8, la cité est claire, et
+    // Un ciel de Méditerranée : depuis la Milestone 11, la cité est claire, et
     // un fond nocturne lui donnait un cerne sombre sur les bords.
     this.scene.background = new THREE.Color(CONFIG.world.skyColor);
     // Le brouillard cache le bord du monde et allège le rendu lointain. Il
@@ -43,8 +43,8 @@ export class GameScene {
     // Lumière ambiante : éclaire tout uniformément, évite les zones noires.
     // Légèrement bleutée — c'est le ciel qui remplit les ombres.
     //
-    // ⚠️ Ces deux intensités ont été remontées en Milestone 8. Réglées pour
-    // la ville sombre de la Milestone 2, elles rendaient la cité grecque
+    // ⚠️ Ces deux intensités ont été remontées en Milestone 11. Réglées pour
+    // la ville sombre de la Milestone 3, elles rendaient la cité grecque
     // terne : le marbre virait au gris et la terre battue à la boue. Une
     // cité de Méditerranée doit être ÉCLATANTE — c'est la moitié du thème.
     this.scene.add(new THREE.AmbientLight(0xd6e4f0, 0.95));

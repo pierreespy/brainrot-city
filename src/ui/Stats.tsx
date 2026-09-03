@@ -17,7 +17,7 @@
  *     venaient de son GPU logiciel et non du jeu.
  *   - **le détail par étape**, puis les silhouettes réellement envoyées au
  *     GPU sur le nombre existant, et les **triangles** comptés par Three.js
- *     lui-même — la mesure de la Milestone 7.
+ *     lui-même — la mesure de la Milestone 9.
  *
  * Comme le HUD, ce panneau n'est PAS redessiné à chaque image : il est
  * rafraîchi deux fois par seconde (`profiler.publishInterval`).

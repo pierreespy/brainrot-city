@@ -1,4 +1,4 @@
-# Journal des modifications — Brainrot City
+# Journal des modifications — Divine City
 
 > Les modifications les plus **récentes** sont en haut.
 > À lire en premier quand tu reprends le projet.
@@ -6,6 +6,53 @@
 **Convention** — à chaque changement notable, ajouter un bloc en haut du fichier
 avec : la date, l'auteur, ce qui a changé, les fichiers touchés, ce qui a été
 vérifié, et ce qui a été supprimé ou cassé.
+
+---
+
+## 2026-09-03 — Claude — La feuille de route passe de 13 à 50 milestones
+
+**Résumé** — Découpage beaucoup plus fin de la feuille de route pour cadrer
+précisément le travail restant : 30-50 personnages/dieux/décors à produire,
+7 capacités divines, plusieurs types de mortels, la publication. Chaque
+étape future doit rester petite et vérifiable. **Aucun code de gameplay n'a
+changé** : ce bloc ne touche que la documentation et les commentaires citant
+un numéro de milestone. Les **commits Git passés gardent leurs anciens
+numéros** (`Milestone 8 : la cité grecque`, etc.) — l'historique n'est pas
+réécrit.
+
+### Ancienne → nouvelle numérotation
+
+| Ancien # | Nouveau # | Contenu |
+|---|---|---|
+| 1 | 1 | Projet + scène + déplacement du joueur |
+| — (Expo) | 2 | Migration vers Expo + joystick tactile |
+| 2 | 3 | Ville simple + caméra |
+| 3 | 4 | Mortels : spawn + déambulation |
+| 4 | 5-6 | Conversion au contact + propagation dans le cortège |
+| 5 | 7 | Système de cortège |
+| 6 | 8 | HUD : compteur + relance |
+| 7 | 9-10 | Optimisation : profileur/banc de mesure + tri par instance |
+| 8 | 11 | La cité grecque |
+| 9 | 12-18 | Panthéon (roster, sélection, apparence, déblocage) + mortels spécialisés (hoplite, prêtresse, philosophe) |
+| 10 | 19-27 | Capacités divines : contrat + une milestone par dieu + équilibrage |
+| 11 | 28-32 | Cortèges rivaux (IA, combat, plusieurs rivaux, UX, perf) |
+| 12 | 33-44 | Game feel, audio, haptique, réglages qualité, contenu visuel |
+| — (nouveau) | 45-46 | Décisions de design encore ouvertes (mode de jeu, monétisation) |
+| 13 | 47-50 | Publication |
+
+La feuille de route à jour est dans **[`README.md`](./README.md#feuille-de-route)**.
+
+### Notes
+
+- Le H1 de ce journal, resté « Brainrot City » depuis le renommage du jeu,
+  est corrigé en « Divine City ».
+- La table dupliquée et obsolète en fin de fichier (dans le bloc de la
+  Milestone 1) est remplacée par un renvoi vers le README, pour ne plus avoir
+  deux feuilles de route à maintenir.
+- Les commentaires de code citant un numéro de milestone (`src/config.ts`,
+  `src/ui/Hud.tsx`, `src/world/City.ts`, `src/world/districts.ts`,
+  `src/entities/Mortals.ts`, `src/entities/Retinue.ts`, `src/ui/Stats.tsx`)
+  sont mis à jour vers la nouvelle numérotation dans ce même changement.
 
 ---
 
@@ -1372,19 +1419,9 @@ npm run dev              # ← n'existe plus
 
 ## Feuille de route
 
-| # | Milestone | État |
-|---|---|---|
-| 1 | Projet + scène + déplacement du joueur | ✅ Terminée |
-| — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
-| 2 | Ville simple + caméra | ✅ Terminée |
-| 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
-| 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
-| 5 | Système de cortège (formation, suivi) | ✅ Terminée |
-| 6 | HUD : compteur de fidèles + relance | ✅ Terminée |
-| 7 | Première passe d'optimisation | ✅ Terminée |
-| 8 | 🏛️ La cité grecque : quartiers, marbre, temples, repères | ⬜ À venir |
-| 9 | 🏛️ Le panthéon : dieux jouables | ⬜ |
-| 10 | ⚡ Capacités divines : une par dieu | ⬜ |
-| 11 | ⚔️ Cortèges rivaux | ⬜ |
-| 12 | Game feel, effets et audio | ⬜ |
-| 13 | Publication (EAS Build, stores) | ⬜ |
+> Cette table date de la Milestone 1 (numérotation d'origine, 1 à 13) et
+> n'est plus tenue à jour ici pour éviter la duplication. La feuille de
+> route à jour (50 milestones depuis le 2026-09-03) vit dans
+> **[`README.md`](./README.md#feuille-de-route)** ; la correspondance
+> ancien→nouveau numéro est documentée dans le bloc du 2026-09-03 en tête de
+> ce journal.

@@ -10,7 +10,7 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 8 terminée** — app Expo fonctionnelle, **cité
+> **État actuel : Milestone 11 terminée** — app Expo fonctionnelle, **cité
 > grecque** générée en six quartiers (Agora, Céramique, Acropole, Port,
 > Théâtre, Bois sacré), collisions contre les façades,
 > **450 mortels qui déambulent**, **conversion au contact** qui se propage, et
@@ -545,64 +545,108 @@ se voie en chiffres et pas seulement à l'œil.
 
 ## Feuille de route
 
-Le thème (mythologie grecque) a été décidé le 2026-09-02, après la Milestone 2.
-Les milestones 3 à 7 restent **techniques** : elles construisent la boucle de
-jeu, qui est la même quel que soit l'habillage. Le thème arrive ensuite, une
-fois qu'il y a un jeu à habiller.
+Le thème (mythologie grecque) a été décidé le 2026-09-02, après l'ancienne
+Milestone 2 (aujourd'hui M3). Les milestones 4 à 10 restent **techniques** :
+elles construisent la boucle de jeu, qui est la même quel que soit
+l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
+
+> La feuille de route est passée de 13 à 50 milestones le 2026-09-03, pour un
+> découpage plus fin du travail restant. Voir
+> **[`UPDATE.md`](./UPDATE.md)** pour la table de correspondance avec
+> l'ancienne numérotation (les commits Git passés gardent leurs anciens
+> numéros).
 
 | # | Milestone | État |
 |---|---|---|
 | 1 | Projet + scène + déplacement du joueur | ✅ Terminée |
-| — | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
-| 2 | Ville simple + caméra | ✅ Terminée |
-| 3 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
-| 4 | **Conversion** au contact : le cortège grandit | ✅ Terminée |
-| 5 | Système de cortège (formation, suivi) | ✅ Terminée |
-| 6 | HUD : compteur de fidèles + relance | ✅ Terminée |
-| 7 | **Première passe d'optimisation** : profileur, banc de mesure, tri par instance | ✅ Terminée |
-| 8 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ✅ Terminée |
-| 9 | 🏛️ **Le panthéon** : dieux jouables (données, apparence, sélection) | ⬜ À venir |
-| 10 | ⚡ **Capacités divines** : une par dieu, jauge et bouton | ⬜ |
-| 11 | ⚔️ **Cortèges rivaux** : concurrence et affrontements | ⬜ |
-| 12 | Game feel, effets et audio | ⬜ |
-| 13 | Publication (EAS Build, App Store et Play Store) | ⬜ |
+| 2 | Migration vers Expo (app mobile) + joystick tactile | ✅ Terminée |
+| 3 | Ville simple + caméra | ✅ Terminée |
+| 4 | **Mortels** : spawn + déambulation (~100) | ✅ Terminée |
+| 5 | **Conversion** au contact | ✅ Terminée |
+| 6 | Propagation de la conversion dans le cortège | ✅ Terminée |
+| 7 | Système de cortège (formation, suivi) | ✅ Terminée |
+| 8 | HUD : compteur de fidèles + relance | ✅ Terminée |
+| 9 | Optimisation : profileur + banc de mesure | ✅ Terminée |
+| 10 | Optimisation : tri par instance | ✅ Terminée |
+| 11 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ✅ Terminée |
+| 12 | 🏛️ Panthéon — roster de données (apparence, capacité, réglages) | ⬜ À venir |
+| 13 | 🏛️ Panthéon — écran de sélection du dieu | ⬜ |
+| 14 | 🏛️ Panthéon — apparence différenciée par dieu | ⬜ |
+| 15 | 🏛️ Panthéon — déblocage progressif des dieux | ⬜ |
+| 16 | Mortel spécialisé — l'hoplite (valeur ×3) | ⬜ |
+| 17 | Mortel spécialisé — la prêtresse (recharge capacité) | ⬜ |
+| 18 | Mortel spécialisé — le philosophe (fuite) | ⬜ |
+| 19 | ⚡ Contrat `Ability` + bouton et jauge HUD | ⬜ |
+| 20 | ⚡ Capacité Hermès — Talaria (sprint) | ⬜ |
+| 21 | ⚡ Capacité Zeus — Foudre (conversion de zone) | ⬜ |
+| 22 | ⚡ Capacité Aphrodite — Charme (rayon ×2,5) | ⬜ |
+| 23 | ⚡ Capacité Poséidon — Ressac (attire les mortels) | ⬜ |
+| 24 | ⚡ Capacité Athéna — Égide (invulnérabilité du cortège) | ⬜ |
+| 25 | ⚡ Capacité Hadès — Retour du Styx (récupération) | ⬜ |
+| 26 | ⚡ Capacité Arès — Charge (vol de fidèles) | ⬜ |
+| 27 | ⚡ Équilibrage des capacités | ⬜ |
+| 28 | ⚔️ Cortège rival — IA de déambulation et conversion | ⬜ |
+| 29 | ⚔️ Combat au contact entre cortèges | ⬜ |
+| 30 | ⚔️ Plusieurs cortèges rivaux sur la carte | ⬜ |
+| 31 | ⚔️ Lisibilité UX du vol de fidèles | ⬜ |
+| 32 | ⚔️ Optimisation : budget perf avec rivaux (2ᵉ passe) | ⬜ |
+| 33 | Game feel — particules de conversion | ⬜ |
+| 34 | Game feel — juice HUD (animations, feedback) | ⬜ |
+| 35 | Audio — musique d'ambiance | ⬜ |
+| 36 | Audio — effets sonores | ⬜ |
+| 37 | Retour haptique | ⬜ |
+| 38 | Écran de fin de partie / résultats | ⬜ |
+| 39 | Réglages de qualité graphique adaptatifs | ⬜ |
+| 40 | Contenu visuel — style des personnages (décision + prototype) | ⬜ |
+| 41 | Contenu visuel — habillage hoplite / prêtresse / philosophe | ⬜ |
+| 42 | Contenu visuel — détails de quartier | ⬜ |
+| 43 | Contenu visuel — ambiance lumineuse (ciel, skybox) | ⬜ |
+| 44 | Contenu visuel — artwork UI (icônes des dieux) | ⬜ |
+| 45 | Décision — mode de jeu | ⬜ |
+| 46 | Décision — monétisation | ⬜ |
+| 47 | Publication — icônes, splash, métadonnées `app.json` | ⬜ |
+| 48 | Publication — vérification nom/marque | ⬜ |
+| 49 | Publication — build EAS + tests sur device réels | ⬜ |
+| 50 | Publication — soumission App Store et Play Store | ⬜ |
 
 ### Ce que le thème change, milestone par milestone
 
-- **M3 — Mortels.** Les PNJ s'appellent des mortels. Un seul type pour
-  commencer (le citoyen) ; hoplites, prêtresses et philosophes viennent en M8,
-  quand la boucle est jouable. Le code, lui, prévoit dès M3 un **type** par
-  mortel, sinon il faudra tout reprendre.
-- **M4 — Conversion.** Le contact « recrute » ; le thème n'ajoute qu'un mot et
-  un effet visuel. Mais la M4 doit prévoir qu'un mortel puisse valoir **plus
+- **M4 — Mortels.** Les PNJ s'appellent des mortels. Un seul type pour
+  commencer (le citoyen) ; hoplites, prêtresses et philosophes viennent avec
+  le panthéon (M16-M18), quand la boucle est jouable. Le code, lui, prévoit
+  dès M4 un **type** par mortel, sinon il faudra tout reprendre.
+- **M5 — Conversion.** Le contact « recrute » ; le thème n'ajoute qu'un mot et
+  un effet visuel. Mais la M5 doit prévoir qu'un mortel puisse valoir **plus
   d'un fidèle** (l'hoplite en vaut 3), sinon le compteur sera à refaire.
-- **M5 — Cortège.** Inchangé techniquement. C'est ici que se décide si un
+- **M7 — Cortège.** Inchangé techniquement. C'est ici que se décide si un
   cortège de 500 fidèles reste lisible à l'écran.
-- **M6 — HUD.** Le compteur affiche des **fidèles**. Prévoir dès maintenant la
-  place du **bouton de capacité** (M10) : le HUD sera à redessiner sinon.
-- **M7 — Optimisation.** Le budget de performance devait être tenu **avant**
-  d'ajouter marbre, colonnes et cortèges rivaux. Il l'est : 0,07 ms de calcul
-  et 9 100 triangles par image en partie réelle. La M8 peut donc dépenser —
-  et le banc dira aussitôt combien.
-- **M8 — La cité grecque.** Faite : six quartiers, marbre et tuiles, colonnes,
-  oliviers, la mer au bord du port. Le découpage corrige le défaut constaté en
-  M2 — la grille uniforme où l'on se perdait — et c'est **la couleur du sol**,
-  plus que les monuments, qui fait le travail.
+- **M8 — HUD.** Le compteur affiche des **fidèles**. Prévoir dès maintenant la
+  place du **bouton de capacité** (M19) : le HUD sera à redessiner sinon.
+- **M9-M10 — Optimisation.** Le budget de performance devait être tenu
+  **avant** d'ajouter marbre, colonnes et cortèges rivaux. Il l'est : 0,07 ms
+  de calcul et 9 100 triangles par image en partie réelle. La M11 peut donc
+  dépenser — et le banc dira aussitôt combien.
+- **M11 — La cité grecque.** Faite : six quartiers, marbre et tuiles,
+  colonnes, oliviers, la mer au bord du port. Le découpage corrige le défaut
+  constaté en M3 — la grille uniforme où l'on se perdait — et c'est **la
+  couleur du sol**, plus que les monuments, qui fait le travail.
   **Ce qui n'a PAS été fait ici** : les hoplites, prêtresses et philosophes,
-  annoncés pour cette milestone. Ils demandent un mesh par type et des
-  comportements propres (fuir, rester immobile), et la prêtresse recharge une
-  capacité qui n'existe qu'en M10. Ils vont donc avec le panthéon, en M9.
-- **M9 — Le panthéon.** Un dieu = **une ligne de données**, pas une classe.
-  Apparence, capacité, réglages propres. Plus l'écran de sélection.
-- **M10 — Capacités divines.** Le cœur du thème : Foudre, Talaria, Charme,
-  Ressac, Égide, Retour du Styx, Charge. Même principe d'architecture que les
-  entrées et les collisions — **un contrat, plusieurs implémentations** — donc
-  le jeu ne connaîtra jamais « Zeus », seulement « la capacité active ».
-- **M11 — Rivaux.** Ce qui donne un enjeu à la carte et un sens aux capacités
-  défensives (Égide, Retour du Styx) et offensives (Charge).
+  annoncés pour cette milestone à l'origine. Ils demandent un mesh par type
+  et des comportements propres (fuir, rester immobile), et la prêtresse
+  recharge une capacité qui n'existe qu'en M19. Ils vont donc avec le
+  panthéon, en M16-M18.
+- **M12-M15 — Le panthéon.** Un dieu = **une ligne de données**, pas une
+  classe. Apparence, capacité, réglages propres. Plus l'écran de sélection.
+- **M19-M27 — Capacités divines.** Le cœur du thème : Foudre, Talaria,
+  Charme, Ressac, Égide, Retour du Styx, Charge. Même principe
+  d'architecture que les entrées et les collisions — **un contrat, plusieurs
+  implémentations** — donc le jeu ne connaîtra jamais « Zeus », seulement
+  « la capacité active ».
+- **M28-M32 — Rivaux.** Ce qui donne un enjeu à la carte et un sens aux
+  capacités défensives (Égide, Retour du Styx) et offensives (Charge).
 
 > **Envie de voir le thème plus tôt ?** On peut avancer la seule *palette* de
-> la M8 (marbre et tuiles, ~1 h de travail, aucun risque) sans toucher aux
+> la M11 (marbre et tuiles, ~1 h de travail, aucun risque) sans toucher aux
 > quartiers. En revanche, refaire la génération de la cité **avant** que la
 > foule existe reviendrait à la refaire deux fois : le cortège change la façon
 > dont on lit l'espace.

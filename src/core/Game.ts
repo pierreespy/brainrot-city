@@ -27,7 +27,7 @@ import { DISTRICTS } from '../world/districts';
 
 /**
  * Ce que le jeu sait dire de sa propre performance — lu par l'affichage de
- * debug (Milestone 7) et par le banc de test.
+ * debug (Milestone 9) et par le banc de test.
  */
 export interface GameStats {
   profile: ProfileSnapshot;
@@ -76,11 +76,11 @@ export class Game {
   onFaithfulChange: ((faithful: number) => void) | null = null;
 
   /**
-   * Prévenue quand le joueur change de quartier (Milestone 8).
+   * Prévenue quand le joueur change de quartier (Milestone 11).
    *
    * Elle annonce un **nom**, pas un quartier : le jeu ne sait pas plus ce
    * qu'est un HUD ici qu'ailleurs. C'est le remède au défaut relevé en
-   * Milestone 2 — « on s'y perd et on ne mesure pas sa progression » : la
+   * Milestone 3 — « on s'y perd et on ne mesure pas sa progression » : la
    * couleur du sol dit qu'on a changé d'endroit, ce nom dit lequel.
    */
   onDistrictChange: ((label: string) => void) | null = null;
@@ -144,7 +144,7 @@ export class Game {
     // 3. Suivre avec la caméra, en visant un peu devant le joueur, puis
     //    relever ce qu'elle cadre.
     //
-    //    ⚠️ La caméra passe AVANT la foule depuis la Milestone 7 : c'est son
+    //    ⚠️ La caméra passe AVANT la foule depuis la Milestone 9 : c'est son
     //    champ qui décide des silhouettes à dessiner et à faire marcher. La
     //    calculer après reviendrait à trier avec le cadrage de l'image
     //    précédente. Elle ne lit que la position et la vitesse du joueur,
@@ -172,7 +172,7 @@ export class Game {
     this.retinue.update(deltaTime, x, z, this.trail, this.culling);
     this.profiler.mark('cortège');
 
-    // --- Milestone 10 : this.ability.update(deltaTime)    (la capacité divine)
+    // --- Milestone 19 : this.ability.update(deltaTime)    (la capacité divine)
     //     Thème et contenu : voir UNIVERS.md
 
     // 6. Annoncer le score, s'il a changé et pas trop souvent.
@@ -251,7 +251,7 @@ export class Game {
     this.gameScene.resize(width, height);
   }
 
-  /** Remet la partie à zéro (sera branché sur le bouton en Milestone 6). */
+  /** Remet la partie à zéro (sera branché sur le bouton en Milestone 8). */
   restart(): void {
     this.player.reset();
     this.retinue.clear();
@@ -266,7 +266,7 @@ export class Game {
     this.profiler.reset();
   }
 
-  /** Le score : le nombre de fidèles du cortège (affiché en Milestone 6). */
+  /** Le score : le nombre de fidèles du cortège (affiché en Milestone 8). */
   getFaithfulCount(): number {
     return this.retinue.faithfulCount;
   }

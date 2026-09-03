@@ -114,7 +114,7 @@ export class Player {
     this.mesh.position.set(this.position.x, y, this.position.y);
   }
 
-  /** Remet le joueur au centre (utilisé par le restart en Milestone 6). */
+  /** Remet le joueur au centre (utilisé par le restart en Milestone 8). */
   reset(): void {
     this.position.set(0, 0);
     this.velocity.set(0, 0);

@@ -8,7 +8,7 @@
  *    pas, donc (0, 0) est toujours un carrefour : le joueur ne démarre
  *    jamais dans un mur.
  *
- * 2. **Un quartier par pâté** (Milestone 8). Le plan de la cité vit dans
+ * 2. **Un quartier par pâté** (Milestone 11). Le plan de la cité vit dans
  *    `districts.ts` ; ici on ne fait que *bâtir* ce qu'il annonce. Chaque
  *    quartier a sa couleur de sol, ses façades et sa façon d'occuper le
  *    terrain — c'est ce qui rend la cité lisible plutôt qu'uniforme.
@@ -26,7 +26,7 @@
  * ⚠️ **Ce qui bloque et ce qui ne bloque pas.** Murs, plateformes, gradins et
  * entrepôts sont des obstacles. **Colonnes et oliviers n'en sont pas** : ce
  * sont des décors qu'on traverse. Ce n'est pas un oubli — un cortège de 600
- * fidèles se coince sur les obstacles fins (mesuré en Milestone 7 : un fidèle
+ * fidèles se coince sur les obstacles fins (mesuré en Milestone 9 : un fidèle
  * bloqué contre une façade décroche de 40 unités). Semer une forêt de poteaux
  * dans les rues coûterait bien plus en jouabilité que ça ne rapporte en
  * réalisme.
@@ -204,7 +204,7 @@ export class City implements Collider {
   /**
    * Le tissu urbain : des maisons plaquées sur la rue, coiffées de tuiles.
    *
-   * Ce détail de placement change tout, et date de la Milestone 2. Si chaque
+   * Ce détail de placement change tout, et date de la Milestone 3. Si chaque
    * maison était centrée dans sa parcelle avec un recul, les reculs
    * s'aligneraient d'un pâté à l'autre et ouvriraient des couloirs
    * rectilignes à travers toute la cité : on la traverserait au lieu de la
@@ -212,7 +212,7 @@ export class City implements Collider {
    * vers l'intérieur, elles forment une façade continue, et c'est la COUR —
    * invisible — qui absorbe les variations.
    *
-   * Le TOIT, lui, est l'apport de la Milestone 8, et ce n'est pas un détail
+   * Le TOIT, lui, est l'apport de la Milestone 11, et ce n'est pas un détail
    * décoratif : vue de 40 unités de haut, une maison est essentiellement un
    * toit. C'est la tuile, pas la façade, qui donne à la cité son air grec.
    */
@@ -528,7 +528,7 @@ export class City implements Collider {
    *
    * Elles ne servent pas qu'à décorer : sans repère au sol, une rue est une
    * surface unie et on ne SENT plus qu'on avance. Elles ont remplacé la
-   * grille de la Milestone 1, puis les bandes blanches de la Milestone 2 —
+   * grille de la Milestone 1, puis les bandes blanches de la Milestone 3 —
    * une cité grecque n'a pas de marquage routier, mais elle a du pavage.
    */
   private addPaving(yard: Yard): void {
@@ -599,7 +599,7 @@ export class City implements Collider {
     this.addInstanced(
       yard.columns,
       // Six côtés : une colonne fait moins d'une unité de large à l'écran,
-      // et la M7 a montré que le radial est le seul découpage qui se voie.
+      // et la M9 a montré que le radial est le seul découpage qui se voie.
       new THREE.CylinderGeometry(CONFIG.city.columnRadius, CONFIG.city.columnRadius * 1.1, 1, 6),
       new THREE.MeshLambertMaterial({ color: 0xeae4d6 }),
     );
@@ -681,7 +681,7 @@ export class City implements Collider {
    * enfoncé. Résultat : on GLISSE le long des façades au lieu de s'y coller,
    * ce qui est indispensable au confort dans une cité en couloirs.
    *
-   * ⚠️ Milestone 7 — on n'interroge QUE les cases que le personnage touche
+   * ⚠️ Milestone 10 — on n'interroge QUE les cases que le personnage touche
    * vraiment, pas les neuf qui l'entourent.
    *
    * C'est correct, et pas seulement plus rapide : un obstacle est inscrit
@@ -737,7 +737,7 @@ export class City implements Collider {
    * Sort un personnage d'un amas de murs — et pas seulement du premier.
    *
    * ⚠️ `resolve()` ne suffit pas quand les maisons sont MITOYENNES, et c'est
-   * le cas depuis la Milestone 8. Sortir d'une maison par le côté le plus
+   * le cas depuis la Milestone 11. Sortir d'une maison par le côté le plus
    * court, c'est parfois entrer dans sa voisine ; celle-ci renvoie vers la
    * première, et le personnage fait la navette. Ce n'est pas une convergence
    * lente, c'est un cycle stable : le répéter n'y change rien.
