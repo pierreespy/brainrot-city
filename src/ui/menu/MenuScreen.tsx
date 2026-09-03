@@ -29,7 +29,7 @@
  * de la même : le magasin en montre le tiers gauche, « Jouer » le milieu,
  * les dieux le tiers droit. Le doigt fait donc voyager le regard le long
  * d'un même paysage — d'où `Backdrop` ci-dessous, posé une fois pour tout le
- * ruban. L'image attendue est panoramique (assets/wallpaper.png, cadrée en
+ * ruban. L'image attendue est panoramique (assets/wallpaper.jpg, cadrée en
  * 27:16) : c'est le seul fichier à remplacer pour changer le décor.
  *
  * Le voile en dégradé (haut et bas), lui, reste FIXE — c'est un habillage de
@@ -330,7 +330,7 @@ export function MenuScreen({
 function Backdrop({ width }: { width: number }) {
   return (
     <Image
-      source={require('../../../assets/wallpaper.png')}
+      source={require('../../../assets/wallpaper.jpg')}
       style={[styles.backdrop, { width }]}
       resizeMode="cover"
     />

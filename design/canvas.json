@@ -10,7 +10,7 @@
       "x": 0,
       "y": -150,
       "w": 390,
-      "text": "Les trois onglets sont cliquables : Magasin, Jouer (au milieu), Dieux.\nFond = assets/wallpaper.png : UNE image panoramique (27:16) répartie sur les trois onglets, pas trois exemplaires. Couleurs, prix et capacités viennent de roster.ts et store.ts (M12)."
+      "text": "Les trois onglets sont cliquables : Magasin, Jouer (au milieu), Dieux.\nFond = assets/wallpaper.jpg : UNE image panoramique (27:16) répartie sur les trois onglets, pas trois exemplaires. Couleurs, prix et capacités viennent de roster.ts et store.ts (M12)."
     },
     {
       "id": "note-reglages",

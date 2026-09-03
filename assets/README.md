@@ -1,6 +1,6 @@
 # assets
 
-## wallpaper.png — le décor du menu
+## wallpaper.jpg — le décor du menu
 
 C'est **la seule image du menu**. Les trois onglets n'en portent pas trois
 exemplaires : ils se partagent celle-ci, large de trois écrans. Le magasin en
@@ -8,12 +8,12 @@ montre le tiers gauche, « Jouer » le milieu, les dieux le tiers droit, et le
 doigt fait voyager le regard le long du même paysage.
 
 Pour changer le décor, **remplace ce fichier**. Rien d'autre à toucher : ni le
-code, ni `app.json`. Garde le nom `wallpaper.png`.
+code, ni `app.json`. Garde le nom `wallpaper.jpg`.
 
 | | |
 | --- | --- |
-| Chemin | `assets/wallpaper.png` |
-| Format | PNG (`.png`) |
+| Chemin | `assets/wallpaper.jpg` |
+| Format | JPEG (`.jpg`) — le fichier doit VRAIMENT être un JPEG, renommer l'extension ne suffit pas |
 | Cadrage | panoramique **27:16** |
 | Taille conseillée | 2700 × 1600 px (minimum 1350 × 800) |
 
