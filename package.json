@@ -13,8 +13,11 @@
     "bench": "tsc -p tsconfig.bench.json && node dist/bench/tools/bench.js"
   },
   "dependencies": {
+    "@expo-google-fonts/cinzel": "^0.4.2",
+    "@expo-google-fonts/spectral": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.19",
+    "expo-font": "~57.0.3",
     "expo-gl": "~57.0.2",
     "expo-linear-gradient": "~57.0.1",
     "expo-splash-screen": "~57.0.8",

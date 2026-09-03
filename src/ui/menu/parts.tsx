@@ -8,7 +8,7 @@
 
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE, hex } from './theme';
+import { COLORS, FONTS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE, hex } from './theme';
 
 /** Un intitulé de section : petites capitales espacées. */
 export function SectionTitle({ children }: { children: string }) {
@@ -230,9 +230,12 @@ export function Card({
 }
 
 const styles = StyleSheet.create({
+  // Un intitulé de section est posé À MÊME le décor, entre deux cartes :
+  // c'est le texte le plus exposé du menu, d'où l'ombre.
   sectionTitle: {
     ...TYPE.label,
-    color: COLORS.muted,
+    ...TEXT_SHADOW,
+    color: COLORS.text,
     marginBottom: SPACE.md,
     marginTop: SPACE.xl,
   },
@@ -304,7 +307,7 @@ const styles = StyleSheet.create({
   addButtonGold: { backgroundColor: COLORS.gold },
   addButtonAmbrosia: { backgroundColor: COLORS.ambrosia },
   addButtonPressed: { opacity: 0.8, transform: [{ scale: 0.9 }] },
-  addButtonLabel: { fontSize: 14, fontWeight: '800', lineHeight: 16 },
+  addButtonLabel: { fontFamily: FONTS.bodySemi, fontSize: 15, lineHeight: 17 },
   addButtonLabelGold: { color: COLORS.onGold },
   addButtonLabelAmbrosia: { color: COLORS.onAmbrosia },
 
@@ -331,8 +334,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: { opacity: 0.92, borderBottomWidth: 1, transform: [{ translateY: 3 }] },
   buttonDisabled: { opacity: 0.4 },
-  buttonLabel: { ...TYPE.body, fontWeight: '700', color: COLORS.text },
-  buttonLabelPrimary: { color: COLORS.onGold, fontWeight: '800' },
+  buttonLabel: { ...TYPE.strong, color: COLORS.text },
+  // Pas d'ombre ici : le texte est SOMBRE sur de l'or, un halo noir l'empâte.
+  buttonLabelPrimary: { color: COLORS.onGold },
 
   card: {
     backgroundColor: COLORS.panel,

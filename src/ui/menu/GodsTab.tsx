@@ -12,7 +12,7 @@ import { GOD_ORDER, godById, type GodId } from '../../entities/gods/roster';
 import { ownsSkin, type Progression } from '../../meta/progression';
 import { skinsOf } from '../../meta/store';
 import { Card, GodBadge, SectionTitle } from './parts';
-import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE, hex } from './theme';
+import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE, hex } from './theme';
 
 interface Props {
   state: Progression;
@@ -129,7 +129,7 @@ export function GodsTab({ state, onSelectGod, onEquipSkin, onOpenShop }: Props) 
 
 const styles = StyleSheet.create({
   root: { paddingBottom: SPACE.xl },
-  count: { ...TYPE.body, color: COLORS.muted, marginTop: -SPACE.sm, marginBottom: SPACE.md },
+  count: { ...TYPE.body, ...TEXT_SHADOW, color: COLORS.text, marginTop: -SPACE.sm, marginBottom: SPACE.md },
 
   godPress: { marginBottom: SPACE.md },
   pressed: { opacity: 0.85 },

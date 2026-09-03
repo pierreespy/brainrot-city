@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     minHeight: TOUCH_MIN,
   },
   rowText: { flex: 1 },
-  rowTitle: { ...TYPE.body, fontWeight: '700', color: COLORS.text },
+  rowTitle: { ...TYPE.strong, color: COLORS.text },
   rowSub: { ...TYPE.body, fontSize: 12, color: COLORS.muted, marginTop: SPACE.xs, lineHeight: 17 },
 
   separator: {

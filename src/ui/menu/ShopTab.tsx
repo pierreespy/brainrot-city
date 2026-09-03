@@ -15,7 +15,7 @@ import { GOD_ORDER, godById, type GodId } from '../../entities/gods/roster';
 import { godPrice, ownsGod, ownsSkin, type Progression } from '../../meta/progression';
 import { AMBROSIA_PACKS, COIN_PACKS, purchasableSkins } from '../../meta/store';
 import { Button, Card, Coin, Gem, GodBadge, SectionTitle } from './parts';
-import { COLORS, RADIUS, SPACE, TYPE } from './theme';
+import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TYPE } from './theme';
 
 interface Props {
   state: Progression;
@@ -186,8 +186,8 @@ const styles = StyleSheet.create({
   packLabel: { ...TYPE.body, fontSize: 12, color: COLORS.muted },
   packButton: { marginTop: SPACE.md, alignSelf: 'stretch' },
 
-  note: { ...TYPE.body, fontSize: 12, color: COLORS.muted, marginTop: SPACE.md, lineHeight: 18 },
-  empty: { ...TYPE.body, color: COLORS.muted, lineHeight: 20 },
+  note: { ...TYPE.body, ...TEXT_SHADOW, fontSize: 13, color: COLORS.muted, marginTop: SPACE.md, lineHeight: 18 },
+  empty: { ...TYPE.body, ...TEXT_SHADOW, color: COLORS.text, lineHeight: 22 },
 
   row: {
     flexDirection: 'row',

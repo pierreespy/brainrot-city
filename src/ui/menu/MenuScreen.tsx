@@ -56,7 +56,7 @@ import { PlayTab } from './PlayTab';
 import { SettingsSheet } from './SettingsSheet';
 import { ShopTab } from './ShopTab';
 import { CurrencyBar } from './parts';
-import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
+import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE } from './theme';
 
 export type MenuTab = 'shop' | 'play' | 'gods';
 
@@ -288,8 +288,8 @@ export function MenuScreen({
           dessous sans jamais bouger lui-même. */}
       <LinearGradient
         pointerEvents="none"
-        colors={[COLORS.ground, 'transparent', 'transparent', COLORS.ground]}
-        locations={[0, 0.22, 0.72, 1]}
+        colors={[COLORS.ground, COLORS.veil, COLORS.veil, COLORS.ground]}
+        locations={[0, 0.24, 0.7, 1]}
         style={StyleSheet.absoluteFill}
       />
 
@@ -406,5 +406,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderStrong,
   },
-  tabLabel: { ...TYPE.body, fontWeight: '700', color: COLORS.text },
+  tabLabel: { ...TYPE.tab, ...TEXT_SHADOW, color: COLORS.text },
 });

@@ -10,7 +10,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { godById } from '../../entities/gods/roster';
 import { appearanceOf, type Progression } from '../../meta/progression';
 import { Button, Card, GodBadge, SectionTitle } from './parts';
-import { COLORS, SPACE, TYPE } from './theme';
+import { COLORS, SPACE, TEXT_SHADOW, TYPE } from './theme';
 
 interface Props {
   state: Progression;
@@ -85,9 +85,11 @@ const styles = StyleSheet.create({
   root: { paddingBottom: SPACE.xl },
 
   hero: { marginTop: SPACE.lg },
-  eyebrow: { ...TYPE.label, color: COLORS.gold },
-  title: { ...TYPE.display, color: COLORS.text, marginTop: SPACE.sm },
-  pitch: { ...TYPE.body, color: COLORS.muted, marginTop: SPACE.sm, lineHeight: 20 },
+  // Le bandeau d'accueil tombe pile sur la partie claire du décor — le ciel
+  // et la mer. Les trois lignes portent donc l'ombre.
+  eyebrow: { ...TYPE.label, ...TEXT_SHADOW, color: COLORS.gold },
+  title: { ...TYPE.display, ...TEXT_SHADOW, color: COLORS.text, marginTop: SPACE.sm },
+  pitch: { ...TYPE.body, ...TEXT_SHADOW, color: COLORS.text, marginTop: SPACE.sm, lineHeight: 22 },
 
   godRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE.lg },
   godText: { flex: 1 },
@@ -111,6 +113,7 @@ const styles = StyleSheet.create({
 
   best: {
     ...TYPE.body,
+    ...TEXT_SHADOW,
     color: COLORS.muted,
     textAlign: 'center',
     marginTop: SPACE.lg,

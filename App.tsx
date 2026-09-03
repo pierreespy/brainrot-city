@@ -20,6 +20,13 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
+import { useFonts } from 'expo-font';
+import { Cinzel_600SemiBold, Cinzel_700Bold } from '@expo-google-fonts/cinzel';
+import {
+  Spectral_400Regular,
+  Spectral_500Medium,
+  Spectral_600SemiBold,
+} from '@expo-google-fonts/spectral';
 import { PixelRatio } from 'react-native';
 
 import { CONFIG } from './src/config';
@@ -36,6 +43,23 @@ import { MenuScreen } from './src/ui/menu/MenuScreen';
 
 export default function App() {
   const gameRef = useRef<Game | null>(null);
+
+  /**
+   * Les polices du menu (voir src/ui/menu/theme.ts).
+   *
+   * ⚠️ C'est le SEUL endroit où elles sont déclarées, et il faut y déclarer
+   * chaque graisse séparément : une famille citée dans un style sans être
+   * chargée ici s'affiche en police système sur Android, et pas du tout sur
+   * iOS. Rien ne se dessine tant qu'elles ne sont pas prêtes — sinon le
+   * titre du menu changerait de tracé sous les yeux du joueur.
+   */
+  const [fontsLoaded] = useFonts({
+    Cinzel_600SemiBold,
+    Cinzel_700Bold,
+    Spectral_400Regular,
+    Spectral_500Medium,
+    Spectral_600SemiBold,
+  });
   const { width, height } = useWindowDimensions();
 
   /** Ce que le joueur regarde. Le jeu tourne uniquement en `partie`. */
@@ -152,6 +176,10 @@ export default function App() {
     // aller-retour vers le menu. D'où le `screenRef` ci-dessus.
     [input],
   );
+
+  // Un fond nu, le temps du chargement : c'est la couleur du décor du jeu,
+  // donc l'écran ne clignote pas quand le menu arrive.
+  if (!fontsLoaded) return <View style={styles.root} />;
 
   return (
     <SafeAreaProvider>
