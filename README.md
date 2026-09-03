@@ -31,11 +31,11 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 | Élément | Choix |
 |---|---|
-| Framework app | **Expo SDK 54** (React Native 0.81.5) |
+| Framework app | **Expo SDK 57** (React Native 0.86.3) |
 | Langage | **TypeScript** (typage strict) |
 | Rendu 3D | **Three.js** sur **`expo-gl`** |
 | Cibles | **iOS**, **Android**, et web (banc de test) |
-| Test sur téléphone | **Expo Go** (SDK 54) |
+| Test sur téléphone | **Expo Go** (SDK 57) |
 
 **Pourquoi ce choix ?** Expo permet de développer une vraie app iOS + Android
 depuis un seul code TypeScript, de la tester instantanément sur un téléphone via
@@ -52,7 +52,7 @@ n'est nécessaire pour développer.
 ## Installation
 
 Prérequis : [Node.js](https://nodejs.org) 18 ou plus, et l'app **Expo Go** sur
-ton téléphone (SDK 54).
+ton téléphone (SDK 57).
 
 ```bash
 npm install
