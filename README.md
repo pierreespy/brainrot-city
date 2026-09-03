@@ -20,8 +20,8 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 > 0,09 ms de calcul par image en partie réelle, sur les 16,7 disponibles.
 > Le **panthéon** existe côté données : sept dieux, chacun une ligne dans
 > `src/entities/gods/roster.ts`, et l'app s'ouvre désormais sur un **menu à
-> trois onglets** — Magasin, Jouer, Dieux — avec des **drachmes** gagnées en
-> jouant, des divinités et des parures à acquérir, et une progression
+> trois onglets** — Magasin, Jouer, Dieux — avec deux monnaies (les
+> **drachmes**, gagnées en jouant, et l'**ambroisie**, plus rare), des divinités et des parures à acquérir, et une progression
 > **enregistrée sur l'appareil**. Le dieu court **au milieu de sa foule**, plus
 > en tête de file.
 
@@ -131,8 +131,8 @@ imprimé dessus.
     │   └── gods/roster.ts ⭐ Le panthéon : un dieu = une ligne de données
     │
     ├── meta/              Hors partie : ce que le joueur possède
-    │   ├── progression.ts ⭐ Drachmes, dieux, parures — données pures, testables
-    │   ├── store.ts       ⭐ Le catalogue : prix, parures, paquets de drachmes
+    │   ├── progression.ts ⭐ Drachmes, ambroisie, dieux, parures — données pures, testables
+    │   ├── store.ts       ⭐ Le catalogue : prix, parures, paquets de drachmes et d'ambroisie
     │   ├── storage.ts     La sauvegarde sur l'appareil (AsyncStorage)
     │   └── useProgression.ts  Le pont vers React
     │
@@ -154,7 +154,7 @@ imprimé dessus.
     │   └── menu/          ⭐ L'accueil : Jouer / Magasin / Dieux
     │       ├── MenuScreen.tsx   Le ruban des trois onglets et sa barre
     │       ├── PlayTab.tsx      Lancer une partie, et les paramètres
-    │       ├── ShopTab.tsx      Drachmes, divinités, parures
+    │       ├── ShopTab.tsx      Drachmes, ambroisie, divinités, parures
     │       ├── GodsTab.tsx      Le panthéon possédé et ses cosmétiques
     │       ├── SettingsSheet.tsx  La feuille de paramètres
     │       ├── parts.tsx        Les briques communes (bouton, carte, pastille)

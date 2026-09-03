@@ -1,8 +1,9 @@
 /**
  * ShopTab.tsx — l'onglet « Magasin ».
  *
- * Trois rayons, dans cet ordre : les drachmes (ce qui rapporte de l'argent
- * réel), les dieux (le gros achat), les parures (le petit achat répété).
+ * Quatre rayons, dans cet ordre : les drachmes et l'ambroisie (ce qui
+ * rapporte de l'argent réel — la monnaie commune, puis la rare), les dieux
+ * (le gros achat), les parures (le petit achat répété).
  *
  * ⚠️ Un rayon n'affiche jamais ce que le joueur possède déjà. Un magasin qui
  * montre des cases barrées ne donne pas envie d'acheter, il donne envie de
@@ -12,8 +13,8 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GOD_ORDER, godById, type GodId } from '../../entities/gods/roster';
 import { godPrice, ownsGod, ownsSkin, type Progression } from '../../meta/progression';
-import { COIN_PACKS, purchasableSkins } from '../../meta/store';
-import { Button, Card, GodBadge, SectionTitle } from './parts';
+import { AMBROSIA_PACKS, COIN_PACKS, purchasableSkins } from '../../meta/store';
+import { Button, Card, Coin, Gem, GodBadge, SectionTitle } from './parts';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
 
 interface Props {
@@ -46,7 +47,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
         {COIN_PACKS.map((pack) => (
           <View key={pack.id} style={[styles.pack, pack.featured && styles.packFeatured]}>
             {pack.featured && <Text style={styles.packTag}>LE PLUS PRIS</Text>}
-            <View style={styles.coin} />
+            <Coin size={30} />
             <Text style={styles.packAmount}>{pack.drachmas.toLocaleString('fr-FR')}</Text>
             <Text style={styles.packLabel}>drachmes</Text>
             <Button label={pack.price} onPress={() => undefined} disabled style={styles.packButton} />
@@ -56,6 +57,36 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
       <Text style={styles.note}>
         Les achats ouvriront à la sortie du jeu. En attendant, les drachmes se gagnent en
         jouant : un tiers de ton cortège à chaque partie.
+      </Text>
+
+      <SectionTitle>Ambroisie</SectionTitle>
+      {/*
+        Même rayon que les drachmes, même raison d'être inerte (M46) — mais
+        un rang À PART plutôt qu'une case de plus dans `COIN_PACKS` : ce
+        n'est pas la même monnaie, et la présenter séparément dit déjà
+        qu'elle n'a pas la même valeur.
+      */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.packRow}
+      >
+        {AMBROSIA_PACKS.map((pack) => (
+          <View
+            key={pack.id}
+            style={[styles.pack, styles.packAmbrosia, pack.featured && styles.packFeaturedAmbrosia]}
+          >
+            {pack.featured && <Text style={styles.packTagAmbrosia}>LE PLUS PRIS</Text>}
+            <Gem size={26} />
+            <Text style={styles.packAmount}>{pack.ambrosia.toLocaleString('fr-FR')}</Text>
+            <Text style={styles.packLabel}>ambroisie</Text>
+            <Button label={pack.price} onPress={() => undefined} disabled style={styles.packButton} />
+          </View>
+        ))}
+      </ScrollView>
+      <Text style={styles.note}>
+        L'ambroisie, elle, ne se gagne pas en jouant : elle est réservée aux dieux — et pour
+        l'instant à personne, tant que ces paquets restent inertes.
       </Text>
 
       <SectionTitle>Divinités</SectionTitle>
@@ -146,7 +177,11 @@ const styles = StyleSheet.create({
   },
   packFeatured: { backgroundColor: COLORS.panelRaised, borderColor: COLORS.borderStrong },
   packTag: { ...TYPE.label, fontSize: 9, color: COLORS.gold, marginBottom: SPACE.sm },
-  coin: { width: 26, height: 26, borderRadius: 13, backgroundColor: COLORS.gold },
+  // L'étagère de l'ambroisie reprend le même gabarit que celle des drachmes,
+  // avec la teinte améthyste à la place de l'or — la seule chose qui change.
+  packAmbrosia: { borderColor: COLORS.ambrosiaBorder },
+  packFeaturedAmbrosia: { backgroundColor: COLORS.panelRaised, borderColor: COLORS.ambrosia },
+  packTagAmbrosia: { ...TYPE.label, fontSize: 9, color: COLORS.ambrosia, marginBottom: SPACE.sm },
   packAmount: { ...TYPE.title, color: COLORS.text, marginTop: SPACE.md },
   packLabel: { ...TYPE.body, fontSize: 12, color: COLORS.muted },
   packButton: { marginTop: SPACE.md, alignSelf: 'stretch' },

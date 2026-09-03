@@ -9,6 +9,49 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 💎 L'ambroisie, et un menu plus « jeu mobile »
+
+**Résumé** — Deux monnaies au lieu d'une, et une mise en forme du menu qui
+s'inspire des jeux mobiles du genre (Clash Royale en tête) sur la **forme**,
+pas sur la direction artistique — le marbre et l'or de Divine City restent
+ce qu'ils sont.
+
+**La nouvelle monnaie : l'ambroisie.** Plus rare que la drachme, réservée aux
+dieux dans la mythologie grecque — voir `UNIVERS.md` pour le choix du mot.
+Elle vit dans `Progression.ambrosia`, vaut 0 tant qu'aucune monétisation
+n'existe (M46), et le magasin lui consacre un rayon à part
+(`AMBROSIA_PACKS` dans `store.ts`), inerte comme celui des drachmes et pour
+la même raison.
+
+**Le menu.** Trois retouches, toutes structurelles :
+
+- La bourse en haut de l'écran devient une **barre à deux pastilles**
+  (`CurrencyBar`), drachmes puis ambroisie, chacune surmontée d'un bouton
+  rond « + » à cheval sur son bord qui ouvre le magasin — le réflexe de jeu
+  mobile pour recharger une monnaie sans changer d'écran.
+- Le trait fin sous l'onglet actif devient un **chip** : une pastille
+  arrondie qui embrasse tout l'onglet, plus facile à repérer au doigt qu'un
+  soulignement.
+- Les boutons et les cartes gagnent un **chant** (bordure basse épaisse,
+  plus sombre) qui simule une épaisseur — l'air d'un bouton qu'on presse,
+  pas d'un lien. Il s'aplatit à l'appui, pour vendre l'enfoncement.
+
+**Fichiers touchés** — `src/ui/menu/theme.ts` (couleurs de l'ambroisie et
+des chants), `src/ui/menu/parts.tsx` (`CurrencyBar`, `Coin`, `Gem`,
+boutons/cartes), `src/ui/menu/MenuScreen.tsx` (barre de monnaies, chip
+d'onglet), `src/ui/menu/ShopTab.tsx` (rayon Ambroisie), `src/meta/store.ts`
+(`AMBROSIA_PACKS`), `src/meta/progression.ts` (`ambrosia`), `UNIVERS.md`,
+`README.md`, `UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe. Pas de test automatisé existant sur
+ces écrans (aucun fichier `*.test.*` dans le dépôt à ce jour).
+
+**Ce qui n'a pas bougé** — l'ambroisie ne s'achète et ne se dépense encore
+nulle part : comme les paquets de drachmes avant elle, c'est une place
+réservée à l'écran, pas une décision d'économie (M46).
+
+---
+
 ## 2026-09-03 — Claude — 🎞️ Le fond bouge avec le doigt, pas fixe derrière
 
 **Résumé** — Correction du changement précédent : le fond n'est PAS censé
