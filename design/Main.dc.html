@@ -7,36 +7,32 @@
 <body>
 <x-dc>
 <helmet>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap">
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: Manrope, system-ui, sans-serif; }
-    a { color: #7dd3fc; } a:hover { color: #bae6fd; }
+    a { color: #d8b46a; } a:hover { color: #efd9a8; }
   </style>
 </helmet>
 
-<div style="width: 390px; height: 844px; background: #0e161a; position: relative; overflow: hidden; display: flex; flex-direction: column;">
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; display: flex; flex-direction: column; background: #12141c url('temple-bg.jpg') center / cover no-repeat;">
 
-  <!-- Halo du dieu sélectionné : la seule source de couleur du fond. -->
-  <div style="position: absolute; top: -140px; left: 50%; margin-left: -220px; width: 440px; height: 440px; border-radius: 50%; background: radial-gradient(circle, {{godGlow}} 0%, rgba(14,22,26,0) 70%); pointer-events: none;"></div>
-
-  <!-- Frise à la grecque, très discrète, en haut de l'écran. -->
-  <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: repeating-linear-gradient(90deg, rgba(239,233,219,0.16) 0 10px, transparent 10px 20px); pointer-events: none;"></div>
+  <!-- Le voile de lisibilité : assombrit le haut et le bas jusqu'à la
+       couleur de fond du jeu (COLORS.ground), laisse le centre du temple
+       visible — exactement le dégradé de src/ui/menu/MenuScreen.tsx. -->
+  <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, #12141c 0%, rgba(18,20,28,0) 22%, rgba(18,20,28,0) 72%, #12141c 100%); pointer-events: none;"></div>
 
   <!-- Barre du haut : monnaie + réglages. Marge haute laissée à la vraie
        barre d'état du téléphone, qui se dessine par-dessus. -->
   <div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 56px 20px 0 20px;">
-    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 12px; background: rgba(0,0,0,0.45);">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fde047" stroke-width="1.8">
-        <circle cx="12" cy="12" r="8.5"></circle>
-        <path d="M12 7.5v9M9.5 9.8h4.2a2.2 2.2 0 0 1 0 4.4H9.5"></path>
-      </svg>
-      <span style="color: #efe9db; font-size: 15px; font-weight: 800; letter-spacing: 0.3px;">2 480</span>
-      <span style="color: rgba(239,233,219,0.55); font-size: 12px; font-weight: 600;">drachmes</span>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; background: #1b1f2b; border: 1px solid rgba(255,255,255,0.10);">
+      <div style="width: 14px; height: 14px; border-radius: 7px; background: #d8b46a;"></div>
+      <span style="color: #f3f0e8; font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">2 480</span>
+      <span style="color: #a8adbd; font-size: 12px; font-weight: 600;">drachmes</span>
     </div>
 
-    <div style="width: 44px; height: 44px; border-radius: 22px; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#efe9db" stroke-width="1.7">
+    <div style="width: 44px; height: 44px; border-radius: 22px; background: #1b1f2b; border: 1px solid rgba(255,255,255,0.10); display: flex; align-items: center; justify-content: center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f3f0e8" stroke-width="1.7">
         <circle cx="12" cy="12" r="3.2"></circle>
         <path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"></path>
       </svg>
@@ -45,214 +41,257 @@
 
   <!-- ONGLET JOUER -->
   <sc-if value="{{isJouer}}" hint-placeholder-val="{{ true }}">
-    <div style="position: relative; flex-grow: 1; display: flex; flex-direction: column; padding: 0 20px;">
+    <div style="position: relative; flex-grow: 1; display: flex; flex-direction: column; padding: 0 20px; min-height: 0;">
 
-      <div style="text-align: center; padding-top: 34px;">
-        <div style="font-family: Cinzel, Georgia, serif; font-size: 35px; font-weight: 700; color: #efe9db; letter-spacing: 2.5px; line-height: 1.1;">DIVINE<br>CITY</div>
-        <div style="margin-top: 10px; color: rgba(239,233,219,0.5); font-size: 12px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase;">Descends sur la cité</div>
+      <div style="padding-top: 28px;">
+        <div style="color: #d8b46a; font-size: 11px; font-weight: 800; letter-spacing: 1.6px;">LA CITÉ T'ATTEND</div>
+        <div style="margin-top: 8px; font-family: Cinzel, Georgia, serif; font-size: 34px; font-weight: 700; color: #f3f0e8; letter-spacing: 0.5px; line-height: 1.05;">Divine City</div>
+        <div style="margin-top: 8px; color: #a8adbd; font-size: 14px; font-weight: 500; line-height: 20px;">Traverse la cité, convertis les mortels, et fais grossir ton cortège.</div>
       </div>
 
-      <!-- Le dieu sélectionné. C'est la carte qui porte l'identité de la partie. -->
-      <div style="margin-top: 30px; padding: 18px; border-radius: 18px; background: rgba(0,0,0,0.45); border: 1px solid {{godBorder}}; display: flex; align-items: center; gap: 15px;">
-        <div style="width: 62px; height: 62px; border-radius: 16px; background: {{godColor}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="{{godAccent}}" stroke-width="1.9" stroke-linecap="round">
-            <path d="M6 13.5c2.4-1 4.2-1 6 0s3.6 1 6 0"></path>
-            <path d="M12 4.5v6M9.4 7.1 12 4.5l2.6 2.6"></path>
-            <path d="M7 17.5c2.2-.9 3.8-.9 5 0s3.3.9 5 0"></path>
-          </svg>
+      <div style="margin-top: 22px; color: #a8adbd; font-size: 11px; font-weight: 800; letter-spacing: 1.4px;">DIVINITÉ CHOISIE</div>
+
+      <!-- La carte qui porte l'identité de la partie : seule à recevoir la
+           bordure dorée (COLORS.borderStrong), comme une Card selected. -->
+      <div style="margin-top: 12px; padding: 18px; border-radius: 20px; background: #1b1f2b; border: 1px solid rgba(216,180,106,0.55); box-shadow: 0 12px 28px rgba(0,0,0,0.35);">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <div style="position: relative; width: 58px; height: 58px; border-radius: 29px; background: #1d84b5; border: 2px solid #7dd3fc; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 20px; height: 20px; border-radius: 10px; background: #7dd3fc;"></div>
+          </div>
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="font-family: Cinzel, Georgia, serif; font-size: 19px; font-weight: 700; color: #f3f0e8;">Hermès</div>
+            <div style="margin-top: 2px; color: #a8adbd; font-size: 14px; font-weight: 500;">Voyageurs et messagers</div>
+          </div>
         </div>
-        <div style="flex-grow: 1; min-width: 0;">
-          <div style="font-family: Cinzel, Georgia, serif; font-size: 21px; font-weight: 700; color: #efe9db; letter-spacing: 0.6px;">Hermès</div>
-          <div style="margin-top: 3px; color: {{godAccent}}; font-size: 13px; font-weight: 700;">Talaria · 3 s, recharge 12 s</div>
-          <div style="margin-top: 4px; color: rgba(239,233,219,0.55); font-size: 12px; font-weight: 500; line-height: 1.35;">Sprint : +80 % de vitesse, le cortège suit sans se disloquer.</div>
+
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.10);">
+          <div style="color: #d8b46a; font-size: 11px; font-weight: 800; letter-spacing: 1.4px;">TALARIA</div>
+          <div style="margin-top: 6px; color: #f3f0e8; font-size: 14px; font-weight: 500; line-height: 19px;">Sprint : +80&nbsp;% de vitesse, le cortège suit sans se disloquer.</div>
+          <div style="margin-top: 4px; color: #767c8c; font-size: 12px; font-weight: 500;">Disponible dans une prochaine version</div>
         </div>
-        <div onClick="{{goDieux}}" style="color: rgba(239,233,219,0.5); font-size: 12px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; flex-shrink: 0; align-self: flex-start;">CHANGER</div>
+
+        <div onClick="{{goDieux}}" style="margin-top: 16px; height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.10); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <span style="color: #f3f0e8; font-size: 14px; font-weight: 700;">Changer de divinité</span>
+        </div>
       </div>
 
-      <div style="flex-grow: 1;"></div>
-
-      <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px 12px 4px;">
-        <span style="color: rgba(239,233,219,0.5); font-size: 12px; font-weight: 600; letter-spacing: 0.6px;">Record</span>
-        <span style="color: #efe9db; font-size: 15px; font-weight: 800;">708 <span style="color: rgba(239,233,219,0.55); font-size: 12px; font-weight: 600;">fidèles</span></span>
-      </div>
+      <div style="flex-grow: 1; min-height: 16px;"></div>
 
       <!-- L'action principale, seule de son poids sur l'écran. -->
-      <div style="height: 60px; border-radius: 16px; background: {{accent}}; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-        <span style="font-family: Cinzel, Georgia, serif; font-size: 20px; font-weight: 700; color: #0e161a; letter-spacing: 3px;">JOUER</span>
+      <div style="height: 60px; border-radius: 16px; background: #d8b46a; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 10px 24px rgba(216,180,106,0.28);">
+        <span style="font-family: Cinzel, Georgia, serif; font-size: 19px; font-weight: 700; color: #1a1508; letter-spacing: 2px;">JOUER</span>
       </div>
 
-      <div style="height: 22px;"></div>
+      <div style="margin-top: 10px; height: 44px; border-radius: 14px; background: #1b1f2b; border: 1px solid rgba(255,255,255,0.10); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <span style="color: #f3f0e8; font-size: 14px; font-weight: 700;">Paramètres</span>
+      </div>
+
+      <div style="margin-top: 10px; text-align: center; color: #a8adbd; font-size: 12px; font-weight: 600;">Meilleur cortège&nbsp;: 708 fidèles</div>
+
+      <div style="height: 20px;"></div>
     </div>
   </sc-if>
 
   <!-- ONGLET MAGASIN -->
   <sc-if value="{{isMagasin}}" hint-placeholder-val="{{ true }}">
     <div style="position: relative; flex-grow: 1; overflow: hidden; padding: 26px 20px 0 20px;">
-      <div style="font-family: Cinzel, Georgia, serif; font-size: 26px; font-weight: 700; color: #efe9db; letter-spacing: 1.4px;">Magasin</div>
+      <div style="font-family: Cinzel, Georgia, serif; font-size: 25px; font-weight: 700; color: #f3f0e8; letter-spacing: 0.4px;">Magasin</div>
 
-      <div style="margin-top: 22px; color: rgba(239,233,219,0.5); font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;">Drachmes</div>
-      <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;">
+      <div style="margin-top: 20px; color: #a8adbd; font-size: 11px; font-weight: 800; letter-spacing: 1.4px;">DRACHMES</div>
+      <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px;">
         <sc-for list="{{coinPacks}}" as="pack" hint-placeholder-count="3">
-          <div style="padding: 14px 8px; border-radius: 14px; background: rgba(0,0,0,0.45); border: 1px solid {{pack.border}}; text-align: center;">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fde047" stroke-width="1.6">
-              <circle cx="12" cy="12" r="8.5"></circle>
-              <path d="M12 7.5v9M9.5 9.8h4.2a2.2 2.2 0 0 1 0 4.4H9.5"></path>
-            </svg>
-            <div style="margin-top: 7px; color: #efe9db; font-size: 14px; font-weight: 800;">{{pack.amount}}</div>
-            <div style="margin-top: 6px; color: {{pack.priceColor}}; font-size: 12px; font-weight: 700;">{{pack.price}}</div>
+          <div style="padding: 13px 6px; border-radius: 14px; background: {{pack.bg}}; border: 1px solid {{pack.border}}; text-align: center;">
+            <sc-if value="{{pack.featured}}" hint-placeholder-val="{{ false }}">
+              <div style="color: #d8b46a; font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px; margin-bottom: 6px;">LE PLUS PRIS</div>
+            </sc-if>
+            <div style="width: 22px; height: 22px; border-radius: 11px; background: #d8b46a; margin: 0 auto;"></div>
+            <div style="margin-top: 8px; color: #f3f0e8; font-size: 14px; font-weight: 800;">{{pack.amount}}</div>
+            <div style="color: #a8adbd; font-size: 10px; font-weight: 600;">drachmes</div>
+            <div style="margin-top: 8px; padding: 6px 0; border-radius: 10px; background: rgba(255,255,255,0.06); color: #a8adbd; font-size: 11px; font-weight: 700;">{{pack.price}}</div>
           </div>
         </sc-for>
       </div>
+      <div style="margin-top: 12px; color: #a8adbd; font-size: 11.5px; font-weight: 500; line-height: 16px;">Les achats ouvriront à la sortie du jeu. En attendant, les drachmes se gagnent en jouant.</div>
 
-      <div style="margin-top: 26px; color: rgba(239,233,219,0.5); font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;">Dieux à débloquer</div>
+      <div style="margin-top: 22px; color: #a8adbd; font-size: 11px; font-weight: 800; letter-spacing: 1.4px;">DIVINITÉS</div>
       <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 9px;">
         <sc-for list="{{shopGods}}" as="god" hint-placeholder-count="3">
-          <div style="padding: 12px 14px; border-radius: 14px; background: rgba(0,0,0,0.45); display: flex; align-items: center; gap: 12px;">
-            <div style="width: 40px; height: 40px; border-radius: 11px; background: {{god.color}}; flex-shrink: 0;"></div>
+          <div style="padding: 13px; border-radius: 16px; background: #1b1f2b; border: 1px solid rgba(255,255,255,0.10); display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 22px; background: {{god.color}}; border: 2px solid {{god.accent}}; flex-shrink: 0;"></div>
             <div style="flex-grow: 1; min-width: 0;">
-              <div style="font-family: Cinzel, Georgia, serif; font-size: 16px; font-weight: 700; color: #efe9db;">{{god.name}}</div>
-              <div style="margin-top: 2px; color: rgba(239,233,219,0.55); font-size: 12px; font-weight: 500;">{{god.ability}}</div>
+              <div style="font-family: Cinzel, Georgia, serif; font-size: 16px; font-weight: 700; color: #f3f0e8;">{{god.name}}</div>
+              <div style="margin-top: 1px; color: #a8adbd; font-size: 11.5px; font-weight: 500;">{{god.domain}}</div>
+              <div style="margin-top: 3px; color: #d8b46a; font-size: 10px; font-weight: 800; letter-spacing: 0.6px;">{{god.ability}}</div>
             </div>
-            <div style="display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 10px; background: rgba(253,224,71,0.12); flex-shrink: 0;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fde047" stroke-width="2"><circle cx="12" cy="12" r="8.5"></circle></svg>
-              <span style="color: #fde047; font-size: 13px; font-weight: 800;">{{god.price}}</span>
+            <div style="padding: 9px 13px; border-radius: 12px; background: #d8b46a; flex-shrink: 0;">
+              <span style="color: #1a1508; font-size: 13px; font-weight: 800;">{{god.price}}</span>
             </div>
           </div>
         </sc-for>
       </div>
 
-      <div style="margin-top: 26px; color: rgba(239,233,219,0.5); font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;">Apparences</div>
-      <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+      <div style="margin-top: 22px; color: #a8adbd; font-size: 11px; font-weight: 800; letter-spacing: 1.4px;">PARURES</div>
+      <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px;">
         <sc-for list="{{skins}}" as="skin" hint-placeholder-count="2">
-          <div style="padding: 13px; border-radius: 14px; background: rgba(0,0,0,0.45); display: flex; align-items: center; gap: 11px;">
-            <div style="width: 34px; height: 34px; border-radius: 10px; background: {{skin.color}}; flex-shrink: 0;"></div>
+          <div style="padding: 12px; border-radius: 14px; background: #1b1f2b; border: 1px solid rgba(255,255,255,0.10); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 16px; background: {{skin.color}}; border: 2px solid {{skin.accent}}; flex-shrink: 0;"></div>
             <div style="min-width: 0;">
-              <div style="color: #efe9db; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{skin.name}}</div>
-              <div style="margin-top: 2px; color: #fde047; font-size: 12px; font-weight: 700;">{{skin.price}}</div>
+              <div style="color: #f3f0e8; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{skin.name}}</div>
+              <div style="margin-top: 2px; color: #d8b46a; font-size: 11.5px; font-weight: 700;">{{skin.price}} dr.</div>
             </div>
           </div>
         </sc-for>
       </div>
+
+      <div style="height: 18px;"></div>
     </div>
   </sc-if>
 
   <!-- ONGLET DIEUX -->
   <sc-if value="{{isDieux}}" hint-placeholder-val="{{ true }}">
     <div style="position: relative; flex-grow: 1; overflow: hidden; padding: 26px 20px 0 20px;">
-      <div style="display: flex; align-items: baseline; justify-content: space-between;">
-        <div style="font-family: Cinzel, Georgia, serif; font-size: 26px; font-weight: 700; color: #efe9db; letter-spacing: 1.4px;">Panthéon</div>
-        <div style="color: rgba(239,233,219,0.5); font-size: 12px; font-weight: 700;">2 / 7 possédés</div>
-      </div>
+      <div style="font-family: Cinzel, Georgia, serif; font-size: 25px; font-weight: 700; color: #f3f0e8; letter-spacing: 0.4px;">Ton panthéon</div>
+      <div style="margin-top: 4px; color: #a8adbd; font-size: 13px; font-weight: 500;">{{ownedCount}} divinités sur 7</div>
 
-      <div style="margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px;">
-        <sc-for list="{{pantheon}}" as="god" hint-placeholder-count="6">
-          <div style="padding: 14px; border-radius: 16px; background: rgba(0,0,0,0.45); border: 1px solid {{god.border}}; opacity: {{god.opacity}};">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <div style="width: 38px; height: 38px; border-radius: 11px; background: {{god.color}};"></div>
-              <div style="color: {{god.badgeColor}}; font-size: 10px; font-weight: 800; letter-spacing: 0.8px;">{{god.badge}}</div>
+      <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+        <sc-for list="{{pantheon}}" as="god" hint-placeholder-count="2">
+          <div style="padding: 16px; border-radius: 18px; background: #1b1f2b; border: 1px solid {{god.border}};">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="width: 50px; height: 50px; border-radius: 25px; background: {{god.color}}; border: 2px solid {{god.accent}}; flex-shrink: 0;"></div>
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="font-family: Cinzel, Georgia, serif; font-size: 17px; font-weight: 700; color: #f3f0e8;">{{god.name}}</div>
+                <div style="margin-top: 1px; color: #a8adbd; font-size: 12px; font-weight: 500;">{{god.domain}}</div>
+              </div>
+              <sc-if value="{{god.selected}}" hint-placeholder-val="{{ false }}">
+                <div style="color: #d8b46a; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; flex-shrink: 0;">CHOISI</div>
+              </sc-if>
             </div>
-            <div style="margin-top: 10px; font-family: Cinzel, Georgia, serif; font-size: 17px; font-weight: 700; color: #efe9db;">{{god.name}}</div>
-            <div style="margin-top: 2px; color: {{god.accent}}; font-size: 12px; font-weight: 700;">{{god.ability}}</div>
-            <div style="margin-top: 8px; color: rgba(239,233,219,0.45); font-size: 11px; font-weight: 600;">{{god.cosmetics}}</div>
+            <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+              <sc-for list="{{god.skins}}" as="skin" hint-placeholder-count="2">
+                <div style="display: flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; border: 1px solid {{skin.border}}; background: {{skin.bg}};">
+                  <div style="width: 15px; height: 15px; border-radius: 8px; background: {{skin.color}}; border: 2px solid {{skin.accent}}; opacity: {{skin.opacity}};"></div>
+                  <span style="color: {{skin.textColor}}; font-size: 12px; font-weight: 600;">{{skin.name}}</span>
+                </div>
+              </sc-for>
+            </div>
           </div>
         </sc-for>
       </div>
+
+      <div style="margin-top: 14px; padding: 16px; border-radius: 16px; border: 1px dashed rgba(255,255,255,0.10);">
+        <div style="color: #d8b46a; font-family: Cinzel, Georgia, serif; font-size: 15px; font-weight: 700;">{{missingCount}} divinités à découvrir</div>
+        <div style="margin-top: 3px; color: #a8adbd; font-size: 12.5px; font-weight: 500;">Elles t'attendent au magasin.</div>
+      </div>
+
+      <div style="height: 18px;"></div>
     </div>
   </sc-if>
 
-  <!-- BARRE D'ONGLETS -->
-  <div style="position: relative; display: flex; padding: 10px 12px 26px 12px; background: rgba(0,0,0,0.45); border-top: 1px solid rgba(239,233,219,0.09);">
+  <!-- BARRE D'ONGLETS — Magasin, Jouer, Dieux : Jouer au milieu. -->
+  <div style="position: relative; display: flex; padding: 10px 8px 26px 8px; background: linear-gradient(to bottom, rgba(18,20,28,0), #12141c 40%); border-top: 1px solid rgba(255,255,255,0.10);">
     <sc-for list="{{tabs}}" as="tab" hint-placeholder-count="3">
-      <div onClick="{{tab.pick}}" style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 0; cursor: pointer;">
-        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="{{tab.color}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="{{tab.icon}}"></path>
-        </svg>
-        <span style="color: {{tab.color}}; font-size: 11px; font-weight: {{tab.weight}}; letter-spacing: 0.4px;">{{tab.label}}</span>
+      <div onClick="{{tab.pick}}" style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0; cursor: pointer;">
+        <div style="width: 22px; height: 3px; border-radius: 999px; background: {{tab.markColor}};"></div>
+        <span style="color: {{tab.color}}; font-size: 13px; font-weight: {{tab.weight}}; letter-spacing: 0.2px;">{{tab.label}}</span>
       </div>
     </sc-for>
   </div>
 </div>
 </x-dc>
 
-<script data-dc-script data-props='{"accent":{"editor":"color","default":"#7dd3fc","options":["#7dd3fc","#fde047","#c4694a","#99f6e4"],"section":"Thème"}}'>
+<script data-dc-script data-props='{"tab":{"editor":"enum","default":"jouer","options":["magasin","jouer","dieux"],"section":"État"}}'>
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { tab: 'jouer' };
+    this.state = { tab: props.tab ?? 'jouer' };
   }
 
   renderVals() {
-    const accent = this.props.accent ?? '#7dd3fc';
-    const dim = 'rgba(239,233,219,0.5)';
     const tab = this.state.tab;
+    const gold = '#d8b46a';
+    const muted = '#a8adbd';
 
+    // Ordre réel de la barre du bas : Magasin, Jouer (au milieu), Dieux.
     const tabs = [
-      { id: 'jouer', label: 'Jouer', icon: 'M8 5.5 18.5 12 8 18.5z' },
-      { id: 'magasin', label: 'Magasin', icon: 'M5 8.5h14l-1.2 10.5H6.2zM9 8.5V6.8a3 3 0 0 1 6 0v1.7' },
-      { id: 'dieux', label: 'Dieux', icon: 'M4 20h16M6 20V9m4 11V9m4 11V9m4 11V9M3.5 9h17L12 3.6z' },
+      { id: 'magasin', label: 'Magasin' },
+      { id: 'jouer', label: 'Jouer' },
+      { id: 'dieux', label: 'Dieux' },
     ].map((t) => ({
       id: t.id,
       label: t.label,
-      icon: t.icon,
-      color: tab === t.id ? accent : dim,
-      weight: tab === t.id ? '800' : '500',
+      color: tab === t.id ? '#f3f0e8' : muted,
+      weight: tab === t.id ? '700' : '600',
+      markColor: tab === t.id ? gold : 'transparent',
       pick: () => this.setState({ tab: t.id }),
     }));
 
-    // Les couleurs, capacités, durées et recharges viennent telles quelles de
-    // `src/entities/gods/roster.ts` (M12) — la maquette ne réinvente rien.
+    // Couleurs, domaines, capacités : src/entities/gods/roster.ts (M12).
+    // Prix : src/meta/store.ts (GOD_PRICES, PURCHASABLE). Rien n'est inventé.
     const roster = [
-      { name: 'Hermès', color: '#1d84b5', accent: '#7dd3fc', ability: 'Talaria', owned: true, cosmetics: '3 apparences', price: '—' },
-      { name: 'Zeus', color: '#b45309', accent: '#fde047', ability: 'Foudre', owned: true, cosmetics: '2 apparences', price: '—' },
-      { name: 'Aphrodite', color: '#be185d', accent: '#f9a8d4', ability: 'Charme', owned: false, cosmetics: '2 apparences', price: '1 200' },
-      { name: 'Poséidon', color: '#0e5a6e', accent: '#67e8f9', ability: 'Ressac', owned: false, cosmetics: '2 apparences', price: '1 200' },
-      { name: 'Athéna', color: '#0f766e', accent: '#99f6e4', ability: 'Égide', owned: false, cosmetics: '3 apparences', price: '1 800' },
-      { name: 'Hadès', color: '#5b21b6', accent: '#c4b5fd', ability: 'Retour du Styx', owned: false, cosmetics: '2 apparences', price: '1 800' },
-      { name: 'Arès', color: '#991b1b', accent: '#fca5a5', ability: 'Charge', owned: false, cosmetics: '2 apparences', price: '2 400' },
+      { id: 'hermes', name: 'Hermès', domain: 'Voyageurs et messagers', color: '#1d84b5', accent: '#7dd3fc', ability: 'TALARIA', owned: true, price: null,
+        skins: [{ id: 'origine', name: 'Origine', color: '#1d84b5', accent: '#7dd3fc', owned: true }, { id: 'nuit', name: 'Nuit', color: '#1e3a8a', accent: '#93c5fd', owned: false }, { id: 'olivier', name: 'Olivier', color: '#3f6212', accent: '#bef264', owned: false }] },
+      { id: 'zeus', name: 'Zeus', domain: 'Ciel et foudre', color: '#b45309', accent: '#fde047', ability: 'FOUDRE', owned: true, price: null,
+        skins: [{ id: 'origine', name: 'Origine', color: '#b45309', accent: '#fde047', owned: true }, { id: 'orage', name: 'Orage', color: '#3f3f46', accent: '#fef08a', owned: false }] },
+      { id: 'aphrodite', name: 'Aphrodite', domain: 'Amour et beauté', color: '#be185d', accent: '#f9a8d4', ability: 'CHARME', owned: false, price: '400 dr.' },
+      { id: 'poseidon', name: 'Poséidon', domain: 'Mers et tremblements', color: '#0e5a6e', accent: '#67e8f9', ability: 'RESSAC', owned: false, price: '400 dr.' },
+      { id: 'athena', name: 'Athéna', domain: 'Sagesse et stratégie', color: '#0f766e', accent: '#99f6e4', ability: 'ÉGIDE', owned: false, price: '600 dr.' },
+      { id: 'hades', name: 'Hadès', domain: 'Enfers et richesses', color: '#5b21b6', accent: '#c4b5fd', ability: 'RETOUR DU STYX', owned: false, price: '600 dr.' },
+      { id: 'ares', name: 'Arès', domain: 'Guerre et carnage', color: '#991b1b', accent: '#fca5a5', ability: 'CHARGE', owned: false, price: '800 dr.' },
     ];
 
-    const pantheon = roster.map((g) => ({
+    const selectedGodId = 'hermes';
+    const owned = roster.filter((g) => g.owned);
+    const notOwned = roster.filter((g) => !g.owned);
+
+    const pantheon = owned.map((g) => ({
       name: g.name,
+      domain: g.domain,
       color: g.color,
-      accent: g.owned ? g.accent : 'rgba(239,233,219,0.4)',
-      ability: g.ability,
-      cosmetics: g.cosmetics,
-      badge: g.owned ? 'POSSÉDÉ' : 'VERROUILLÉ',
-      badgeColor: g.owned ? accent : 'rgba(239,233,219,0.35)',
-      border: g.owned ? 'rgba(239,233,219,0.14)' : 'transparent',
-      opacity: g.owned ? '1' : '0.55',
+      accent: g.accent,
+      selected: g.id === selectedGodId,
+      border: g.id === selectedGodId ? 'rgba(216,180,106,0.55)' : 'rgba(255,255,255,0.10)',
+      skins: g.skins.map((s) => ({
+        name: s.name,
+        color: s.color,
+        accent: s.accent,
+        opacity: s.owned ? '1' : '0.4',
+        bg: s.owned ? 'rgba(216,180,106,0.12)' : 'transparent',
+        border: s.owned ? 'rgba(216,180,106,0.55)' : 'rgba(255,255,255,0.10)',
+        textColor: s.owned ? '#f3f0e8' : '#767c8c',
+      })),
     }));
 
-    const shopGods = roster
-      .filter((g) => !g.owned)
-      .slice(0, 3)
-      .map((g) => ({ name: g.name, color: g.color, ability: g.ability, price: g.price }));
-
     return {
-      accent,
       isJouer: tab === 'jouer',
       isMagasin: tab === 'magasin',
       isDieux: tab === 'dieux',
       tabs,
-      pantheon,
-      shopGods,
       goDieux: () => this.setState({ tab: 'dieux' }),
 
-      // Le dieu en cours : Hermès, le dieu par défaut du roster.
-      godColor: '#1d84b5',
-      godAccent: '#7dd3fc',
-      godBorder: 'rgba(125,211,252,0.35)',
-      godGlow: 'rgba(29,132,181,0.30)',
+      ownedCount: owned.length,
+      missingCount: notOwned.length,
+      pantheon,
 
+      shopGods: notOwned.slice(0, 3).map((g) => ({
+        name: g.name,
+        domain: g.domain,
+        color: g.color,
+        accent: g.accent,
+        ability: g.ability,
+        price: g.price,
+      })),
+
+      // src/meta/store.ts — COIN_PACKS (affichés, inertes : M46).
       coinPacks: [
-        { amount: '500', price: '[PRIX]', priceColor: accent, border: 'transparent' },
-        { amount: '1 500', price: '[PRIX]', priceColor: accent, border: 'rgba(125,211,252,0.35)' },
-        { amount: '5 000', price: '[PRIX]', priceColor: accent, border: 'transparent' },
+        { amount: '500', price: '1,99 €', featured: false, bg: '#1b1f2b', border: 'rgba(255,255,255,0.10)' },
+        { amount: '1 500', price: '4,99 €', featured: true, bg: '#252b3a', border: 'rgba(216,180,106,0.55)' },
+        { amount: '4 000', price: '9,99 €', featured: false, bg: '#1b1f2b', border: 'rgba(255,255,255,0.10)' },
       ],
 
+      // src/meta/store.ts — PURCHASABLE, parures des dieux déjà possédés.
       skins: [
-        { name: 'Hermès · Ailé', color: '#7dd3fc', price: '600' },
-        { name: 'Zeus · Orage', color: '#fde047', price: '600' },
+        { name: 'Nuit', color: '#1e3a8a', accent: '#93c5fd', price: '120' },
+        { name: 'Olivier', color: '#3f6212', accent: '#bef264', price: '120' },
       ],
     };
   }

@@ -10,7 +10,7 @@
       "x": 0,
       "y": -150,
       "w": 390,
-      "text": "Les trois onglets sont cliquables : Jouer, Magasin, Dieux.\nCouleurs, capacités, durées et recharges viennent de roster.ts (M12)."
+      "text": "Les trois onglets sont cliquables : Magasin, Jouer (au milieu), Dieux.\nFond = assets/wallpaper.jpg. Couleurs, prix et capacités viennent de roster.ts et store.ts (M12)."
     },
     {
       "id": "note-reglages",
