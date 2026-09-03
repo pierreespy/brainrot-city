@@ -15,8 +15,15 @@ import { GOD_ORDER, GODS, DEFAULT_GOD_ID, type GodId } from '../entities/gods/ro
 import { GOD_PRICES, defaultSkinId, skinById, skinsOf } from './store';
 
 export interface Progression {
-  /** La monnaie de la cité. */
+  /** La monnaie de la cité — celle qu'on gagne en jouant. */
   drachmas: number;
+  /**
+   * L'ambroisie : la monnaie des dieux, plus rare que la drachme. Comme les
+   * paquets de drachmes (`COIN_PACKS`), elle ne s'obtient pour l'instant que
+   * contre argent réel — et cet achat est lui aussi INERTE (M46). Elle vaut
+   * donc 0 tant que la monétisation n'existe pas ; c'est voulu.
+   */
+  ambrosia: number;
   /** Les dieux acquis. */
   ownedGods: GodId[];
   /** Les parures acquises, toutes divinités confondues. */
@@ -42,6 +49,7 @@ export function initialProgression(): Progression {
 
   return {
     drachmas: 0,
+    ambrosia: 0,
     ownedGods,
     ownedSkins: ownedGods.map(defaultSkinId),
     selectedGod: ownedGods.includes(DEFAULT_GOD_ID) ? DEFAULT_GOD_ID : ownedGods[0],
@@ -182,6 +190,7 @@ export function sanitize(loaded: Partial<Progression> | null): Progression {
   const selected = loaded.selectedGod;
   return {
     drachmas: Math.max(0, Math.floor(loaded.drachmas ?? 0)),
+    ambrosia: Math.max(0, Math.floor(loaded.ambrosia ?? 0)),
     ownedGods,
     ownedSkins,
     selectedGod: selected !== undefined && ownedGods.includes(selected) ? selected : ownedGods[0],

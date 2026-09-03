@@ -23,6 +23,25 @@ export const COLORS = {
   gold: '#d8b46a',
   /** Le texte posé SUR l'or. Sombre, sinon il ne se lit pas. */
   onGold: '#1a1508',
+  /**
+   * L'ambroisie : la monnaie rare, celle des dieux — plus précieuse que
+   * l'or des mortels. Un violet-améthyste, pour qu'elle se distingue de la
+   * chaleur du reste de la palette au premier coup d'œil, comme un joyau
+   * posé sur du marbre.
+   */
+  ambrosia: '#c99bf0',
+  /** Le texte posé SUR l'ambroisie. Même logique que `onGold`. */
+  onAmbrosia: '#241236',
+  ambrosiaBorder: 'rgba(201, 155, 240, 0.55)',
+  /**
+   * Les teintes « d'épaisseur » : posées en bordure basse d'un bouton, plus
+   * sombres que sa face, elles font croire à un bouton **taillé**, avec un
+   * chant — pas un simple rectangle plat. Une bordure basse, épaisse, dans
+   * une nuance foncée de la même couleur, c'est ce qui donne aux boutons
+   * d'un jeu mobile leur air de bonbon qu'on presse, plutôt que de lien web.
+   */
+  goldShadow: '#96742f',
+  panelShadow: '#0d0f16',
   text: '#f3f0e8',
   /** Texte secondaire — 5,9:1 sur le fond, au-delà du minimum. */
   muted: '#a8adbd',

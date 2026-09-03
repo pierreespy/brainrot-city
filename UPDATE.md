@@ -9,6 +9,139 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🐛 Le correctif WebGL précédent ne suffisait pas sur téléphone : nouvelle approche
+
+**Résumé** — Le correctif précédent (effacer le global
+`WebGLRenderingContext` avant de construire `THREE.WebGLRenderer`) ne
+marchait pas sur un vrai téléphone : le crash `WebGL 1 is not supported
+since r163` revenait à l'identique. Cause probable : ce global est installé
+par expo-gl **non configurable**, donc `delete` échoue silencieusement —
+rien à voir avec un cache de bundle, le symptôme est resté identique après
+rechargement complet.
+
+**Nouvelle approche : cacher la chaîne de prototypes, pas le global.**
+Three.js interroge `instanceof`, qui interroge lui-même
+`Object.getPrototypeOf` — donc un `Proxy` autour du contexte, avec un
+`getPrototypeOf` qui répond `Object.prototype`, fait échouer le test SANS
+toucher à quoi que ce soit de global. Chaque méthode est reliée (`bind`) au
+`gl` d'origine avant d'être renvoyée, sinon les appels natifs — qui
+s'attendent à recevoir `gl` comme `this` — casseraient en recevant le Proxy
+à la place.
+
+**Le détail qui comptait : ce Proxy devient `_gl` DANS Three.js**, donc il
+encaisse chaque appel WebGL de chaque image, pas seulement la construction
+du renderer. Sans mise en cache des méthodes déjà liées, on aurait créé une
+fonction liée à CHAQUE `gl.uniform...`/`gl.bindTexture`/etc. — des milliers
+de fois par seconde. Un `Map` s'en charge.
+
+**Fichiers touchés** — `src/core/createRenderer.ts`, `UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe. Banc web : menu et partie
+s'affichent sans erreur console (comme avant — ce test ne peut toujours pas
+reproduire le bug d'origine, spécifique au contexte natif). **Reste à
+confirmer sur téléphone via Expo Go**, seul test qui vaille ici.
+
+---
+
+## 2026-09-03 — Claude — 🐛 Corrige le crash « WebGL 1 is not supported » sur téléphone
+
+**Résumé** — Le jeu plantait au lancement sur téléphone (Expo Go, iOS)
+depuis le passage à SDK 57, avec `THREE.WebGLRenderer: WebGL 1 is not
+supported since r163.` levée dans `createRenderer.ts`.
+
+**La cause n'est pas un vrai contexte WebGL1.** `expo-gl` 57.x fournit un
+contexte qui implémente déjà l'API WebGL2 (son propre type le dit :
+`ExpoWebGLRenderingContext extends WebGL2RenderingContext`), mais il reste
+identifié, côté runtime, par un global `WebGLRenderingContext` hérité de
+l'ancien nom. Depuis la r163, Three.js rejette tout `context` reconnu comme
+instance de CE global, sans vérifier ce qu'il sait réellement faire —
+un faux positif qui ne se voyait pas sur le banc web (le navigateur, lui,
+donne un vrai contexte WebGL2, une classe distincte).
+
+**Le correctif** efface ce global le temps de construire
+`THREE.WebGLRenderer`, puis le remet en place aussitôt après — le contexte
+transmis à Three.js, lui, ne change pas d'un octet.
+
+**Fichiers touchés** — `src/core/createRenderer.ts`, `UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe. Banc web : menu ET partie (dieu,
+cortège, mortels, HUD) s'affichent sans erreur console, avant et après le
+correctif — ce test ne pouvait pas voir le bug d'origine (WebGL2 natif sur
+le web), seul un test sur téléphone via Expo Go le confirmera vraiment.
+
+---
+
+## 2026-09-03 — Claude — 🧹 Finit le passage à Expo SDK 57
+
+**Résumé** — Le passage à SDK 57 (`expo ~57.0.19`, React Native 0.86.3, React
+19.2.3) était déjà fait sur `main` ; ce commit règle ce qu'`expo-doctor`
+signalait encore.
+
+**`app.json`** — trois champs que SDK 57 n'accepte plus dans le schéma :
+`newArchEnabled` (la Nouvelle Architecture est désormais la seule qui
+existe, plus besoin de l'activer), `android.edgeToEdgeEnabled` (l'edge-to-edge
+est désormais toujours actif) et `splash` (remplacé par le plugin
+`expo-splash-screen`, ajouté avec la même couleur de fond et le même
+`resizeMode`).
+
+**`tsconfig.bench.json`** — `typescript` passe à `~6.0.3` (version attendue
+par SDK 57), qui refusait `moduleResolution: "Node"` (dépréciée, disparaîtra
+en TS 7). Retirée : sans elle, `module: "CommonJS"` suffit à faire tourner
+`npm run bench` sur Node sans avertissement.
+
+**Fichiers touchés** — `app.json`, `package.json`, `package-lock.json`
+(ajout d'`expo-splash-screen`, `typescript` → `~6.0.3`), `tsconfig.bench.json`,
+`UPDATE.md`.
+
+**Vérifié** — `npx expo-doctor` : 21/21. `npm run typecheck` passe. `npm run
+bench` tourne sans avertissement. Banc web relancé : menu et 3D s'affichent
+sans erreur console.
+
+---
+
+## 2026-09-03 — Claude — 💎 L'ambroisie, et un menu plus « jeu mobile »
+
+**Résumé** — Deux monnaies au lieu d'une, et une mise en forme du menu qui
+s'inspire des jeux mobiles du genre (Clash Royale en tête) sur la **forme**,
+pas sur la direction artistique — le marbre et l'or de Divine City restent
+ce qu'ils sont.
+
+**La nouvelle monnaie : l'ambroisie.** Plus rare que la drachme, réservée aux
+dieux dans la mythologie grecque — voir `UNIVERS.md` pour le choix du mot.
+Elle vit dans `Progression.ambrosia`, vaut 0 tant qu'aucune monétisation
+n'existe (M46), et le magasin lui consacre un rayon à part
+(`AMBROSIA_PACKS` dans `store.ts`), inerte comme celui des drachmes et pour
+la même raison.
+
+**Le menu.** Trois retouches, toutes structurelles :
+
+- La bourse en haut de l'écran devient une **barre à deux pastilles**
+  (`CurrencyBar`), drachmes puis ambroisie, chacune surmontée d'un bouton
+  rond « + » à cheval sur son bord qui ouvre le magasin — le réflexe de jeu
+  mobile pour recharger une monnaie sans changer d'écran.
+- Le trait fin sous l'onglet actif devient un **chip** : une pastille
+  arrondie qui embrasse tout l'onglet, plus facile à repérer au doigt qu'un
+  soulignement.
+- Les boutons et les cartes gagnent un **chant** (bordure basse épaisse,
+  plus sombre) qui simule une épaisseur — l'air d'un bouton qu'on presse,
+  pas d'un lien. Il s'aplatit à l'appui, pour vendre l'enfoncement.
+
+**Fichiers touchés** — `src/ui/menu/theme.ts` (couleurs de l'ambroisie et
+des chants), `src/ui/menu/parts.tsx` (`CurrencyBar`, `Coin`, `Gem`,
+boutons/cartes), `src/ui/menu/MenuScreen.tsx` (barre de monnaies, chip
+d'onglet), `src/ui/menu/ShopTab.tsx` (rayon Ambroisie), `src/meta/store.ts`
+(`AMBROSIA_PACKS`), `src/meta/progression.ts` (`ambrosia`), `UNIVERS.md`,
+`README.md`, `UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe. Pas de test automatisé existant sur
+ces écrans (aucun fichier `*.test.*` dans le dépôt à ce jour).
+
+**Ce qui n'a pas bougé** — l'ambroisie ne s'achète et ne se dépense encore
+nulle part : comme les paquets de drachmes avant elle, c'est une place
+réservée à l'écran, pas une décision d'économie (M46).
+
+---
+
 ## 2026-09-03 — Claude — 🎞️ Le fond bouge avec le doigt, pas fixe derrière
 
 **Résumé** — Correction du changement précédent : le fond n'est PAS censé

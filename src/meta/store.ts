@@ -1,5 +1,6 @@
 /**
- * store.ts — le catalogue du magasin : prix, parures, paquets de drachmes.
+ * store.ts — le catalogue du magasin : prix, parures, paquets de drachmes et
+ * d'ambroisie.
  *
  * ⚠️ Pourquoi ce fichier n'est PAS dans `entities/gods/roster.ts`.
  *
@@ -131,4 +132,27 @@ export const COIN_PACKS: readonly CoinPack[] = [
   { id: 'bourse', drachmas: 500, price: '1,99 €', featured: false },
   { id: 'coffre', drachmas: 1500, price: '4,99 €', featured: true },
   { id: 'tresor', drachmas: 4000, price: '9,99 €', featured: false },
+];
+
+/**
+ * Les paquets d'ambroisie contre argent réel.
+ *
+ * Même principe que `CoinPack`, gardé comme un type à part plutôt que
+ * généralisé : l'ambroisie est une monnaie plus rare que la drachme (moins
+ * d'unités, prix plus élevé), pas la même chose sous un autre nom — un
+ * champ `drachmas` partagé pour les deux aurait été trompeur à relire.
+ *
+ * ⚠️ INERTS, comme `COIN_PACKS` : même raison (M46), voir plus haut.
+ */
+export interface AmbrosiaPack {
+  readonly id: string;
+  readonly ambrosia: number;
+  readonly price: string;
+  readonly featured: boolean;
+}
+
+export const AMBROSIA_PACKS: readonly AmbrosiaPack[] = [
+  { id: 'larme', ambrosia: 50, price: '2,99 €', featured: false },
+  { id: 'coupe', ambrosia: 180, price: '7,99 €', featured: true },
+  { id: 'amphore', ambrosia: 500, price: '17,99 €', featured: false },
 ];

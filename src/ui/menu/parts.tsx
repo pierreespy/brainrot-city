@@ -58,17 +58,114 @@ export function GodBadge({
   );
 }
 
-/** Le solde de drachmes, affiché en permanence en haut de l'écran. */
-export function Purse({ drachmas }: { drachmas: number }) {
+/**
+ * Les deux bourses, affichées en permanence en haut de l'écran : les
+ * drachmes puis l'ambroisie, dans l'ordre où on les gagne — la monnaie
+ * commune d'abord, la monnaie rare ensuite.
+ *
+ * Chacune est une pastille surmontée d'un bouton rond « + », posé à cheval
+ * sur son bord — la façon dont un jeu mobile affiche une monnaie qu'on peut
+ * recharger sans quitter l'écran où l'on est. Toucher le « + » ouvre le
+ * magasin, au rayon qui correspond.
+ */
+export function CurrencyBar({
+  drachmas,
+  ambrosia,
+  onOpenShop,
+}: {
+  drachmas: number;
+  ambrosia: number;
+  onOpenShop: () => void;
+}) {
   return (
-    <View style={styles.purse}>
-      <View style={styles.coin} />
-      <Text style={styles.purseValue} testID="drachmas">
-        {drachmas.toLocaleString('fr-FR')}
-      </Text>
-      <Text style={styles.purseLabel}>drachmes</Text>
+    <View style={styles.currencyBar}>
+      <CurrencyPill
+        testID="drachmas"
+        tone="gold"
+        value={drachmas}
+        icon={<Coin />}
+        hint="Ouvrir le magasin pour acheter des drachmes"
+        onAdd={onOpenShop}
+      />
+      <CurrencyPill
+        testID="ambrosia"
+        tone="ambrosia"
+        value={ambrosia}
+        icon={<Gem />}
+        hint="Ouvrir le magasin pour acheter de l'ambroisie"
+        onAdd={onOpenShop}
+      />
     </View>
   );
+}
+
+function CurrencyPill({
+  testID,
+  tone,
+  value,
+  icon,
+  hint,
+  onAdd,
+}: {
+  testID: string;
+  tone: 'gold' | 'ambrosia';
+  value: number;
+  icon: ReactNode;
+  hint: string;
+  onAdd: () => void;
+}) {
+  const gold = tone === 'gold';
+  return (
+    <View style={styles.pillWrap}>
+      <View style={[styles.pill, gold ? styles.pillGold : styles.pillAmbrosia]}>
+        {icon}
+        <Text style={styles.pillValue} testID={testID}>
+          {value.toLocaleString('fr-FR')}
+        </Text>
+      </View>
+      {/* Le bouton déborde exprès du bord de la pastille : c'est ce qui le
+          distingue d'un simple chiffre, et qui dit « on peut en ajouter »
+          sans un mot de texte. */}
+      <Pressable
+        onPress={onAdd}
+        accessibilityRole="button"
+        accessibilityLabel={hint}
+        hitSlop={8}
+        style={({ pressed }) => [
+          styles.addButton,
+          gold ? styles.addButtonGold : styles.addButtonAmbrosia,
+          pressed && styles.addButtonPressed,
+        ]}
+      >
+        <Text style={[styles.addButtonLabel, gold ? styles.addButtonLabelGold : styles.addButtonLabelAmbrosia]}>
+          +
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+/**
+ * La pièce d'or : un disque, avec le reflet qui le distingue d'un pion plat.
+ * Exportée : le rayon « Drachmes » du magasin en affiche une, plus grande,
+ * sur chaque paquet — la même pièce que dans la bourse, pour qu'on
+ * reconnaisse ce qu'on est en train d'acheter.
+ */
+export function Coin({ size = 16 }: { size?: number }) {
+  return (
+    <View style={[styles.coin, { width: size, height: size, borderRadius: size / 2 }]}>
+      <View style={[styles.coinShine, { width: size * 0.38, height: size * 0.38, borderRadius: size }]} />
+    </View>
+  );
+}
+
+/**
+ * La goutte d'ambroisie : un losange, la silhouette universelle du joyau —
+ * volontairement différente du disque de la drachme, pour se reconnaître
+ * d'un coup d'œil même daltonien. Exportée pour la même raison que `Coin`.
+ */
+export function Gem({ size = 13 }: { size?: number }) {
+  return <View style={[styles.gem, { width: size, height: size }]} />;
 }
 
 interface ButtonProps {
@@ -146,7 +243,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
 
-  purse: {
+  currencyBar: { flexDirection: 'row', gap: SPACE.lg },
+
+  // Le `marginRight`/`marginTop` fait de la place au bouton « + » qui
+  // déborde du coin de la pastille sans être rogné par ses voisins.
+  pillWrap: { marginRight: SPACE.xs, marginTop: SPACE.xs },
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACE.sm,
@@ -155,41 +257,95 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     backgroundColor: COLORS.panel,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
-  coin: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: COLORS.gold,
-  },
-  purseValue: { ...TYPE.price, color: COLORS.text },
-  purseLabel: { ...TYPE.body, color: COLORS.muted, fontSize: 12 },
+  pillGold: { borderColor: COLORS.borderStrong },
+  pillAmbrosia: { borderColor: COLORS.ambrosiaBorder },
+  pillValue: { ...TYPE.price, color: COLORS.text },
 
+  coin: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: COLORS.gold,
+    borderWidth: 1,
+    borderColor: COLORS.goldShadow,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  coinShine: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.55)',
+  },
+  gem: {
+    width: 13,
+    height: 13,
+    backgroundColor: COLORS.ambrosia,
+    borderWidth: 1,
+    borderColor: '#7c4bab',
+    transform: [{ rotate: '45deg' }],
+  },
+
+  // Le bouton « + » : rond, à cheval sur le coin bas-droit de la pastille —
+  // c'est lui, pas la pastille, que le doigt vient chercher pour recharger.
+  addButton: {
+    position: 'absolute',
+    right: -SPACE.xs,
+    bottom: -SPACE.xs,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.ground,
+  },
+  addButtonGold: { backgroundColor: COLORS.gold },
+  addButtonAmbrosia: { backgroundColor: COLORS.ambrosia },
+  addButtonPressed: { opacity: 0.8, transform: [{ scale: 0.9 }] },
+  addButtonLabel: { fontSize: 14, fontWeight: '800', lineHeight: 16 },
+  addButtonLabelGold: { color: COLORS.onGold },
+  addButtonLabelAmbrosia: { color: COLORS.onAmbrosia },
+
+  /**
+   * Le bouton, dans son ensemble : une face, et un CHANT en dessous, plus
+   * sombre — la bordure basse épaisse simule l'épaisseur d'un bonbon qu'on
+   * presse. `buttonPressed` réduit cette épaisseur en même temps qu'il tasse
+   * le bouton : c'est ce qui vend l'illusion qu'on vient de l'enfoncer.
+   */
   button: {
     minHeight: TOUCH_MIN,
     paddingHorizontal: SPACE.lg,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+    borderBottomWidth: 4,
   },
-  buttonPrimary: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  buttonGhost: { backgroundColor: COLORS.panelRaised, borderColor: COLORS.border },
-  buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
+  buttonPrimary: { backgroundColor: COLORS.gold, borderColor: COLORS.gold, borderBottomColor: COLORS.goldShadow },
+  buttonGhost: {
+    backgroundColor: COLORS.panelRaised,
+    borderColor: COLORS.border,
+    borderBottomColor: COLORS.panelShadow,
+  },
+  buttonPressed: { opacity: 0.92, borderBottomWidth: 1, transform: [{ translateY: 3 }] },
   buttonDisabled: { opacity: 0.4 },
   buttonLabel: { ...TYPE.body, fontWeight: '700', color: COLORS.text },
   buttonLabelPrimary: { color: COLORS.onGold, fontWeight: '800' },
 
   card: {
     backgroundColor: COLORS.panel,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: SPACE.lg,
   },
+  // Le cadre s'épaissit plutôt que de changer de couleur seul : une carte
+  // choisie a l'air d'un objet qu'on a sorti du lot, pas d'un survol.
   cardSelected: {
     backgroundColor: COLORS.panelRaised,
     borderColor: COLORS.borderStrong,
+    borderWidth: 2,
   },
 });

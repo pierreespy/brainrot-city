@@ -204,6 +204,27 @@ assez proche pour donner envie, assez loin pour rester un but.
 
 ---
 
+## L'ambroisie
+
+**État : ajoutée le 2026-09-03.** La cité a une seconde monnaie, plus rare que
+la drachme — celle des dieux, pas des mortels.
+
+Le choix suit la même règle que celui de la drachme : pas un mot de jeu
+générique (« gemmes », « cristaux »), mais un mot **de cet univers-là**.
+L'ambroisie est la nourriture de l'Olympe dans la mythologie grecque —
+réservée aux dieux, elle rend immortel celui qui la consomme. Le joueur qui
+voit « 40 ambroisie » à côté de « 340 drachmes » comprend sans légende
+laquelle des deux est la précieuse : les mortels comptent en drachmes, les
+dieux en ambroisie.
+
+**Ce qu'elle achète** : rien encore. Comme les paquets de drachmes, les
+paquets d'ambroisie du magasin sont affichés mais **inertes** (voir plus
+bas) — la monétisation reste une décision de la M46, pas de ce chantier-ci.
+Ce que l'ambroisie achètera en premier (une parure rare, un raccourci de
+déblocage) reste à trancher **avec** cette décision.
+
+---
+
 ## Ce qui n'est PAS décidé
 
 - **Le style des personnages** — silhouettes stylisées ou plus détaillées.
@@ -221,5 +242,6 @@ assez proche pour donner envie, assez loin pour rester un but.
   > plates). C'est le sujet de la **M40**.
 - **Le mode de jeu** — partie chronométrée, survie, ou objectif de conversion.
 - **La monétisation** — publicité, achat des dieux, ou rien. Le magasin
-  affiche déjà des paquets de drachmes contre argent réel, mais ils sont
-  **inertes** : la place à l'écran est prise, la décision ne l'est pas (M46).
+  affiche déjà des paquets de drachmes et d'ambroisie contre argent réel,
+  mais ils sont **inertes** : la place à l'écran est prise, la décision ne
+  l'est pas (M46).

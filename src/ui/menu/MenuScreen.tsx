@@ -33,7 +33,7 @@
  * 27:16) : c'est le seul fichier à remplacer pour changer le décor.
  *
  * Le voile en dégradé (haut et bas), lui, reste FIXE — c'est un habillage de
- * l'écran (la bourse, la barre d'onglets), pas une partie de la scène. Il
+ * l'écran (les bourses, la barre d'onglets), pas une partie de la scène. Il
  * est posé APRÈS le ruban pour dessiner par-dessus l'image qui glisse.
  */
 
@@ -55,7 +55,7 @@ import { GodsTab } from './GodsTab';
 import { PlayTab } from './PlayTab';
 import { SettingsSheet } from './SettingsSheet';
 import { ShopTab } from './ShopTab';
-import { Purse } from './parts';
+import { CurrencyBar } from './parts';
 import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
 
 export type MenuTab = 'shop' | 'play' | 'gods';
@@ -69,8 +69,15 @@ const TABS: { id: MenuTab; label: string }[] = [
 
 const indexOf = (id: MenuTab) => TABS.findIndex((t) => t.id === id);
 
-/** La largeur du trait actif, sous l'intitulé. */
-const MARK_WIDTH = 22;
+/**
+ * La marge, de chaque côté, entre le chip actif et le bord de son onglet.
+ *
+ * ⚠️ Le chip a remplacé le simple trait sous l'intitulé : une pastille
+ * arrondie qui EMBRASSE tout l'onglet, à la façon dont un jeu mobile marque
+ * l'onglet du bas qu'on a sous le doigt — pas juste un soulignement de site
+ * web. Elle glisse par la même interpolation que l'ancien trait.
+ */
+const CHIP_INSET = 6;
 
 interface Props {
   state: Progression;
@@ -160,7 +167,11 @@ export function MenuScreen({
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Purse drachmas={state.drachmas} />
+        <CurrencyBar
+          drachmas={state.drachmas}
+          ambrosia={state.ambrosia}
+          onOpenShop={() => goTo('shop')}
+        />
       </View>
 
       {/*
@@ -211,19 +222,19 @@ export function MenuScreen({
       </Animated.ScrollView>
 
       <View style={styles.tabBar}>
-        {/* Le trait actif, pas seulement la couleur : lisible aussi quand on
-            distingue mal les nuances. Il est posé HORS des onglets pour
-            pouvoir glisser entre eux, au rythme exact du doigt. */}
+        {/* Le chip actif, pas seulement la couleur du texte : lisible aussi
+            quand on distingue mal les nuances. Il est posé HORS des onglets
+            pour pouvoir glisser entre eux, au rythme exact du doigt. */}
         <Animated.View
           pointerEvents="none"
           style={[
-            styles.mark,
+            styles.tabChip,
             {
-              width: MARK_WIDTH,
-              left: (tabWidth - MARK_WIDTH) / 2,
+              width: tabWidth - CHIP_INSET * 2,
+              left: CHIP_INSET,
               transform: [
                 {
-                  // Une seule interpolation pour tout le ruban : le trait
+                  // Une seule interpolation pour tout le ruban : le chip
                   // parcourt une largeur d'onglet pendant qu'une page défile.
                   translateX: scrollX.interpolate({
                     inputRange: [0, (TABS.length - 1) * pageWidth],
@@ -271,7 +282,7 @@ export function MenuScreen({
       </View>
 
       {/* Le voile de lisibilité, lui, ne bouge JAMAIS : c'est un habillage de
-          l'écran (la bourse en haut, la barre d'onglets en bas), pas une
+          l'écran (les bourses en haut, la barre d'onglets en bas), pas une
           partie de la scène. Il est posé EN DERNIER, donc AU-DESSUS du
           ruban : c'est ce qui lui permet d'assombrir le temple qui glisse
           dessous sans jamais bouger lui-même. */}
@@ -383,16 +394,17 @@ const styles = StyleSheet.create({
     minHeight: TOUCH_MIN + 6,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 3 + SPACE.sm,
-    paddingBottom: SPACE.sm,
+    paddingVertical: SPACE.sm,
   },
   tabPressed: { opacity: 0.7 },
-  mark: {
+  tabChip: {
     position: 'absolute',
-    top: SPACE.sm,
-    height: 3,
-    borderRadius: RADIUS.pill,
-    backgroundColor: COLORS.gold,
+    top: SPACE.xs,
+    bottom: SPACE.xs,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(216, 180, 106, 0.20)',
+    borderWidth: 1,
+    borderColor: COLORS.borderStrong,
   },
   tabLabel: { ...TYPE.body, fontWeight: '700', color: COLORS.text },
 });
