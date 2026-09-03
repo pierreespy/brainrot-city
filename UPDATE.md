@@ -9,6 +9,34 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🐛 Corrige le crash « WebGL 1 is not supported » sur téléphone
+
+**Résumé** — Le jeu plantait au lancement sur téléphone (Expo Go, iOS)
+depuis le passage à SDK 57, avec `THREE.WebGLRenderer: WebGL 1 is not
+supported since r163.` levée dans `createRenderer.ts`.
+
+**La cause n'est pas un vrai contexte WebGL1.** `expo-gl` 57.x fournit un
+contexte qui implémente déjà l'API WebGL2 (son propre type le dit :
+`ExpoWebGLRenderingContext extends WebGL2RenderingContext`), mais il reste
+identifié, côté runtime, par un global `WebGLRenderingContext` hérité de
+l'ancien nom. Depuis la r163, Three.js rejette tout `context` reconnu comme
+instance de CE global, sans vérifier ce qu'il sait réellement faire —
+un faux positif qui ne se voyait pas sur le banc web (le navigateur, lui,
+donne un vrai contexte WebGL2, une classe distincte).
+
+**Le correctif** efface ce global le temps de construire
+`THREE.WebGLRenderer`, puis le remet en place aussitôt après — le contexte
+transmis à Three.js, lui, ne change pas d'un octet.
+
+**Fichiers touchés** — `src/core/createRenderer.ts`, `UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe. Banc web : menu ET partie (dieu,
+cortège, mortels, HUD) s'affichent sans erreur console, avant et après le
+correctif — ce test ne pouvait pas voir le bug d'origine (WebGL2 natif sur
+le web), seul un test sur téléphone via Expo Go le confirmera vraiment.
+
+---
+
 ## 2026-09-03 — Claude — 🧹 Finit le passage à Expo SDK 57
 
 **Résumé** — Le passage à SDK 57 (`expo ~57.0.19`, React Native 0.86.3, React

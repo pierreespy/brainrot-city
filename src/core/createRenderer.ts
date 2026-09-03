@@ -48,6 +48,18 @@ export function createRenderer(
     getContext: () => gl,
   } as unknown as HTMLCanvasElement;
 
+  // ⚠️ expo-gl installe un global `WebGLRenderingContext` (nom hérité de
+  // avant son passage à WebGL2), et le contexte qu'il donne EST une
+  // instance de ce global — alors qu'il implémente déjà l'API WebGL2
+  // (`ExpoWebGLRenderingContext extends WebGL2RenderingContext`). Depuis la
+  // r163, Three.js refuse tout `context` reconnu comme `WebGLRenderingContext`,
+  // sans vérifier ce qu'il sait réellement faire. On efface ce global, rien
+  // que le temps de construire le renderer, pour ne pas déclencher ce faux
+  // positif — le contexte, lui, ne change pas.
+  const legacyWebGL1Global = (globalThis as { WebGLRenderingContext?: unknown })
+    .WebGLRenderingContext;
+  delete (globalThis as { WebGLRenderingContext?: unknown }).WebGLRenderingContext;
+
   const renderer = new THREE.WebGLRenderer({
     canvas: canvasShim,
     context: gl as unknown as WebGLRenderingContext,
@@ -55,6 +67,14 @@ export function createRenderer(
     // pixel, et les écrans de téléphone sont assez denses pour s'en passer.
     antialias: CONFIG.render.antialias,
   });
+
+  // On remet le global en place : seul le constructeur de Three.js avait
+  // besoin de ne pas le voir, le reste de l'app (et le web, qui n'y touche
+  // jamais) doit le retrouver intact.
+  if (legacyWebGL1Global !== undefined) {
+    (globalThis as { WebGLRenderingContext?: unknown }).WebGLRenderingContext =
+      legacyWebGL1Global;
+  }
 
   // drawingBufferWidth est DÉJÀ en pixels physiques. Si on laissait Three.js
   // appliquer en plus le pixelRatio, on rendrait 2 à 3 fois trop de pixels
