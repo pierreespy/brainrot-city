@@ -21,12 +21,16 @@
  * d'onglets avance avec lui — d'où le `Animated.ScrollView` et la valeur
  * `scrollX` ci-dessous, plutôt qu'un simple `useState` d'onglet actif.
  *
- * ⚠️ Le fond (le temple) est DANS le ruban, pas fixé derrière : chaque page
- * porte sa propre image (voir `Page` plus bas), donc il glisse avec le
- * doigt, dans le même sens et à la même vitesse — le défilement natif s'en
- * charge, sans interpolation à la main. Les trois onglets portent la même
- * image, au même endroit : la jonction entre deux pages montre donc la même
- * scène de part et d'autre, jamais un bord vide ni une coupure choquante.
+ * ⚠️ Le fond (le temple) est DANS le ruban, pas fixé derrière : il glisse
+ * avec le doigt, dans le même sens et à la même vitesse — le défilement
+ * natif s'en charge, sans interpolation à la main.
+ *
+ * ⚠️ Et c'est UNE SEULE image, large de trois écrans, pas trois exemplaires
+ * de la même : le magasin en montre le tiers gauche, « Jouer » le milieu,
+ * les dieux le tiers droit. Le doigt fait donc voyager le regard le long
+ * d'un même paysage — d'où `Backdrop` ci-dessous, posé une fois pour tout le
+ * ruban. L'image attendue est panoramique (assets/wallpaper.jpg, cadrée en
+ * 27:16) : c'est le seul fichier à remplacer pour changer le décor.
  *
  * Le voile en dégradé (haut et bas), lui, reste FIXE — c'est un habillage de
  * l'écran (la bourse, la barre d'onglets), pas une partie de la scène. Il
@@ -181,6 +185,8 @@ export function MenuScreen({
           pagerRef.current?.scrollTo({ x: indexOf('play') * pageWidth, y: 0, animated: false });
         }}
       >
+        <Backdrop width={pageWidth * TABS.length} />
+
         <Page width={pageWidth}>
           <ShopTab state={state} onBuyGod={onBuyGod} onBuySkin={onBuySkin} />
         </Page>
@@ -294,31 +300,44 @@ export function MenuScreen({
 }
 
 /**
+ * Le décor : UNE image, large des trois onglets réunis.
+ *
+ * ⚠️ Elle vit DANS le ruban — c'est un enfant de la zone qui défile, pas un
+ * calque posé derrière l'écran. C'est ce qui la fait bouger avec le doigt
+ * sans une ligne d'animation : le défilement natif la déplace comme il
+ * déplace les pages, donc exactement à leur vitesse. Une interpolation sur
+ * `scrollX` ferait la même chose en moins fiable et en plus cher.
+ *
+ * ⚠️ Elle est en position absolue, donc HORS du rang des pages : sans cela
+ * elle occuperait une quatrième place dans le ruban et décalerait les
+ * onglets d'un écran. Posée en premier, elle est aussi dessinée dessous.
+ *
+ * `cover` sur une boîte de trois écrans de large garde l'image entière en
+ * hauteur et ne rogne que ses bords gauche et droit — le sujet doit donc
+ * vivre au centre du cadre, jamais collé à un bord.
+ */
+function Backdrop({ width }: { width: number }) {
+  return (
+    <Image
+      source={require('../../../assets/wallpaper.jpg')}
+      style={[styles.backdrop, { width }]}
+      resizeMode="cover"
+    />
+  );
+}
+
+/**
  * Une page du ruban : une largeur d'écran, et son propre défilement vertical.
+ *
+ * ⚠️ Elle est TRANSPARENTE, et c'est ce qui laisse voir le décor commun posé
+ * dessous. Lui donner un fond couperait l'image en trois.
  *
  * ⚠️ `nestedScrollEnabled` est ce qui permet, sur Android, de faire défiler le
  * magasin vers le bas alors qu'on est déjà dans un défilement horizontal.
  */
-/**
- * Une page du ruban : une largeur d'écran, son propre défilement vertical, et
- * SON EXEMPLAIRE du temple posé derrière son contenu.
- *
- * ⚠️ L'image vit ICI, dans la page — donc dans le ruban lui-même — plutôt
- * que fixée derrière lui. C'est ce qui la fait bouger avec le doigt : elle
- * n'est pas animée « à la main » (pas d'interpolation, pas de listener), le
- * défilement natif s'en charge, exactement comme pour le reste de la page.
- * Chaque onglet porte donc la même image, à la même place à l'écran — le
- * passage de l'un à l'autre montre la même colline de part et d'autre du
- * doigt, jamais un bord vide.
- */
 function Page({ width, children }: { width: number; children: ReactNode }) {
   return (
     <View style={{ width }}>
-      <Image
-        source={require('../../../assets/wallpaper.jpg')}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      />
       <ScrollView
         style={styles.page}
         contentContainerStyle={styles.pageContent}
@@ -342,7 +361,12 @@ const styles = StyleSheet.create({
   },
 
   pager: { flex: 1 },
-  page: { flex: 1 },
+
+  // Ancrée en haut, en bas et à gauche du ruban : sa hauteur suit celle de
+  // l'écran, sa largeur est donnée à la main (trois pages).
+  backdrop: { position: 'absolute', top: 0, bottom: 0, left: 0 },
+
+  page: { flex: 1, backgroundColor: 'transparent' },
   pageContent: { paddingHorizontal: SPACE.xl },
 
   tabBar: {
