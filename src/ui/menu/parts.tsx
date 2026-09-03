@@ -1,18 +1,279 @@
 /**
- * parts.tsx — les quelques briques que les trois onglets se partagent.
+ * parts.tsx — les briques que les quatre onglets se partagent.
  *
- * Elles existent pour une raison précise : un bouton d'achat, une pastille de
- * dieu et un intitulé de section apparaissent dans les trois onglets. Écrits
- * trois fois, ils auraient divergé dès la première retouche.
+ * Elles existent pour une raison précise : un bandeau gravé, un bouton d'or
+ * et un casier de récompense apparaissent dans plusieurs onglets. Écrits
+ * quatre fois, ils auraient divergé dès la première retouche.
+ *
+ * ⚠️ Tout ce dossier imite un objet MATÉRIEL : du parchemin encadré de bois
+ * doré, posé sur du marbre. D'où, partout, le même trio — une face claire,
+ * une bordure de bois, et un CHANT plus sombre en bas. C'est ce chant, et
+ * lui seul, qui fait qu'un bouton a l'air taillé plutôt que dessiné ; il
+ * disparaît quand on presse, et le bouton s'enfonce.
  */
 
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { COLORS, FONTS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE, hex } from './theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, FONTS, RADIUS, SPACE, TOUCH_MIN, TYPE, hex } from './theme';
 
-/** Un intitulé de section : petites capitales espacées. */
+/* ------------------------------------------------------------------ cadres */
+
+/**
+ * Le bandeau gravé : le titre d'un écran ou d'une section, sur sa tablette
+ * de marbre encadrée d'or. C'est le seul titre visible d'un onglet — il n'y
+ * a pas de barre de navigation par-dessus.
+ */
+export function Plaque({ title, tone = 'marble' }: { title: string; tone?: 'marble' | 'gold' }) {
+  const gold = tone === 'gold';
+  return (
+    <View style={[styles.plaque, gold ? styles.plaqueGold : styles.plaqueMarble]}>
+      <Text style={[styles.plaqueText, gold && styles.plaqueTextGold]} numberOfLines={2}>
+        {title.toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
+/** Un intitulé de section : petites capitales espacées, sans tablette. */
 export function SectionTitle({ children }: { children: string }) {
   return <Text style={styles.sectionTitle}>{children.toUpperCase()}</Text>;
+}
+
+/**
+ * La carte : le parchemin encadré, conteneur de toute chose achetable,
+ * sélectionnable ou racontée.
+ *
+ * `selected` ne change pas la teinte du fond mais l'ÉPAISSEUR et la couleur
+ * du cadre : sur du parchemin, une bordure d'or se voit de loin, là où un
+ * fond légèrement différent passerait inaperçu en plein soleil.
+ */
+export function Card({
+  children,
+  selected = false,
+  style,
+}: {
+  children: ReactNode;
+  selected?: boolean;
+  style?: ViewStyle;
+}) {
+  return <View style={[styles.card, selected && styles.cardSelected, style]}>{children}</View>;
+}
+
+/** La colonne cannelée qui borde le grand cadre d'un onglet. */
+export function Column({ side }: { side: 'left' | 'right' }) {
+  return (
+    <LinearGradient
+      pointerEvents="none"
+      colors={['#fdf6e6', '#e4d2ae', '#fdf6e6']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={[styles.column, side === 'left' ? styles.columnLeft : styles.columnRight]}
+    />
+  );
+}
+
+/* ----------------------------------------------------------------- boutons */
+
+interface ButtonProps {
+  label: string;
+  onPress: () => void;
+  /** `primary` : l'action de l'écran. `ghost` : tout le reste. */
+  variant?: 'primary' | 'ghost';
+  /** Une seconde ligne, sous l'intitulé — un prix, le plus souvent. */
+  price?: ReactNode;
+  disabled?: boolean;
+  /** Lu par les lecteurs d'écran quand l'intitulé ne suffit pas. */
+  hint?: string;
+  testID?: string;
+  style?: ViewStyle;
+  /** `big` : le bouton d'appel de l'écran, pleine largeur. */
+  size?: 'normal' | 'big';
+}
+
+export function Button({
+  label,
+  onPress,
+  variant = 'ghost',
+  price,
+  disabled = false,
+  hint,
+  testID,
+  style,
+  size = 'normal',
+}: ButtonProps) {
+  const primary = variant === 'primary';
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={hint ?? label}
+      accessibilityState={{ disabled }}
+      // Le retour au toucher n'est pas cosmétique : sans lui, on ne sait pas
+      // si l'appui a été pris en compte, et on appuie deux fois.
+      android_ripple={{ color: 'rgba(255, 255, 255, 0.22)' }}
+      style={({ pressed }) => [
+        styles.button,
+        primary ? styles.buttonPrimary : styles.buttonGhost,
+        size === 'big' && styles.buttonBig,
+        pressed && !disabled && styles.buttonPressed,
+        disabled && styles.buttonDisabled,
+        style,
+      ]}
+    >
+      {/* Le dégradé fait le bombé : clair en haut, doré en bas. Une couleur
+          plate donnerait un rectangle, pas un objet qu'on presse. */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={primary ? [COLORS.goldLight, COLORS.gold] : [COLORS.panelRaised, COLORS.panelSunken]}
+        style={StyleSheet.absoluteFill}
+      />
+      <Text style={[styles.buttonLabel, size === 'big' && styles.buttonLabelBig]} numberOfLines={1}>
+        {label.toUpperCase()}
+      </Text>
+      {price !== undefined && <View style={styles.buttonPrice}>{price}</View>}
+    </Pressable>
+  );
+}
+
+/* --------------------------------------------------------------- monnaies */
+
+/**
+ * La pièce d'or : un disque, avec le reflet qui le distingue d'un pion plat.
+ * La même pièce partout — bourse, prix, récompense — pour qu'on reconnaisse
+ * ce qu'on est en train de gagner sans lire un mot.
+ */
+export function Coin({ size = 18 }: { size?: number }) {
+  return (
+    <View style={[styles.coin, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Text style={[styles.coinFace, { fontSize: size * 0.62 }]}>⚡</Text>
+    </View>
+  );
+}
+
+/**
+ * La couronne de laurier : la monnaie rare, celle des dieux. Volontairement
+ * d'une autre SILHOUETTE que le disque de la drachme, pour se reconnaître
+ * d'un coup d'œil même daltonien.
+ */
+export function Laurel({ size = 18 }: { size?: number }) {
+  return (
+    <View style={[styles.laurel, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Text style={[styles.laurelFace, { fontSize: size * 0.66 }]}>🌿</Text>
+    </View>
+  );
+}
+
+/**
+ * La bourse d'une monnaie : la pastille de bois cerclée d'or du bandeau
+ * supérieur, et son bouton « + » qui mène au rayon correspondant.
+ */
+export function CurrencyPill({
+  testID,
+  tone,
+  value,
+  hint,
+  onAdd,
+}: {
+  testID: string;
+  tone: 'gold' | 'laurel';
+  value: number;
+  hint: string;
+  onAdd: () => void;
+}) {
+  const gold = tone === 'gold';
+  return (
+    <View style={[styles.pill, gold ? styles.pillGold : styles.pillLaurel]}>
+      {gold ? <Coin /> : <Laurel />}
+      <Text style={styles.pillValue} testID={testID} numberOfLines={1}>
+        {value.toLocaleString('fr-FR')}
+      </Text>
+      <Pressable
+        onPress={onAdd}
+        accessibilityRole="button"
+        accessibilityLabel={hint}
+        hitSlop={8}
+        style={({ pressed }) => [styles.add, pressed && styles.addPressed]}
+      >
+        <Text style={styles.addLabel}>+</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+/* ---------------------------------------------------------------- casiers */
+
+/**
+ * Un casier de récompense : l'icône de ce qu'on gagne, son nombre, et son
+ * état. Trois états, et pas un de plus — c'est ce qui rend une piste de
+ * passe lisible d'un seul regard :
+ *
+ *   `taken`   déjà pris     — coche verte
+ *   `ready`   à portée      — cadre d'or, fond clair
+ *   `locked`  hors d'atteinte — cadenas, tout est éteint
+ */
+export function Tile({
+  icon,
+  count,
+  state,
+  size = 52,
+}: {
+  icon: string;
+  count?: number;
+  state: 'taken' | 'ready' | 'locked';
+  size?: number;
+}) {
+  return (
+    <View style={styles.tileWrap}>
+      <View
+        style={[
+          styles.tile,
+          { width: size, height: size },
+          state === 'ready' && styles.tileReady,
+          state === 'locked' && styles.tileLocked,
+        ]}
+      >
+        <Text style={{ fontSize: size * 0.5 }}>{icon}</Text>
+        {state === 'locked' && <Text style={styles.tileLock}>🔒</Text>}
+        {state === 'taken' && <Text style={styles.tileCheck}>✓</Text>}
+      </View>
+      {count !== undefined && <Text style={styles.tileCount}>{count}</Text>}
+    </View>
+  );
+}
+
+/**
+ * La jauge : une gouttière de bois, une coulée d'or, et le compte écrit
+ * PAR-DESSUS. Le chiffre au centre est ce que le joueur cherche vraiment ;
+ * le remplissage ne fait que le rendre immédiat.
+ */
+export function Bar({
+  value,
+  max,
+  label,
+  tone = 'gold',
+}: {
+  value: number;
+  max: number;
+  label?: string;
+  tone?: 'gold' | 'laurel';
+}) {
+  const ratio = max <= 0 ? 0 : Math.max(0, Math.min(1, value / max));
+  return (
+    <View style={styles.bar}>
+      <LinearGradient
+        colors={tone === 'gold' ? [COLORS.goldLight, COLORS.gold] : [COLORS.laurelLight, COLORS.laurel]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[styles.barFill, { width: `${ratio * 100}%` }]}
+      />
+      <Text style={styles.barLabel} numberOfLines={1}>
+        {label ?? `${value} / ${max}`}
+      </Text>
+    </View>
+  );
 }
 
 /**
@@ -58,298 +319,156 @@ export function GodBadge({
   );
 }
 
-/**
- * Les deux bourses, affichées en permanence en haut de l'écran : les
- * drachmes puis l'ambroisie, dans l'ordre où on les gagne — la monnaie
- * commune d'abord, la monnaie rare ensuite.
- *
- * Chacune est une pastille surmontée d'un bouton rond « + », posé à cheval
- * sur son bord — la façon dont un jeu mobile affiche une monnaie qu'on peut
- * recharger sans quitter l'écran où l'on est. Toucher le « + » ouvre le
- * magasin, au rayon qui correspond.
- */
-export function CurrencyBar({
-  drachmas,
-  ambrosia,
-  onOpenShop,
-}: {
-  drachmas: number;
-  ambrosia: number;
-  onOpenShop: () => void;
-}) {
-  return (
-    <View style={styles.currencyBar}>
-      <CurrencyPill
-        testID="drachmas"
-        tone="gold"
-        value={drachmas}
-        icon={<Coin />}
-        hint="Ouvrir le magasin pour acheter des drachmes"
-        onAdd={onOpenShop}
-      />
-      <CurrencyPill
-        testID="ambrosia"
-        tone="ambrosia"
-        value={ambrosia}
-        icon={<Gem />}
-        hint="Ouvrir le magasin pour acheter de l'ambroisie"
-        onAdd={onOpenShop}
-      />
-    </View>
-  );
-}
-
-function CurrencyPill({
-  testID,
-  tone,
-  value,
-  icon,
-  hint,
-  onAdd,
-}: {
-  testID: string;
-  tone: 'gold' | 'ambrosia';
-  value: number;
-  icon: ReactNode;
-  hint: string;
-  onAdd: () => void;
-}) {
-  const gold = tone === 'gold';
-  return (
-    <View style={styles.pillWrap}>
-      <View style={[styles.pill, gold ? styles.pillGold : styles.pillAmbrosia]}>
-        {icon}
-        <Text style={styles.pillValue} testID={testID}>
-          {value.toLocaleString('fr-FR')}
-        </Text>
-      </View>
-      {/* Le bouton déborde exprès du bord de la pastille : c'est ce qui le
-          distingue d'un simple chiffre, et qui dit « on peut en ajouter »
-          sans un mot de texte. */}
-      <Pressable
-        onPress={onAdd}
-        accessibilityRole="button"
-        accessibilityLabel={hint}
-        hitSlop={8}
-        style={({ pressed }) => [
-          styles.addButton,
-          gold ? styles.addButtonGold : styles.addButtonAmbrosia,
-          pressed && styles.addButtonPressed,
-        ]}
-      >
-        <Text style={[styles.addButtonLabel, gold ? styles.addButtonLabelGold : styles.addButtonLabelAmbrosia]}>
-          +
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
-
-/**
- * La pièce d'or : un disque, avec le reflet qui le distingue d'un pion plat.
- * Exportée : le rayon « Drachmes » du magasin en affiche une, plus grande,
- * sur chaque paquet — la même pièce que dans la bourse, pour qu'on
- * reconnaisse ce qu'on est en train d'acheter.
- */
-export function Coin({ size = 16 }: { size?: number }) {
-  return (
-    <View style={[styles.coin, { width: size, height: size, borderRadius: size / 2 }]}>
-      <View style={[styles.coinShine, { width: size * 0.38, height: size * 0.38, borderRadius: size }]} />
-    </View>
-  );
-}
-
-/**
- * La goutte d'ambroisie : un losange, la silhouette universelle du joyau —
- * volontairement différente du disque de la drachme, pour se reconnaître
- * d'un coup d'œil même daltonien. Exportée pour la même raison que `Coin`.
- */
-export function Gem({ size = 13 }: { size?: number }) {
-  return <View style={[styles.gem, { width: size, height: size }]} />;
-}
-
-interface ButtonProps {
-  label: string;
-  onPress: () => void;
-  /** `primary` : l'action de l'écran. `ghost` : tout le reste. */
-  variant?: 'primary' | 'ghost';
-  disabled?: boolean;
-  /** Lu par les lecteurs d'écran quand l'intitulé ne suffit pas. */
-  hint?: string;
-  testID?: string;
-  style?: ViewStyle;
-}
-
-export function Button({
-  label,
-  onPress,
-  variant = 'ghost',
-  disabled = false,
-  hint,
-  testID,
-  style,
-}: ButtonProps) {
-  const primary = variant === 'primary';
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={hint ?? label}
-      accessibilityState={{ disabled }}
-      // Le retour au toucher n'est pas cosmétique : sans lui, on ne sait pas
-      // si l'appui a été pris en compte, et on appuie deux fois.
-      android_ripple={{ color: 'rgba(255, 255, 255, 0.16)' }}
-      style={({ pressed }) => [
-        styles.button,
-        primary ? styles.buttonPrimary : styles.buttonGhost,
-        pressed && !disabled && styles.buttonPressed,
-        disabled && styles.buttonDisabled,
-        style,
-      ]}
-    >
-      <Text style={[styles.buttonLabel, primary && styles.buttonLabelPrimary]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-/** Une carte : le conteneur de toute chose achetable ou sélectionnable. */
-export function Card({
-  children,
-  selected = false,
-  style,
-}: {
-  children: ReactNode;
-  selected?: boolean;
-  style?: ViewStyle;
-}) {
-  return (
-    <View style={[styles.card, selected && styles.cardSelected, style]}>{children}</View>
-  );
-}
-
 const styles = StyleSheet.create({
-  // Un intitulé de section est posé À MÊME le décor, entre deux cartes :
-  // c'est le texte le plus exposé du menu, d'où l'ombre.
+  /* cadres */
+  plaque: {
+    minHeight: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACE.lg,
+    paddingVertical: SPACE.sm,
+    borderRadius: RADIUS.md,
+    borderWidth: 2,
+    borderBottomWidth: 4,
+  },
+  plaqueMarble: {
+    backgroundColor: COLORS.panelRaised,
+    borderColor: COLORS.frame,
+    borderBottomColor: COLORS.frameDark,
+  },
+  plaqueGold: {
+    backgroundColor: COLORS.gold,
+    borderColor: COLORS.goldShadow,
+    borderBottomColor: COLORS.frameDeep,
+  },
+  plaqueText: { ...TYPE.banner, color: COLORS.text, textAlign: 'center' },
+  plaqueTextGold: { color: COLORS.onGold },
+
   sectionTitle: {
     ...TYPE.label,
-    ...TEXT_SHADOW,
-    color: COLORS.text,
-    marginBottom: SPACE.md,
-    marginTop: SPACE.xl,
+    color: COLORS.frameDeep,
+    textAlign: 'center',
+    marginBottom: SPACE.sm,
+    marginTop: SPACE.lg,
   },
 
-  badge: {
+  card: {
+    backgroundColor: COLORS.panel,
+    borderRadius: RADIUS.md,
+    borderWidth: 2,
+    borderBottomWidth: 4,
+    borderColor: COLORS.frame,
+    borderBottomColor: COLORS.frameDark,
+    padding: SPACE.md,
+  },
+  cardSelected: { borderColor: COLORS.borderStrong, borderWidth: 3, backgroundColor: COLORS.panelRaised },
+
+  column: { position: 'absolute', top: 0, bottom: 0, width: 12 },
+  columnLeft: { left: -2 },
+  columnRight: { right: -2 },
+
+  /* boutons */
+  button: {
+    minHeight: TOUCH_MIN,
+    paddingHorizontal: SPACE.lg,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
+    borderBottomWidth: 4,
+    borderColor: COLORS.goldShadow,
+    borderBottomColor: COLORS.frameDeep,
+    overflow: 'hidden',
   },
+  buttonBig: { minHeight: 62 },
+  buttonPrimary: {},
+  buttonGhost: { borderColor: COLORS.frame, borderBottomColor: COLORS.frameDark },
+  buttonPressed: { borderBottomWidth: 1, transform: [{ translateY: 3 }] },
+  buttonDisabled: { opacity: 0.45 },
+  buttonLabel: { ...TYPE.banner, fontSize: 14, color: COLORS.onGold, textAlign: 'center' },
+  buttonLabelBig: { fontSize: 19 },
+  buttonPrice: { flexDirection: 'row', alignItems: 'center', gap: SPACE.xs, marginTop: 2 },
 
-  currencyBar: { flexDirection: 'row', gap: SPACE.lg },
-
-  // Le `marginRight`/`marginTop` fait de la place au bouton « + » qui
-  // déborde du coin de la pastille sans être rogné par ses voisins.
-  pillWrap: { marginRight: SPACE.xs, marginTop: SPACE.xs },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACE.sm,
-    paddingVertical: SPACE.sm,
-    paddingHorizontal: SPACE.md,
-    borderRadius: RADIUS.pill,
-    backgroundColor: COLORS.panel,
-    borderWidth: 1,
-  },
-  pillGold: { borderColor: COLORS.borderStrong },
-  pillAmbrosia: { borderColor: COLORS.ambrosiaBorder },
-  pillValue: { ...TYPE.price, color: COLORS.text },
-
+  /* monnaies */
   coin: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
     backgroundColor: COLORS.gold,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: COLORS.goldShadow,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  coinShine: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.55)',
-  },
-  gem: {
-    width: 13,
-    height: 13,
-    backgroundColor: COLORS.ambrosia,
-    borderWidth: 1,
-    borderColor: '#7c4bab',
-    transform: [{ rotate: '45deg' }],
-  },
-
-  // Le bouton « + » : rond, à cheval sur le coin bas-droit de la pastille —
-  // c'est lui, pas la pastille, que le doigt vient chercher pour recharger.
-  addButton: {
-    position: 'absolute',
-    right: -SPACE.xs,
-    bottom: -SPACE.xs,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.ground,
-  },
-  addButtonGold: { backgroundColor: COLORS.gold },
-  addButtonAmbrosia: { backgroundColor: COLORS.ambrosia },
-  addButtonPressed: { opacity: 0.8, transform: [{ scale: 0.9 }] },
-  addButtonLabel: { fontFamily: FONTS.bodySemi, fontSize: 15, lineHeight: 17 },
-  addButtonLabelGold: { color: COLORS.onGold },
-  addButtonLabelAmbrosia: { color: COLORS.onAmbrosia },
-
-  /**
-   * Le bouton, dans son ensemble : une face, et un CHANT en dessous, plus
-   * sombre — la bordure basse épaisse simule l'épaisseur d'un bonbon qu'on
-   * presse. `buttonPressed` réduit cette épaisseur en même temps qu'il tasse
-   * le bouton : c'est ce qui vend l'illusion qu'on vient de l'enfoncer.
-   */
-  button: {
-    minHeight: TOUCH_MIN,
-    paddingHorizontal: SPACE.lg,
-    borderRadius: RADIUS.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderBottomWidth: 4,
-  },
-  buttonPrimary: { backgroundColor: COLORS.gold, borderColor: COLORS.gold, borderBottomColor: COLORS.goldShadow },
-  buttonGhost: {
+  coinFace: { color: COLORS.onGold, lineHeight: undefined },
+  laurel: {
     backgroundColor: COLORS.panelRaised,
-    borderColor: COLORS.border,
-    borderBottomColor: COLORS.panelShadow,
+    borderWidth: 1.5,
+    borderColor: COLORS.laurel,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonPressed: { opacity: 0.92, borderBottomWidth: 1, transform: [{ translateY: 3 }] },
-  buttonDisabled: { opacity: 0.4 },
-  buttonLabel: { ...TYPE.strong, color: COLORS.text },
-  // Pas d'ombre ici : le texte est SOMBRE sur de l'or, un halo noir l'empâte.
-  buttonLabelPrimary: { color: COLORS.onGold },
+  laurelFace: { color: COLORS.laurel },
 
-  card: {
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE.sm,
+    paddingLeft: SPACE.sm,
+    paddingRight: SPACE.xs,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.bar,
+    borderWidth: 2,
+  },
+  pillGold: { borderColor: COLORS.gold },
+  pillLaurel: { borderColor: COLORS.laurel },
+  pillValue: { ...TYPE.price, color: COLORS.onDark, minWidth: 34, textAlign: 'right' },
+  add: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.gold,
+    borderWidth: 1.5,
+    borderColor: COLORS.goldShadow,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addPressed: { opacity: 0.8, transform: [{ scale: 0.92 }] },
+  addLabel: { fontFamily: FONTS.bodySemi, fontSize: 16, lineHeight: 19, color: COLORS.onGold },
+
+  /* casiers */
+  tileWrap: { alignItems: 'center' },
+  tile: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: RADIUS.sm,
+    borderWidth: 2,
+    borderColor: COLORS.frame,
     backgroundColor: COLORS.panel,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACE.lg,
   },
-  // Le cadre s'épaissit plutôt que de changer de couleur seul : une carte
-  // choisie a l'air d'un objet qu'on a sorti du lot, pas d'un survol.
-  cardSelected: {
-    backgroundColor: COLORS.panelRaised,
-    borderColor: COLORS.borderStrong,
+  tileReady: { borderColor: COLORS.borderStrong, backgroundColor: COLORS.panelRaised, borderWidth: 3 },
+  tileLocked: { backgroundColor: COLORS.panelSunken, opacity: 0.75 },
+  tileLock: { position: 'absolute', top: 1, left: 2, fontSize: 11 },
+  tileCheck: {
+    position: 'absolute',
+    top: -8,
+    right: -6,
+    fontSize: 15,
+    color: COLORS.done,
+    fontFamily: FONTS.bodySemi,
+  },
+  tileCount: { ...TYPE.tiny, color: COLORS.text, marginTop: 2 },
+
+  /* jauge */
+  bar: {
+    height: 22,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.panelSunken,
     borderWidth: 2,
+    borderColor: COLORS.frameDark,
+    overflow: 'hidden',
+    justifyContent: 'center',
   },
+  barFill: { position: 'absolute', left: 0, top: 0, bottom: 0 },
+  barLabel: { ...TYPE.tiny, fontSize: 11, color: COLORS.text, textAlign: 'center' },
+
+  badge: { alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
 });

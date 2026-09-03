@@ -3,90 +3,87 @@
  *
  * Un menu de jeu n'a pas besoin d'un système de design : il a besoin qu'une
  * carte de dieu, une vignette de parure et un bouton d'achat aient l'air
- * d'appartenir au même objet. Trois palettes, une échelle d'espacement, une
+ * d'appartenir au même objet. Une palette, une échelle d'espacement, une
  * échelle de texte — et l'écran suivant s'écrit sans rien réinventer.
+ *
+ * ⚠️ Le menu est en PLEIN JOUR. Marbre, parchemin, or et bois : c'est un
+ * temple sous le soleil, pas une interface sombre. Le JEU, lui, reste sur son
+ * fond de nuit (`GROUND`) — le menu le recouvre entièrement, donc les deux
+ * n'ont pas à s'accorder.
  *
  * ⚠️ Les couleurs des DIEUX ne sont pas ici : elles vivent dans le roster et
  * dans le catalogue des parures, parce que le jeu les affiche aussi en 3D.
  * Ce fichier ne décrit que le décor de l'interface.
  */
 
-/** Le marbre veiné d'or : sombre, chaud, jamais gris neutre. */
-export const COLORS = {
-  /** Le fond de l'écran. Identique au fond du jeu, pour un passage sans à-coup. */
-  ground: '#12141c',
-  /** Une carte posée sur le fond. */
-  panel: '#1b1f2b',
-  /** Une carte mise en avant (sélectionnée, ou vedette du magasin). */
-  panelRaised: '#252b3a',
-  /** L'or : la monnaie, la sélection, l'action principale. */
-  gold: '#e8c47a',
-  /** Le texte posé SUR l'or. Sombre, sinon il ne se lit pas. */
-  onGold: '#1a1508',
-  /**
-   * L'ambroisie : la monnaie rare, celle des dieux — plus précieuse que
-   * l'or des mortels. Un violet-améthyste, pour qu'elle se distingue de la
-   * chaleur du reste de la palette au premier coup d'œil, comme un joyau
-   * posé sur du marbre.
-   */
-  ambrosia: '#c99bf0',
-  /** Le texte posé SUR l'ambroisie. Même logique que `onGold`. */
-  onAmbrosia: '#241236',
-  ambrosiaBorder: 'rgba(201, 155, 240, 0.55)',
-  /**
-   * Les teintes « d'épaisseur » : posées en bordure basse d'un bouton, plus
-   * sombres que sa face, elles font croire à un bouton **taillé**, avec un
-   * chant — pas un simple rectangle plat. Une bordure basse, épaisse, dans
-   * une nuance foncée de la même couleur, c'est ce qui donne aux boutons
-   * d'un jeu mobile leur air de bonbon qu'on presse, plutôt que de lien web.
-   */
-  goldShadow: '#96742f',
-  panelShadow: '#0d0f16',
-  /**
-   * Le texte courant. Un blanc chaud, pas un blanc pur : il descend du
-   * marbre, comme l'or.
-   *
-   * ⚠️ Les trois teintes de texte sont posées sur DEUX fonds très
-   * différents — une carte sombre, et la photo du temple, qui monte jusqu'au
-   * ciel clair. C'est le second qui commande : un gris de texte secondaire
-   * calibré pour du #1b1f2b disparaît sur un nuage. D'où des nuances plus
-   * claires qu'on ne l'attendrait, et l'ombre portée ci-dessous pour tout ce
-   * qui touche l'image.
-   */
-  text: '#fdf7ea',
-  /** Texte secondaire : un ivoire tiède, et non plus un gris bleuté. */
-  muted: '#e0d5bf',
-  /** Ce qui n'est pas encore acquis. */
-  locked: '#b0a794',
-  border: 'rgba(255, 255, 255, 0.10)',
-  borderStrong: 'rgba(216, 180, 106, 0.55)',
-  /** Le voile posé derrière une feuille de paramètres. */
-  scrim: 'rgba(6, 7, 11, 0.72)',
-  /**
-   * Le voile posé sur le MILIEU du décor. Le dégradé du menu rejoignait
-   * `ground` en haut et en bas et laissait le centre nu — or c'est
-   * exactement là que se lisent le titre et l'accroche, par-dessus un ciel
-   * clair. Assez dense pour asseoir le texte, assez transparent pour qu'on
-   * voie encore la ville.
-   */
-  veil: 'rgba(11, 13, 19, 0.42)',
-} as const;
+/** Le fond du JEU, derrière le menu. Le seul reste de l'ancienne nuit. */
+export const GROUND = '#12141c';
 
-/**
- * L'ombre portée des textes posés SUR le décor.
- *
- * ⚠️ Elle ne remplace pas le choix des couleurs, elle le sauve dans le cas
- * limite : une lettre claire qui tombe pile sur un nuage blanc. L'ombre est
- * large et peu marquée — un halo sombre, pas un relief — pour ne pas salir
- * les empattements du Cinzel.
- *
- * ⚠️ À ne PAS poser sur du texte sombre sur fond d'or (`onGold`) : là, une
- * ombre foncée empâte le tracé au lieu de le détacher.
- */
-export const TEXT_SHADOW = {
-  textShadowColor: 'rgba(6, 7, 11, 0.9)',
-  textShadowOffset: { width: 0, height: 1 },
-  textShadowRadius: 7,
+/** Marbre, parchemin, or et bois. */
+export const COLORS = {
+  /** Le fond de l'écran, sous le décor : un ciel très pâle. */
+  ground: '#e9dcc0',
+
+  /**
+   * Le parchemin : la matière de toutes les cartes. Deux tons, parce qu'une
+   * carte posée sur une autre doit se détacher sans changer de nature.
+   */
+  panel: '#f6e7c8',
+  panelRaised: '#fdf4e0',
+  /** Le creux : un casier vide, une piste non gagnée, un fond de rangée. */
+  panelSunken: '#e2cda4',
+
+  /** Le bois du cadre, et son ombre. Tout encadrement en descend. */
+  frame: '#c08b4b',
+  frameDark: '#8a5a2b',
+  frameDeep: '#5f3b18',
+
+  /** L'or : la monnaie, la sélection, l'action principale. */
+  gold: '#eec24a',
+  goldLight: '#f8e08a',
+  goldShadow: '#a9741f',
+  /** Le texte posé SUR l'or. Sombre, sinon il ne se lit pas. */
+  onGold: '#4a2f10',
+
+  /**
+   * Le laurier : la monnaie rare, celle des dieux. Un vert-olive antique,
+   * pour qu'elle se distingue de l'or au premier coup d'œil.
+   */
+  laurel: '#5f8d4e',
+  laurelLight: '#a7c98b',
+  onLaurel: '#17280f',
+  laurelBorder: 'rgba(95, 141, 78, 0.65)',
+
+  /**
+   * L'encre. Elle est SOMBRE : tout le texte du menu se lit sur du
+   * parchemin, jamais sur du sombre. La hiérarchie se fait par la densité,
+   * pas par la luminosité.
+   */
+  text: '#4a2f16',
+  muted: '#8a6b47',
+  /** Ce qui n'est pas encore acquis. */
+  locked: '#a08a6c',
+  /** Le texte posé sur une barre de bois foncé (bandeau du haut). */
+  onDark: '#f7e9cd',
+
+  border: 'rgba(95, 59, 24, 0.28)',
+  borderStrong: '#c9a227',
+
+  /** Le bois du bandeau supérieur et de la barre d'onglets. */
+  bar: '#5b3f22',
+  /** Le voile posé derrière une feuille de paramètres. */
+  scrim: 'rgba(38, 24, 10, 0.62)',
+  /**
+   * Le voile posé sur le décor, derrière les cartes. Un brouillard CLAIR :
+   * la photo du temple est trop contrastée pour porter du parchemin, et
+   * l'éclaircir la fait passer au second plan sans la faire disparaître.
+   */
+  veil: 'rgba(248, 238, 214, 0.55)',
+
+  /** Un acquis, une étape franchie. */
+  done: '#4c8b3f',
+  /** Une alerte, une pastille à lire. */
+  alert: '#c0392b',
 } as const;
 
 export const SPACE = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
@@ -101,13 +98,25 @@ export const RADIUS = { sm: 8, md: 14, lg: 20, pill: 999 } as const;
 export const TOUCH_MIN = 44;
 
 /**
+ * L'ombre portée des textes posés SUR le bois foncé du bandeau.
+ *
+ * ⚠️ Elle ne sert QUE là. Sur du parchemin, une ombre salit l'empattement du
+ * Cinzel sans rien gagner : le contraste y est déjà maximal.
+ */
+export const TEXT_SHADOW = {
+  textShadowColor: 'rgba(30, 17, 5, 0.55)',
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 3,
+} as const;
+
+/**
  * Les deux polices du menu, et rien d'autre.
  *
  * Le **Cinzel** est dessiné d'après les capitales gravées dans la pierre
  * antique : c'est la lettre du fronton du temple, celle qui donne son nom au
  * jeu, aux dieux, aux prix. Il ne sait pas faire un paragraphe — ses
  * capitales larges fatiguent dès la deuxième ligne — d'où le **Spectral**
- * pour tout ce qui se lit vraiment : accroches, descriptions, réglages.
+ * pour tout ce qui se lit vraiment.
  *
  * ⚠️ Chaque graisse est une police SÉPARÉE, avec son propre nom. C'est ainsi
  * que fonctionnent les polices chargées à la main : `fontWeight` n'a plus
@@ -129,18 +138,20 @@ export const FONTS = {
 } as const;
 
 export const TYPE = {
-  display: { fontFamily: FONTS.titleBold, fontSize: 30, letterSpacing: 1.2 },
-  title: { fontFamily: FONTS.titleSemi, fontSize: 19, letterSpacing: 0.4 },
-  /** Le corps de texte : un peu plus grand que le sans-serif qu'il remplace,
-      parce qu'un empattement demande de la place pour rester net. */
-  body: { fontFamily: FONTS.body, fontSize: 15 },
-  /** Le corps de texte qui doit peser : intitulé de bouton, titre de réglage. */
-  strong: { fontFamily: FONTS.bodySemi, fontSize: 15 },
+  display: { fontFamily: FONTS.titleBold, fontSize: 26, letterSpacing: 1 },
+  /** Le titre d'un bandeau gravé, en capitales. */
+  banner: { fontFamily: FONTS.titleBold, fontSize: 17, letterSpacing: 1 },
+  title: { fontFamily: FONTS.titleSemi, fontSize: 17, letterSpacing: 0.3 },
+  body: { fontFamily: FONTS.body, fontSize: 14 },
+  /** Le corps de texte qui doit peser : intitulé, titre de réglage. */
+  strong: { fontFamily: FONTS.bodySemi, fontSize: 14 },
   /** Les intitulés de section : petits, espacés, en capitales gravées. */
-  label: { fontFamily: FONTS.titleBold, fontSize: 11, letterSpacing: 1.6 },
+  label: { fontFamily: FONTS.titleBold, fontSize: 11, letterSpacing: 1.4 },
   price: { fontFamily: FONTS.titleBold, fontSize: 15 },
-  /** Le nom d'un onglet, dans la barre du bas. */
-  tab: { fontFamily: FONTS.titleSemi, fontSize: 15, letterSpacing: 0.6 },
+  /** Le nom d'un onglet, sous son icône. */
+  tab: { fontFamily: FONTS.titleSemi, fontSize: 12, letterSpacing: 0.4 },
+  /** Un chiffre minuscule : compteur de casier, niveau de piste. */
+  tiny: { fontFamily: FONTS.titleBold, fontSize: 10, letterSpacing: 0.5 },
 } as const;
 
 /** `#rrggbb` à partir d'une couleur du jeu, qui les stocke en nombres. */

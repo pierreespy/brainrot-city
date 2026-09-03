@@ -61,8 +61,8 @@ export function SettingsSheet({
               testID="toggle-stats"
               value={showStats}
               onValueChange={onToggleStats}
-              trackColor={{ false: COLORS.panelRaised, true: COLORS.gold }}
-              thumbColor={COLORS.text}
+              trackColor={{ false: COLORS.panelSunken, true: COLORS.gold }}
+              thumbColor={COLORS.panelRaised}
             />
           </View>
 
@@ -112,25 +112,27 @@ const styles = StyleSheet.create({
   scrim: { flex: 1, backgroundColor: COLORS.scrim, justifyContent: 'flex-end' },
   scrimTouch: { flex: 1 },
 
+  // La feuille est du parchemin, comme les cartes : elle sort du même
+  // atelier que le reste du menu, pas d'un panneau système.
   sheet: {
-    backgroundColor: COLORS.panel,
+    backgroundColor: COLORS.panelRaised,
     borderTopLeftRadius: RADIUS.lg,
     borderTopRightRadius: RADIUS.lg,
     paddingHorizontal: SPACE.xl,
     paddingTop: SPACE.md,
     paddingBottom: SPACE.xl,
-    borderTopWidth: 1,
-    borderColor: COLORS.border,
+    borderTopWidth: 3,
+    borderColor: COLORS.frame,
   },
   grip: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: COLORS.border,
+    backgroundColor: COLORS.frame,
     marginBottom: SPACE.lg,
   },
-  title: { ...TYPE.title, color: COLORS.text, marginBottom: SPACE.lg },
+  title: { ...TYPE.banner, color: COLORS.text, marginBottom: SPACE.lg, textAlign: 'center' },
 
   row: {
     flexDirection: 'row',
@@ -143,7 +145,7 @@ const styles = StyleSheet.create({
   rowSub: { ...TYPE.body, fontSize: 12, color: COLORS.muted, marginTop: SPACE.xs, lineHeight: 17 },
 
   separator: {
-    height: 1,
+    height: 2,
     backgroundColor: COLORS.border,
     marginVertical: SPACE.lg,
   },
