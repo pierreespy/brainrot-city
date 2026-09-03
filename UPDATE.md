@@ -9,6 +9,51 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🎠 Le menu devient un ruban : Magasin · Jouer · Dieux
+
+**Résumé** — Deux changements sur la coquille du menu, demandés ensemble.
+**(1)** L'ordre des onglets change : **Magasin à gauche, Jouer au milieu,
+Dieux à droite**. **(2)** On passe d'un onglet à l'autre **en glissant le
+doigt**, et le passage est **continu** : les trois onglets sont cousus côte à
+côte dans un même ruban horizontal, pas trois écrans qui se remplacent.
+
+### 1. « Jouer » au milieu
+
+Avec « Jouer » en premier, les deux autres onglets étaient du même côté et
+l'onglet le plus visité était dans un coin. Au milieu, il reste celui qu'on
+ouvre au démarrage, et le magasin comme le panthéon sont à **un seul
+glissement**, l'un à gauche, l'autre à droite.
+
+### 2. Les onglets sont reliés
+
+`MenuScreen` montrait l'onglet actif et jetait les deux autres (`tab === 'play'
+&& …`). Il tient maintenant un `Animated.ScrollView` horizontal, `pagingEnabled`,
+qui contient les **trois onglets montés en permanence**, chacun large d'un
+écran et pourvu de son propre défilement vertical (donc de sa propre position,
+conservée quand on revient dessus).
+
+Le trait doré de la barre d'onglets n'est plus dans l'onglet : il est posé
+**au-dessus**, et sa position vient de la position du ruban
+(`scrollX.interpolate`). Il glisse donc **avec le doigt**, et les intitulés
+s'allument de la même façon. L'animation est confiée au **pilote natif** : elle
+continue même si le fil JavaScript travaille.
+
+**⚠️ Deux pièges de plateforme**, tous deux traités dans le fichier :
+`contentOffset` n'ouvre le ruban sur « Jouer » que sur **iOS** — ailleurs on
+recadre à `onContentSizeChange` ; et une **rotation d'écran** change la largeur
+d'une page, donc on repositionne le ruban quand elle change.
+
+**Fichiers touchés** — `src/ui/menu/MenuScreen.tsx` (seul fichier modifié : les
+trois onglets ignorent toujours qu'ils sont dans un ruban), `README.md`,
+`UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe.
+
+**Supprimé** — le `key={tab}` qui remontait le `ScrollView` à chaque changement
+d'onglet ; il n'a plus d'objet, chaque onglet ayant désormais le sien.
+
+---
+
 ## 2026-09-03 — Claude — 🏛️ Le dieu dans sa foule + le menu d'accueil (M12b, M13)
 
 **Résumé** — Deux changements, demandés ensemble. **(1)** Le dieu ne court plus

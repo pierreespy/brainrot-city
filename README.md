@@ -20,7 +20,7 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 > 0,09 ms de calcul par image en partie réelle, sur les 16,7 disponibles.
 > Le **panthéon** existe côté données : sept dieux, chacun une ligne dans
 > `src/entities/gods/roster.ts`, et l'app s'ouvre désormais sur un **menu à
-> trois onglets** — Jouer, Magasin, Dieux — avec des **drachmes** gagnées en
+> trois onglets** — Magasin, Jouer, Dieux — avec des **drachmes** gagnées en
 > jouant, des divinités et des parures à acquérir, et une progression
 > **enregistrée sur l'appareil**. Le dieu court **au milieu de sa foule**, plus
 > en tête de file.
@@ -152,7 +152,7 @@ imprimé dessus.
     │   ├── Hud.tsx        ⭐ Compteur de fidèles, relance, retour au menu
     │   ├── Stats.tsx      L'affichage de debug (touche le compteur)
     │   └── menu/          ⭐ L'accueil : Jouer / Magasin / Dieux
-    │       ├── MenuScreen.tsx   La coquille et la barre d'onglets
+    │       ├── MenuScreen.tsx   Le ruban des trois onglets et sa barre
     │       ├── PlayTab.tsx      Lancer une partie, et les paramètres
     │       ├── ShopTab.tsx      Drachmes, divinités, parures
     │       ├── GodsTab.tsx      Le panthéon possédé et ses cosmétiques
@@ -592,7 +592,7 @@ l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
 | 11 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ✅ Terminée |
 | 12 | 🏛️ Panthéon — roster de données (apparence, capacité, réglages) | ✅ Terminée |
 | 12b | 🏛️ Le dieu au milieu de sa foule (cortège devant ET derrière) | ✅ Terminée |
-| 13 | 🏛️ Menu d'accueil — onglets Jouer / Magasin / Dieux, paramètres | ✅ Terminée |
+| 13 | 🏛️ Menu d'accueil — onglets Magasin / Jouer / Dieux (au glissé), paramètres | ✅ Terminée |
 | 14 | 🏛️ Panthéon — apparence différenciée par dieu **en jeu** | 🟡 Partielle (couleur du dieu et du cortège) |
 | 15 | 🏛️ Panthéon — déblocage progressif des dieux | 🟡 Partielle (achat en drachmes ; reste le déblocage par exploit) |
 | 16 | Mortel spécialisé — l'hoplite (valeur ×3) | ⬜ |
@@ -664,7 +664,7 @@ l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
   d'un dieu. Les réglages propres (`tuning`) valent tous 1 : les écarts
   s'inventent en jouant, avec les capacités sous la main — c'est la M27.
   **M13 est faite**, et elle a débordé : l'écran de sélection est devenu un
-  **menu à trois onglets** (Jouer, Magasin, Dieux), donc une économie
+  **menu à trois onglets** (Magasin, Jouer, Dieux), donc une économie
   (les drachmes), un catalogue de parures et une sauvegarde. Le
   dossier `src/meta/` tient tout cela **hors du jeu** : le moteur reçoit un
   dieu et deux couleurs, il ignore qu'elles ont été payées.
