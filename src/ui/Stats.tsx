@@ -52,6 +52,9 @@ export function Stats({ stats }: Props) {
       <Row label="mortels" value={`${stats.drawnMortals} / ${stats.mortals}`} dim />
       <Row label="fidèles" value={`${stats.drawnFollowers} / ${stats.followers}`} dim />
       <Row label="triangles" value={`${(stats.triangles / 1000).toFixed(1)}k`} dim />
+      {/* Le dieu joué (M12). Tant qu'il n'y a pas d'écran de sélection (M13)
+          ni d'apparence propre (M14), c'est le seul endroit où il se voit. */}
+      <Row label="dieu" value={stats.god} dim />
     </View>
   );
 }

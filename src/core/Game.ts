@@ -24,6 +24,7 @@ import { PlayerTrail } from '../systems/PlayerTrail';
 import { ViewCulling } from '../systems/ViewCulling';
 import { Profiler, type ProfileSnapshot } from './Profiler';
 import { DISTRICTS } from '../world/districts';
+import { GODS, DEFAULT_GOD_ID, type God } from '../entities/gods/roster';
 
 /**
  * Ce que le jeu sait dire de sa propre performance — lu par l'affichage de
@@ -43,6 +44,8 @@ export interface GameStats {
    * c'est le chiffre que le GPU a vraiment reçu, ville comprise.
    */
   triangles: number;
+  /** Le dieu joué. Sans écran de sélection (M13), c'est encore le seul moyen de le vérifier. */
+  god: string;
 }
 
 export class Game {
@@ -67,6 +70,19 @@ export class Game {
   private readonly culling: ViewCulling;
   /** Le coût d'une image, étape par étape. Voir `Profiler`. */
   private readonly profiler: Profiler;
+
+  /**
+   * Le dieu joué — le seul endroit du jeu qui réponde à « lequel ? ».
+   *
+   * Tout ce qui dépendra du dieu (son apparence en M14, sa capacité en M19,
+   * ses réglages propres) doit passer par ici, et lire une **ligne de
+   * données** (`entities/gods/roster.ts`). Aucun autre fichier n'a à savoir
+   * qu'Hermès existe.
+   *
+   * S'il n'est pas `readonly`, ce n'est pas un oubli : l'écran de sélection
+   * (M13) viendra le changer entre deux parties.
+   */
+  private god: God = GODS[DEFAULT_GOD_ID];
 
   /**
    * Prévenue quand le score change — c'est le seul lien du jeu vers
@@ -173,7 +189,8 @@ export class Game {
     this.profiler.mark('cortège');
 
     // --- Milestone 19 : this.ability.update(deltaTime)    (la capacité divine)
-    //     Thème et contenu : voir UNIVERS.md
+    //     La capacité à exécuter est `this.god.ability` — le jeu ne saura
+    //     jamais que c'est la Foudre, seulement que c'est celle du dieu joué.
 
     // 6. Annoncer le score, s'il a changé et pas trop souvent.
     this.publishFaithful();
@@ -223,7 +240,19 @@ export class Game {
       drawnFollowers: this.retinue.drawnCount,
       followers: this.retinue.size,
       triangles: this.gameScene.renderer.info.render.triangles,
+      god: this.god.label,
     };
+  }
+
+  /**
+   * Le dieu joué, avec son apparence, sa capacité et ses réglages.
+   *
+   * Personne ne l'appelle encore — le panneau de debug se contente du nom,
+   * via `getStats()`. C'est la porte d'entrée de l'écran de sélection (M13),
+   * de l'apparence (M14) et du bouton de capacité (M19).
+   */
+  getGod(): God {
+    return this.god;
   }
 
   /**

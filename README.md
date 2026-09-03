@@ -10,7 +10,7 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 11 terminée** — app Expo fonctionnelle, **cité
+> **État actuel : Milestone 12 terminée** — app Expo fonctionnelle, **cité
 > grecque** générée en six quartiers (Agora, Céramique, Acropole, Port,
 > Théâtre, Bois sacré), collisions contre les façades,
 > **450 mortels qui déambulent**, **conversion au contact** qui se propage, et
@@ -18,6 +18,8 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 > en foule cohérente, **compteur et bouton de relance**. Joystick tactile et
 > caméra de suivi avec anticipation. Le jeu est **profilé et optimisé** :
 > 0,09 ms de calcul par image en partie réelle, sur les 16,7 disponibles.
+> Le **panthéon** existe côté données : sept dieux, chacun une ligne dans
+> `src/entities/gods/roster.ts` — reste à pouvoir en choisir un (M13).
 
 ---
 
@@ -569,8 +571,8 @@ l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
 | 9 | Optimisation : profileur + banc de mesure | ✅ Terminée |
 | 10 | Optimisation : tri par instance | ✅ Terminée |
 | 11 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ✅ Terminée |
-| 12 | 🏛️ Panthéon — roster de données (apparence, capacité, réglages) | ⬜ À venir |
-| 13 | 🏛️ Panthéon — écran de sélection du dieu | ⬜ |
+| 12 | 🏛️ Panthéon — roster de données (apparence, capacité, réglages) | ✅ Terminée |
+| 13 | 🏛️ Panthéon — écran de sélection du dieu | ⬜ À venir |
 | 14 | 🏛️ Panthéon — apparence différenciée par dieu | ⬜ |
 | 15 | 🏛️ Panthéon — déblocage progressif des dieux | ⬜ |
 | 16 | Mortel spécialisé — l'hoplite (valeur ×3) | ⬜ |
@@ -637,6 +639,10 @@ l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
   panthéon, en M16-M18.
 - **M12-M15 — Le panthéon.** Un dieu = **une ligne de données**, pas une
   classe. Apparence, capacité, réglages propres. Plus l'écran de sélection.
+  **M12 est faite** : `src/entities/gods/roster.ts` porte les sept dieux, et
+  `Game` sait lequel est joué sans qu'aucun autre fichier ne connaisse le nom
+  d'un dieu. Les réglages propres (`tuning`) valent tous 1 : les écarts
+  s'inventent en jouant, avec les capacités sous la main — c'est la M27.
 - **M19-M27 — Capacités divines.** Le cœur du thème : Foudre, Talaria,
   Charme, Ressac, Égide, Retour du Styx, Charge. Même principe
   d'architecture que les entrées et les collisions — **un contrat, plusieurs

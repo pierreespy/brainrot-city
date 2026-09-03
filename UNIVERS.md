@@ -114,6 +114,11 @@ courir plutôt que de ratisser au hasard.
 
 ## Le panthéon jouable
 
+> **État : les données existent depuis la Milestone 12.** Les sept dieux
+> ci-dessous vivent dans `src/entities/gods/roster.ts`, une ligne chacun.
+> Ce qui manque encore : pouvoir en **choisir** un (M13), le **voir** (M14),
+> les **débloquer** (M15) et **utiliser** leur capacité (M19 à M27).
+
 Chaque dieu se résume à **trois choses** : une apparence, une capacité, et un
 ou deux réglages qui lui sont propres. Techniquement, ce n'est donc **pas une
 classe par dieu**, mais une **ligne dans un tableau de données** — ce qui rend

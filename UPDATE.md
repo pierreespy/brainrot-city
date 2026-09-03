@@ -9,6 +9,82 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🏛️ Milestone 12 : le roster des dieux
+
+**Résumé** — Le panthéon entre dans le code, **en données uniquement**. Les
+sept dieux d'`UNIVERS.md` (Hermès, Zeus, Aphrodite, Poséidon, Athéna, Hadès,
+Arès) sont désormais sept lignes d'un tableau, chacune portant une apparence,
+une capacité (nom, description, durée, recharge) et deux réglages propres.
+`Game` sait lequel est joué ; **aucun autre fichier ne connaît le nom d'un
+dieu**.
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/entities/gods/roster.ts` | ⭐ Le catalogue : `GodId`, `AbilityId`, `AbilitySpec`, `GodAppearance`, `GodTuning`, `God`, la table `GODS`, l'ordre d'affichage, le dieu par défaut |
+
+### Modifié
+
+| Fichier | Ce qui change |
+|---|---|
+| `src/core/Game.ts` | Champ `god` (le dieu joué, `DEFAULT_GOD_ID` faute d'écran de sélection), accesseur `getGod()`, `god` ajouté à `GameStats`, commentaire de la M19 précisé |
+| `src/ui/Stats.tsx` | Une ligne « dieu » dans le panneau de debug |
+| `README.md`, `UNIVERS.md` | Feuille de route et marqueurs d'état |
+
+### Le pari d'architecture, et ce qu'il interdit
+
+Un dieu n'est **pas une classe** : c'est une ligne. Ajouter un huitième dieu
+doit coûter une ligne ici et une implémentation de capacité, jamais une
+modification du jeu. Corollaire écrit noir sur blanc dans le fichier : toute
+ligne de code qui testerait `if (god.id === 'zeus')` trahit le contrat — ce
+qui doit varier appartient à la ligne du dieu. C'est le même principe que
+`InputSource` (le jeu ignore s'il est piloté au doigt ou au clavier) et que
+`districts.ts` (la ville ignore ce qu'est une Acropole).
+
+### Ce qui n'a PAS été fait ici, volontairement
+
+- **L'écran de sélection (M13)** : on joue `DEFAULT_GOD_ID`, donc Hermès.
+- **L'apparence appliquée (M14)** : les sept couleurs sont décidées, mais
+  `Player` lit toujours `CONFIG.player.color`. Le dieu joué ne se voit que
+  dans le panneau de debug.
+- **Le déblocage (M15)** : `unlockedFromStart` est renseigné (Hermès et Zeus
+  à `true`), personne ne le lit.
+- **Les capacités (M19 à M27)** : `ability` décrit ce qu'elles feront ; pas
+  une ligne ne les exécute.
+
+Ces champs existent **avant** leur usage pour la raison qui avait fait poser
+un `type` sur les mortels dès la M4 : les greffer plus tard, sur un code qui
+suppose « il n'y a qu'un seul dieu », coûterait une réécriture.
+
+### Deux décisions à noter
+
+1. **Les couleurs suivent la leçon de la M11.** La caméra plonge, le joueur
+   voit surtout le sol, qui est clair (marbre, terre battue). Les sept teintes
+   sont donc saturées et plus sombres que la dalle la plus foncée — c'est
+   exactement le problème qui avait obligé à assombrir les mortels.
+2. **`tuning` vaut 1 partout, et c'est un choix.** Inventer des écarts de
+   vitesse ou de rayon avant d'avoir joué reviendrait à équilibrer à
+   l'aveugle. C'est le travail de la **M27**, qui aura les capacités sous la
+   main. Les réglages sont des **multiplicateurs** de `CONFIG`, jamais des
+   valeurs absolues : retoucher la vitesse de base, et les sept dieux suivent.
+
+### Vérifié
+
+- `npm run typecheck` — vert (le projet entier compile).
+- `npm run bench` — aucune régression : 0,99 ms de calcul par image sur le
+  scénario de stress, 70 921 triangles, 0 mortel et 0 fidèle dans un mur, les
+  8 directions de la grille de répulsion couvertes. Les 47 % de fidèles
+  superposés et l'étalement de 69 u sont l'état **déjà connu et documenté**
+  à 600 fidèles (voir plus bas dans ce journal), pas un effet de ce
+  changement — qui ne touche à aucun code de gameplay.
+
+### Supprimé ou cassé
+
+Rien.
+
+---
+
 ## 2026-09-03 — Claude — La feuille de route passe de 13 à 50 milestones
 
 **Résumé** — Découpage beaucoup plus fin de la feuille de route pour cadrer
