@@ -114,6 +114,17 @@ export class Player {
     this.mesh.position.set(this.position.x, y, this.position.y);
   }
 
+  /**
+   * Habille le dieu de la couleur choisie au menu.
+   *
+   * Le matériau est créé une fois et repeint : reconstruire un
+   * `MeshLambertMaterial` à chaque changement de parure laisserait l'ancien
+   * sur la carte graphique, que Three.js ne libère jamais tout seul.
+   */
+  setColor(color: number): void {
+    (this.mesh.material as THREE.MeshLambertMaterial).color.setHex(color);
+  }
+
   /** Remet le joueur au centre (utilisé par le restart en Milestone 8). */
   reset(): void {
     this.position.set(0, 0);

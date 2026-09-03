@@ -180,6 +180,30 @@ monde) et un sens aux capacités d'Athéna, d'Arès et d'Hadès.
 
 ---
 
+## La drachme
+
+La monnaie de la cité — celle qu'on gagne en jouant, et celle qui achète les
+divinités et leurs parures.
+
+Le choix du mot n'est pas un détail d'habillage. « Pièces », « gemmes » ou
+« cristaux » sont le vocabulaire de n'importe quel jeu ; la drachme est le
+vocabulaire de **cette** cité, au même titre que les fidèles, les mortels et
+l'Acropole. Un joueur qui voit « 340 drachmes » sait encore où il est.
+
+**Ce qu'elle achète**, et dans cet ordre d'importance :
+
+1. **Les divinités** — le gros achat, celui qui change la façon de jouer
+   quand les capacités existeront (M19-M27) ;
+2. **Les parures** — la même divinité, d'une autre couleur. Le petit achat
+   qu'on refait.
+
+**Ce qu'elle ne doit pas devenir** : un raccourci vers la fin du jeu. Une
+partie rapporte le tiers de son cortège. À un rythme d'une conversion par
+seconde, cela place la première divinité supplémentaire à quelques parties —
+assez proche pour donner envie, assez loin pour rester un but.
+
+---
+
 ## Ce qui n'est PAS décidé
 
 - **Le style des personnages** — silhouettes stylisées ou plus détaillées.
@@ -196,4 +220,6 @@ monde) et un sens aux capacités d'Athéna, d'Arès et d'Hadès.
   > milliers d'instances à l'écran (mesh bas-poly, texture unique ou couleurs
   > plates). C'est le sujet de la **M40**.
 - **Le mode de jeu** — partie chronométrée, survie, ou objectif de conversion.
-- **La monétisation** — publicité, achat des dieux, ou rien.
+- **La monétisation** — publicité, achat des dieux, ou rien. Le magasin
+  affiche déjà des paquets de drachmes contre argent réel, mais ils sont
+  **inertes** : la place à l'écran est prise, la décision ne l'est pas (M46).

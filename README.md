@@ -10,7 +10,7 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 
 **Application mobile Android et iOS**, destinée à une publication sur les stores.
 
-> **État actuel : Milestone 12 terminée** — app Expo fonctionnelle, **cité
+> **État actuel : Milestones 12 et 13 terminées** — app Expo fonctionnelle, **cité
 > grecque** générée en six quartiers (Agora, Céramique, Acropole, Port,
 > Théâtre, Bois sacré), collisions contre les façades,
 > **450 mortels qui déambulent**, **conversion au contact** qui se propage, et
@@ -19,7 +19,11 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 > caméra de suivi avec anticipation. Le jeu est **profilé et optimisé** :
 > 0,09 ms de calcul par image en partie réelle, sur les 16,7 disponibles.
 > Le **panthéon** existe côté données : sept dieux, chacun une ligne dans
-> `src/entities/gods/roster.ts` — reste à pouvoir en choisir un (M13).
+> `src/entities/gods/roster.ts`, et l'app s'ouvre désormais sur un **menu à
+> trois onglets** — Jouer, Magasin, Dieux — avec des **drachmes** gagnées en
+> jouant, des divinités et des parures à acquérir, et une progression
+> **enregistrée sur l'appareil**. Le dieu court **au milieu de sa foule**, plus
+> en tête de file.
 
 ---
 
@@ -123,7 +127,14 @@ imprimé dessus.
     ├── entities/
     │   ├── Player.ts      Position et déplacement du joueur
     │   ├── Mortals.ts     ⭐ Les 450 habitants : déambulation + mesh instancié
-    │   └── Retinue.ts     ⭐ Le cortège : le score et les fidèles qui suivent
+    │   ├── Retinue.ts     ⭐ Le cortège : le score et la foule AUTOUR du dieu
+    │   └── gods/roster.ts ⭐ Le panthéon : un dieu = une ligne de données
+    │
+    ├── meta/              Hors partie : ce que le joueur possède
+    │   ├── progression.ts ⭐ Drachmes, dieux, parures — données pures, testables
+    │   ├── store.ts       ⭐ Le catalogue : prix, parures, paquets de drachmes
+    │   ├── storage.ts     La sauvegarde sur l'appareil (AsyncStorage)
+    │   └── useProgression.ts  Le pont vers React
     │
     ├── systems/
     │   ├── CameraRig.ts   Caméra qui suit le joueur en douceur
@@ -138,8 +149,16 @@ imprimé dessus.
     │
     ├── ui/
     │   ├── Joystick.tsx   Le joystick virtuel (composant React Native)
-    │   ├── Hud.tsx        ⭐ Compteur de fidèles, relance, place de la capacité
-    │   └── Stats.tsx      L'affichage de debug (touche le compteur)
+    │   ├── Hud.tsx        ⭐ Compteur de fidèles, relance, retour au menu
+    │   ├── Stats.tsx      L'affichage de debug (touche le compteur)
+    │   └── menu/          ⭐ L'accueil : Jouer / Magasin / Dieux
+    │       ├── MenuScreen.tsx   La coquille et la barre d'onglets
+    │       ├── PlayTab.tsx      Lancer une partie, et les paramètres
+    │       ├── ShopTab.tsx      Drachmes, divinités, parures
+    │       ├── GodsTab.tsx      Le panthéon possédé et ses cosmétiques
+    │       ├── SettingsSheet.tsx  La feuille de paramètres
+    │       ├── parts.tsx        Les briques communes (bouton, carte, pastille)
+    │       └── theme.ts         Couleurs, espacements, échelle de texte
     │
     └── world/
         ├── City.ts        ⭐ La cité : ce qu'on bâtit dans chaque quartier
@@ -572,9 +591,10 @@ l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
 | 10 | Optimisation : tri par instance | ✅ Terminée |
 | 11 | 🏛️ **La cité grecque** : quartiers, marbre, temples, repères | ✅ Terminée |
 | 12 | 🏛️ Panthéon — roster de données (apparence, capacité, réglages) | ✅ Terminée |
-| 13 | 🏛️ Panthéon — écran de sélection du dieu | ⬜ À venir |
-| 14 | 🏛️ Panthéon — apparence différenciée par dieu | ⬜ |
-| 15 | 🏛️ Panthéon — déblocage progressif des dieux | ⬜ |
+| 12b | 🏛️ Le dieu au milieu de sa foule (cortège devant ET derrière) | ✅ Terminée |
+| 13 | 🏛️ Menu d'accueil — onglets Jouer / Magasin / Dieux, paramètres | ✅ Terminée |
+| 14 | 🏛️ Panthéon — apparence différenciée par dieu **en jeu** | 🟡 Partielle (couleur du dieu et du cortège) |
+| 15 | 🏛️ Panthéon — déblocage progressif des dieux | 🟡 Partielle (achat en drachmes ; reste le déblocage par exploit) |
 | 16 | Mortel spécialisé — l'hoplite (valeur ×3) | ⬜ |
 | 17 | Mortel spécialisé — la prêtresse (recharge capacité) | ⬜ |
 | 18 | Mortel spécialisé — le philosophe (fuite) | ⬜ |
@@ -643,6 +663,15 @@ l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
   `Game` sait lequel est joué sans qu'aucun autre fichier ne connaisse le nom
   d'un dieu. Les réglages propres (`tuning`) valent tous 1 : les écarts
   s'inventent en jouant, avec les capacités sous la main — c'est la M27.
+  **M13 est faite**, et elle a débordé : l'écran de sélection est devenu un
+  **menu à trois onglets** (Jouer, Magasin, Dieux), donc une économie
+  (les drachmes), un catalogue de parures et une sauvegarde. Le
+  dossier `src/meta/` tient tout cela **hors du jeu** : le moteur reçoit un
+  dieu et deux couleurs, il ignore qu'elles ont été payées.
+- **M12b — Le dieu au milieu de sa foule.** Le cortège suivait en file, le
+  dieu seul en tête : on voyait un homme suivi d'une foule, pas une foule
+  ayant un dieu. Une partie du cortège vise désormais un point **devant** lui.
+  Détail complet dans [`UPDATE.md`](./UPDATE.md).
 - **M19-M27 — Capacités divines.** Le cœur du thème : Foudre, Talaria,
   Charme, Ressac, Égide, Retour du Styx, Charge. Même principe
   d'architecture que les entrées et les collisions — **un contrat, plusieurs

@@ -95,7 +95,16 @@ interface Result {
   maxSpread: number;
   /** Étalement moyen — la mesure stable, moins sensible à un traînard isolé. */
   meanSpread: number;
-  /** Part des fidèles collés à un voisin (empilement). */
+  /**
+   * Part des fidèles collés à un voisin (empilement), MOYENNÉE sur le
+   * parcours.
+   *
+   * ⚠️ Mesurée sur la dernière image jusqu'à la M12b, et c'était trompeur :
+   * le joueur scripté tourne à angle droit toutes les 1 à 3 secondes, et
+   * juste après un virage la foule est forcément tassée. Selon l'instant où
+   * tombait la dernière image, le même réglage affichait 10 % ou 23 %. On
+   * échantillonne donc deux fois par seconde et on moyenne.
+   */
   overlapRate: number;
   mortalsInWalls: number;
   followersInWalls: number;
@@ -139,6 +148,8 @@ function run(label: string, frames: number, preloadFollowers: number): Result {
   let drawnFollowers = 0;
   let mortalsInWalls = 0;
   let followersInWalls = 0;
+  let overlapSum = 0;
+  let overlapSamples = 0;
 
   // Images à blanc : le temps que les compilateurs à la volée chauffent, et
   // surtout que le cortège prenne sa formation. Un cortège que l'on vient de
@@ -201,6 +212,11 @@ function run(label: string, frames: number, preloadFollowers: number): Result {
 
     // Les garde-fous ne sont vérifiés que de temps en temps : les compter à
     // chaque image coûterait plus cher que le jeu lui-même.
+    if (frame % 30 === 0) {
+      overlapSum += overlapRate(retinue.getPositions());
+      overlapSamples += 1;
+    }
+
     if (frame % 60 === 0) {
       mortalsInWalls = Math.max(mortalsInWalls, mortals.countInsideBuildings());
       followersInWalls = Math.max(followersInWalls, countInWalls(retinue.getPositions(), city));
@@ -208,7 +224,6 @@ function run(label: string, frames: number, preloadFollowers: number): Result {
   }
 
   const snapshot = profiler.snapshot();
-  const positions = retinue.getPositions();
 
   return {
     label,
@@ -225,7 +240,7 @@ function run(label: string, frames: number, preloadFollowers: number): Result {
       (drawnMortals / frames + drawnFollowers / frames) * capsuleTriangles() + staticTriangles,
     maxSpread,
     meanSpread: spreadTotal / frames,
-    overlapRate: overlapRate(positions),
+    overlapRate: overlapSum / Math.max(1, overlapSamples),
     mortalsInWalls,
     followersInWalls,
   };

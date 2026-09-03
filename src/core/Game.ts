@@ -145,6 +145,40 @@ export class Game {
     this.loop.start();
   }
 
+  /**
+   * Suspend la simulation — le menu est revenu par-dessus.
+   *
+   * ⚠️ On arrête la BOUCLE, on ne détruit rien. La ville, les mortels et le
+   * contexte 3D coûtent près d'une seconde à reconstruire : les jeter chaque
+   * fois que le joueur ouvre le magasin ferait payer cette seconde à chaque
+   * retour. Une boucle arrêtée, elle, ne consomme rigoureusement rien.
+   */
+  pause(): void {
+    this.loop.stop();
+  }
+
+  resume(): void {
+    this.loop.start();
+  }
+
+  /**
+   * Change le dieu joué — ce que la M12 avait laissé en attente d'un écran.
+   *
+   * Il n'applique PAS l'apparence : c'est `setAppearance` qui s'en charge, et
+   * les deux sont séparés à dessein. Le dieu vient du roster, ses couleurs
+   * peuvent venir d'une parure achetée ; mélanger les deux ferait entrer la
+   * boutique dans le moteur.
+   */
+  setGod(god: God): void {
+    this.god = god;
+  }
+
+  /** Les couleurs portées : le corps du dieu, et la teinte de son cortège. */
+  setAppearance(color: number, accent: number): void {
+    this.player.setColor(color);
+    this.retinue.setColor(accent);
+  }
+
   /** Une frame de jeu, du début à la fin. */
   private update(deltaTime: number): void {
     this.profiler.frameStart();

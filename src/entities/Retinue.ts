@@ -43,6 +43,17 @@ interface Follower {
   z: number;
   /** Orientation affichée, alignée sur le déplacement. */
   angle: number;
+  /**
+   * Sa place à GAUCHE ou à DROITE dans la foule, entre -1 et 1, tirée une
+   * fois pour toutes à la conversion.
+   *
+   * Elle ne sert qu'aux fidèles de tête. Derrière le dieu, le chemin
+   * serpente et les étale tout seul ; devant lui il n'y a qu'une ligne
+   * droite, sur laquelle tout le monde viserait le même point. Sans ce
+   * décalage latéral, la tête du cortège s'empilait en file indienne —
+   * mesuré au banc : 23 % de fidèles superposés contre 10 %.
+   */
+  readonly side: number;
 }
 
 export class Retinue {
@@ -150,6 +161,7 @@ export class Retinue {
       x: x + (Math.random() - 0.5) * scatter,
       z: z + (Math.random() - 0.5) * scatter,
       angle: 0,
+      side: Math.random() * 2 - 1,
     });
   }
 
@@ -164,16 +176,58 @@ export class Retinue {
     trail: PlayerTrail,
     culling: ViewCulling | null = null,
   ): void {
-    this.followPath(deltaTime, trail);
+    this.followPath(deltaTime, trail, playerX, playerZ);
+    this.clearGod(playerX, playerZ);
     this.separate();
     this.settle(playerX, playerZ);
     this.syncMeshes(culling);
   }
 
   /** 1. Chacun rejoint le point du chemin qui correspond à son rang. */
-  private followPath(deltaTime: number, trail: PlayerTrail): void {
-    const { speedFactor, lagMin, lagStep, arriveRadius } = CONFIG.retinue;
+  private followPath(
+    deltaTime: number,
+    trail: PlayerTrail,
+    playerX: number,
+    playerZ: number,
+  ): void {
+    const {
+      speedFactor,
+      lagMin,
+      lagStep,
+      arriveRadius,
+      crowdLeadShare,
+      crowdLeadMax,
+      aheadArrive,
+      leadRecoverRadius,
+    } = CONFIG.retinue;
     const speed = CONFIG.player.speed * speedFactor;
+
+    // Le décalage qui met le dieu AU MILIEU de sa foule.
+    //
+    // Les retards sont calculés comme avant — du plus petit au plus grand —
+    // puis tous diminués d'une même longueur : celle du rang qui doit se
+    // retrouver exactement sur le dieu. Tout ce qui précède ce rang passe en
+    // retard NÉGATIF et vise un point devant lui (voir `PlayerTrail.sample`).
+    //
+    // ⚠️ Le décalage se calcule sur un RANG, pas sur une fraction de la
+    // longueur du cortège : les retards suivent une racine carrée, donc la
+    // foule est bien plus dense à l'arrière qu'à l'avant. Décaler de la
+    // moitié de la longueur ne mettait que 4 % des fidèles devant le dieu
+    // (mesuré) — il restait en tête, exactement ce qu'on voulait corriger.
+    const count = this.followers.length;
+    const lead =
+      count > 0 && crowdLeadShare > 0
+        ? Math.min(lagMin + lagStep * Math.sqrt(crowdLeadShare * count), crowdLeadMax)
+        : 0;
+
+    // De quelle largeur la tête du cortège s'ouvre, et dans quel sens.
+    // La perpendiculaire au cap : (dirZ, -dirX).
+    const halfWidth = Math.min(
+      CONFIG.retinue.separation * Math.sqrt(count) * 0.6,
+      CONFIG.retinue.crowdWidthMax,
+    );
+    const perpX = trail.headingZ * halfWidth;
+    const perpZ = -trail.headingX * halfWidth;
 
     // Le curseur évite de reparcourir le chemin pour chaque fidèle : les
     // retards vont croissant, donc une seule traversée suffit au cortège
@@ -185,8 +239,38 @@ export class Retinue {
 
       // La racine carrée du rang : un cortège de 500 doit s'épaissir, pas
       // s'étirer sur 250 mètres.
-      const lag = lagMin + lagStep * Math.sqrt(i);
-      cursor = trail.sample(lag, cursor, this.target);
+      const lag = lagMin + lagStep * Math.sqrt(i) - lead;
+
+      // ⚠️ Un fidèle de TÊTE vise un point en ligne droite devant le dieu :
+      // il ignore donc les façades, exactement le défaut que `PlayerTrail`
+      // avait été écrit pour corriger. Tant qu'il est dans la foule, cela ne
+      // se voit pas — le collider le rattrape en un pas ou deux. Mais celui
+      // qui se retrouve derrière un immeuble pousse contre le mur
+      // indéfiniment : mesuré au banc, un fidèle échoué à 68 unités qui ne
+      // revenait jamais. Décroché, il repasse donc par le CHEMIN, comme les
+      // autres, le temps de rentrer dans le rang.
+      let ahead = lag <= 0;
+      if (ahead) {
+        const gapX = follower.x - playerX;
+        const gapZ = follower.z - playerZ;
+        if (gapX * gapX + gapZ * gapZ > leadRecoverRadius * leadRecoverRadius) ahead = false;
+      }
+
+      if (ahead) {
+        // Retard négatif : `sample` prolonge le cap et laisse le curseur
+        // intact — ce fidèle ne consomme pas de chemin.
+        trail.sample(lag, cursor, this.target);
+        // On ouvre l'éventail : chacun garde sa place à gauche ou à droite,
+        // et la foule avance de front au lieu de défiler.
+        this.target.x += perpX * follower.side;
+        this.target.z += perpZ * follower.side;
+      } else {
+        // `lagMin` est le plus petit retard du cortège : un revenant ne fait
+        // donc jamais reculer le curseur, qui reste monotone.
+        cursor = trail.sample(Math.max(lag, lagMin), cursor, this.target);
+      }
+
+      const arrive = ahead ? arriveRadius * aheadArrive : arriveRadius;
 
       const dx = this.target.x - follower.x;
       const dz = this.target.z - follower.z;
@@ -198,9 +282,9 @@ export class Retinue {
       // Arrivé « à peu près » : on le laisse tranquille. C'est ce qui donne
       // à la répulsion la place d'étaler le cortège en foule plutôt qu'en
       // pile de fidèles superposés sur le même point du chemin.
-      if (distance > arriveRadius) {
+      if (distance > arrive) {
         // On ne dépasse jamais sa cible, sinon le fidèle oscille autour.
-        const step = Math.min(speed * deltaTime, distance - arriveRadius * 0.5);
+        const step = Math.min(speed * deltaTime, distance - arrive * 0.5);
         follower.x += (dx / distance) * step;
         follower.z += (dz / distance) * step;
         follower.angle = Math.atan2(dx, dz);
@@ -209,7 +293,42 @@ export class Retinue {
   }
 
   /**
-   * 2. Les fidèles trop proches se repoussent.
+   * 2. Le dieu garde sa bulle.
+   *
+   * ⚠️ Ce n'est pas du confort : depuis que la foule l'entoure au lieu de le
+   * suivre, c'est la SEULE chose qui l'empêche d'être avalé par son propre
+   * cortège — le défaut que redoutait le commentaire de `lagMin`.
+   *
+   * L'ordre compte. Écarter les fidèles du dieu les tasse forcément les uns
+   * contre les autres ; c'est donc fait AVANT la répulsion, qui a alors le
+   * temps de rétablir les distances dans la même image. Fait après, on
+   * mesurait au banc 26 % de fidèles superposés au lieu de 10 %.
+   */
+  private clearGod(playerX: number, playerZ: number): void {
+    const { godClearance } = CONFIG.retinue;
+
+    for (const follower of this.followers) {
+      const dx = follower.x - playerX;
+      const dz = follower.z - playerZ;
+      const gap = Math.sqrt(dx * dx + dz * dz);
+      if (gap >= godClearance) continue;
+
+      if (gap < 0.0001) {
+        // Pile sur lui (une conversion au contact) : on le sort par le côté,
+        // dans une direction arbitraire mais stable.
+        follower.x = playerX + godClearance;
+        follower.z = playerZ;
+        continue;
+      }
+
+      const push = (godClearance - gap) / gap;
+      follower.x += dx * push;
+      follower.z += dz * push;
+    }
+  }
+
+  /**
+   * 3. Les fidèles trop proches se repoussent.
    *
    * Comparer chacun à tous ferait 180 000 paires pour 600 fidèles. On range
    * donc le cortège dans une grille dont la case vaut exactement la distance
@@ -303,7 +422,7 @@ export class Retinue {
     }
   }
 
-  /** 3. Personne ne finit dans un mur ni hors de la cité. */
+  /** 4. Personne ne finit dans un mur ni hors de la cité. */
   private settle(playerX: number, playerZ: number): void {
     const citizen = CONFIG.mortals.types.citizen;
     const limit = CONFIG.world.halfSize - citizen.radius;
@@ -312,6 +431,7 @@ export class Retinue {
     for (const follower of this.followers) {
       follower.x = THREE.MathUtils.clamp(follower.x, -limit, limit);
       follower.z = THREE.MathUtils.clamp(follower.z, -limit, limit);
+
 
       this.probe.set(follower.x, follower.z);
       // ⚠️ On EXTRAIT, on ne repousse pas : voir `Collider.extract()`.
@@ -333,7 +453,7 @@ export class Retinue {
   }
 
   /**
-   * 4. Envoyer au GPU les silhouettes que la caméra cadre, et elles seules.
+   * 5. Envoyer au GPU les silhouettes que la caméra cadre, et elles seules.
    *
    * Le cortège colle au joueur, donc la plupart sont à l'écran — mais pas
    * toutes : un cortège de 600 traîne sur une quinzaine d'unités, et la
@@ -381,6 +501,16 @@ export class Retinue {
       if (dx * dx + dz * dz <= radiusSq) return true;
     }
     return false;
+  }
+
+  /**
+   * Teinte le cortège de la couleur d'accent du dieu.
+   *
+   * Un seul matériau pour les six cents silhouettes — c'est tout l'intérêt de
+   * l'`InstancedMesh` — donc une seule couleur à changer.
+   */
+  setColor(color: number): void {
+    (this.mesh.material as THREE.MeshLambertMaterial).color.setHex(color);
   }
 
   /** Le score affiché au joueur (Milestone 8). */

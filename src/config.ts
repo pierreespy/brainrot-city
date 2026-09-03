@@ -297,8 +297,89 @@ export const CONFIG = {
     /**
      * Nombre de passes de répulsion par frame. Deux passes valent bien mieux
      * qu'une force doublée : la foule se démêle sans vibrer.
+     *
+     * ⚠️ Passé de 2 à 3 quand la foule s'est mise à entourer le dieu : elle
+     * est désormais aussi dense devant lui que derrière, et deux passes ne
+     * suffisaient plus (17 % de fidèles superposés au banc, contre 12 %
+     * avant ; à trois passes, 12 % de nouveau). Cela coûte 0,1 ms par image
+     * sur un cortège plein — 0,6 % du budget.
      */
-    separationPasses: 2,
+    separationPasses: 3,
+
+    /**
+     * Part du cortège qui court DEVANT le dieu (0 = tout derrière, comme
+     * avant ; 0,5 = le dieu au centre exact de sa foule).
+     *
+     * Le cortège en file derrière laissait la divinité seule en tête, comme
+     * une locomotive : on voyait un homme suivi d'une foule, pas une foule
+     * ayant un dieu. On calcule donc le retard du fidèle de rang
+     * `crowdLeadShare × effectif`, et on retranche ce retard à TOUS les
+     * autres : cette part du cortège passe en retard négatif, vise un point
+     * situé devant le dieu (voir `PlayerTrail.sample`), et lui se retrouve
+     * dedans.
+     *
+     * ⚠️ Un peu moins de la moitié, à dessein : le joueur doit voir la rue
+     * où il s'engage. À 0,5 pile, autant de fidèles lui masquent l'avant
+     * qu'ils lui couvrent le dos.
+     */
+    crowdLeadShare: 0.4,
+    /**
+     * Distance maximale projetée devant le dieu, en unités.
+     *
+     * Devant lui, il n'y a pas de chemin : on prolonge son cap en ligne
+     * droite, ce qui ignore les façades. Sur quelques mètres, le collider
+     * rattrape les rares fidèles poussés dans un mur ; au-delà, un cortège de
+     * 600 enverrait sa tête à travers tout un pâté de maisons.
+     */
+    crowdLeadMax: 6,
+    /**
+     * Bulle laissée libre autour du dieu.
+     *
+     * ⚠️ C'est elle qui remplace l'ancien `lagMin` comme garde-fou : la foule
+     * l'entoure désormais de tous côtés, et sans ce vide elle l'avalerait
+     * purement et simplement (le défaut redouté dans le commentaire de
+     * `lagMin`). Un peu plus que `separation`, pour que le dieu tienne sa
+     * place mieux qu'un fidèle.
+     */
+    /**
+     * Demi-largeur maximale de l'éventail de tête, en unités.
+     *
+     * Devant le dieu il n'y a qu'une ligne droite : sans ouverture latérale,
+     * tous les fidèles de tête visent le même point et se marchent dessus.
+     * L'éventail grandit avec le cortège (∝ √n) et s'arrête ici — au-delà, la
+     * foule serait plus large qu'une rue et passerait son temps dans les murs.
+     */
+    crowdWidthMax: 3.5,
+
+    /**
+     * Tolérance d'arrivée des fidèles de TÊTE, en multiples d'`arriveRadius`.
+     *
+     * Leur cible fuit à la vitesse du dieu et pivote à chaque virage : à les
+     * vouloir précis, ils passent leur temps à se croiser pour rejoindre un
+     * point qui a déjà bougé, et se marchent dessus. On les laisse arriver
+     * « dans le quartier » et c'est la répulsion, plus stable, qui range la
+     * tête du cortège.
+     */
+    /**
+     * Vitesse à laquelle le cap suivi par la tête du cortège rattrape celui
+     * du dieu, par image (0 à 1). Voir `PlayerTrail.update`.
+     */
+    headingEase: 0.06,
+
+    aheadArrive: 2.5,
+
+    /**
+     * Au-delà de cette distance du dieu, un fidèle de tête cesse de viser
+     * devant lui et repasse par le chemin.
+     *
+     * ⚠️ Ce n'est pas un confort : sans lui, un fidèle de tête laissé
+     * derrière un immeuble pousse en ligne droite contre la façade pour
+     * l'éternité. Mesuré au banc avant correction : un échoué à 68 unités,
+     * deux parcours sur trois.
+     */
+    leadRecoverRadius: 10,
+
+    godClearance: 1.4,
   },
 
   /**

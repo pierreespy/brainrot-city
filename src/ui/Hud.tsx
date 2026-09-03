@@ -20,6 +20,11 @@ interface Props {
   district: string;
   onRestart: () => void;
   /**
+   * Retour au menu. Il termine la partie : le score est encaissé en drachmes
+   * à ce moment-là (voir `App.tsx`).
+   */
+  onQuit: () => void;
+  /**
    * Toucher le compteur affiche les mesures de performance (Milestone 9).
    *
    * Il n'y a pas de bouton dédié : l'écran d'un téléphone est petit, et une
@@ -28,7 +33,7 @@ interface Props {
   onToggleStats: () => void;
 }
 
-export function Hud({ faithful, district, onRestart, onToggleStats }: Props) {
+export function Hud({ faithful, district, onRestart, onQuit, onToggleStats }: Props) {
   return (
     // `box-none` : cette couche laisse passer les doigts vers le joystick,
     // sauf sur ses propres boutons. Sans cela, l'interface avalerait tout
@@ -44,14 +49,35 @@ export function Hud({ faithful, district, onRestart, onToggleStats }: Props) {
           </Text>
         </Pressable>
 
-        <Pressable
-          testID="restart"
-          onPress={onRestart}
-          style={({ pressed }) => [styles.restart, pressed && styles.restartPressed]}
-          hitSlop={12}
-        >
-          <Text style={styles.restartIcon}>↻</Text>
-        </Pressable>
+        <View style={styles.topButtons}>
+          <Pressable
+            testID="restart"
+            onPress={onRestart}
+            accessibilityRole="button"
+            accessibilityLabel="Recommencer la partie"
+            style={({ pressed }) => [styles.restart, pressed && styles.restartPressed]}
+            hitSlop={12}
+          >
+            <Text style={styles.restartIcon}>↻</Text>
+          </Pressable>
+
+          {/*
+            Le retour au menu. Il n'existait pas tant que le jeu commençait
+            directement : maintenant qu'il y a un magasin, une partie doit
+            pouvoir se terminer — c'est aussi le geste qui transforme les
+            fidèles en drachmes.
+          */}
+          <Pressable
+            testID="quit"
+            onPress={onQuit}
+            accessibilityRole="button"
+            accessibilityLabel="Terminer la partie et revenir au menu"
+            style={({ pressed }) => [styles.quit, pressed && styles.restartPressed]}
+            hitSlop={12}
+          >
+            <Text style={styles.quitLabel}>Menu</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/*
@@ -102,6 +128,18 @@ const styles = StyleSheet.create({
   },
   scoreValue: { color: '#fff', fontSize: 30, fontWeight: '800' },
   scoreLabel: { color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, fontWeight: '600' },
+
+  topButtons: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+
+  quit: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  quitLabel: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
   restart: {
     width: 44, // 44 points : la taille minimale confortable pour un pouce.

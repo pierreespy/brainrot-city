@@ -1,10 +1,16 @@
 /**
  * App.tsx — l'enveloppe Expo : le seul fichier qui connaît la plateforme.
  *
- * Son rôle est volontairement minuscule :
- *   1. afficher une surface de dessin 3D (GLView) ;
- *   2. créer le jeu dessus quand elle est prête ;
- *   3. poser le joystick et le HUD par-dessus.
+ * Son rôle reste volontairement mince :
+ *   1. tenir la surface de dessin 3D (GLView) et le jeu posé dessus ;
+ *   2. décider de ce qu'on regarde — le MENU ou la PARTIE ;
+ *   3. faire passer la progression (drachmes, dieux, parures) de l'un à l'autre.
+ *
+ * ⚠️ La surface 3D reste MONTÉE quand le menu est affiché ; seule la boucle
+ * de jeu s'arrête (`game.pause()`). Démonter la GLView détruirait le contexte
+ * graphique, et il faudrait reconstruire la ville et ses quatre cent
+ * cinquante mortels à chaque aller-retour vers le magasin. Le menu, opaque,
+ * la recouvre entièrement.
  *
  * Tout le reste du jeu vit dans src/ et ignore totalement React Native.
  */
@@ -20,16 +26,31 @@ import { CONFIG } from './src/config';
 import { Game, type GameStats } from './src/core/Game';
 import { createRenderer } from './src/core/createRenderer';
 import { InputManager } from './src/systems/input/InputManager';
+import { godById } from './src/entities/gods/roster';
+import { appearanceOf } from './src/meta/progression';
+import { useProgression } from './src/meta/useProgression';
 import { Joystick } from './src/ui/Joystick';
 import { Hud } from './src/ui/Hud';
 import { Stats } from './src/ui/Stats';
+import { MenuScreen } from './src/ui/menu/MenuScreen';
 
 export default function App() {
   const gameRef = useRef<Game | null>(null);
   const { width, height } = useWindowDimensions();
 
-  // Le seul état React de l'app. Le jeu le pousse ici quand il change, au
-  // plus 8 fois par seconde (voir `hud.scorePublishInterval`).
+  /** Ce que le joueur regarde. Le jeu tourne uniquement en `partie`. */
+  const [screen, setScreen] = useState<'menu' | 'partie'>('menu');
+
+  // La même information, lisible depuis une fonction qui ne doit PAS changer
+  // d'identité (voir `onContextCreate`). Sans elle, une rotation d'écran en
+  // pleine partie recréerait le jeu... et le mettrait en pause.
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+
+  const progression = useProgression();
+
+  // Le seul état React de l'app pendant la partie. Le jeu le pousse ici quand
+  // il change, au plus 8 fois par seconde (voir `hud.scorePublishInterval`).
   const [faithful, setFaithful] = useState(0);
   const [district, setDistrict] = useState('');
 
@@ -41,7 +62,7 @@ export default function App() {
   const [stats, setStats] = useState<GameStats | null>(null);
 
   useEffect(() => {
-    if (!showStats) {
+    if (!showStats || screen !== 'partie') {
       setStats(null);
       return;
     }
@@ -49,9 +70,7 @@ export default function App() {
       setStats(gameRef.current?.getStats() ?? null);
     }, CONFIG.profiler.publishInterval);
     return () => clearInterval(id);
-  }, [showStats]);
-
-  const onToggleStats = useCallback(() => setShowStats((visible) => !visible), []);
+  }, [showStats, screen]);
 
   // L'entrée existe AVANT le jeu : le joystick est donc utilisable dès la
   // première image, même si la surface 3D n'est pas encore initialisée.
@@ -60,28 +79,79 @@ export default function App() {
   if (inputRef.current === null) inputRef.current = new InputManager();
   const input = inputRef.current;
 
+  /**
+   * Habille le jeu du dieu et de la parure choisis au menu.
+   *
+   * Appelé au lancement d'une partie plutôt qu'à chaque achat : changer de
+   * parure pendant qu'on court ferait clignoter le cortège, et personne ne
+   * demande cela.
+   */
+  const applyLoadout = useCallback(() => {
+    const game = gameRef.current;
+    if (game === null) return;
+    const { color, accent } = appearanceOf(progression.state);
+    game.setGod(godById(progression.state.selectedGod));
+    game.setAppearance(color, accent);
+  }, [progression.state]);
+
+  const onPlay = useCallback(() => {
+    const game = gameRef.current;
+    setFaithful(0);
+    setDistrict('');
+    setScreen('partie');
+    if (game === null) return;
+    applyLoadout();
+    game.restart();
+    game.resume();
+  }, [applyLoadout]);
+
+  /**
+   * Fin de partie : le cortège devient des drachmes, et le menu revient.
+   *
+   * ⚠️ On encaisse ici, et nulle part ailleurs. Créditer au fil des
+   * conversions obligerait à écrire la sauvegarde en pleine boucle de jeu.
+   */
+  const onQuit = useCallback(() => {
+    gameRef.current?.pause();
+    progression.finishRun(gameRef.current?.getFaithfulCount() ?? faithful);
+    setScreen('menu');
+  }, [faithful, progression]);
+
   const onRestart = useCallback(() => {
     gameRef.current?.restart();
     setFaithful(0);
   }, []);
 
-  const onContextCreate = useCallback((gl: ExpoWebGLRenderingContext) => {
-    // Évite de recréer un second jeu si la surface est réinitialisée
-    // (rechargement à chaud pendant le développement).
-    gameRef.current?.dispose();
+  const onToggleStats = useCallback(() => setShowStats((visible) => !visible), []);
 
-    const pixelRatio = PixelRatio.get();
-    const { renderer, width: w, height: h, presentFrame } = createRenderer(gl, pixelRatio);
+  const onContextCreate = useCallback(
+    (gl: ExpoWebGLRenderingContext) => {
+      // Évite de recréer un second jeu si la surface est réinitialisée
+      // (rechargement à chaud pendant le développement).
+      gameRef.current?.dispose();
 
-    const game = new Game(renderer, w, h, presentFrame, input);
-    game.onFaithfulChange = setFaithful;
-    game.onDistrictChange = setDistrict;
-    gameRef.current = game;
-    game.start();
+      const pixelRatio = PixelRatio.get();
+      const { renderer, width: w, height: h, presentFrame } = createRenderer(gl, pixelRatio);
 
-    // Pratique pour déboguer et pour les tests automatisés sur le banc web.
-    (globalThis as unknown as { game: Game }).game = game;
-  }, [input]);
+      const game = new Game(renderer, w, h, presentFrame, input);
+      game.onFaithfulChange = setFaithful;
+      game.onDistrictChange = setDistrict;
+      gameRef.current = game;
+
+      // La boucle ne démarre QUE si une partie est en cours. Au premier
+      // lancement on est au menu : la ville est construite, prête, et
+      // n'avance pas.
+      game.start();
+      if (screenRef.current === 'menu') game.pause();
+
+      // Pratique pour déboguer et pour les tests automatisés sur le banc web.
+      (globalThis as unknown as { game: Game }).game = game;
+    },
+    // Une seule dépendance, à dessein : cette fonction ne doit pas changer
+    // d'identité, sinon la GLView recréerait son contexte à chaque
+    // aller-retour vers le menu. D'où le `screenRef` ci-dessus.
+    [input],
+  );
 
   return (
     <SafeAreaProvider>
@@ -101,19 +171,38 @@ export default function App() {
           msaaSamples={0}
         />
 
-        {/* Le joystick écrit directement dans l'entrée du jeu. Il est posé
-            AVANT le HUD pour que les boutons de celui-ci restent cliquables :
-            en React Native, la dernière couche déclarée reçoit le doigt. */}
-        <Joystick touch={input.touch} />
+        {screen === 'partie' ? (
+          <>
+            {/* Le joystick écrit directement dans l'entrée du jeu. Il est posé
+                AVANT le HUD pour que les boutons de celui-ci restent cliquables :
+                en React Native, la dernière couche déclarée reçoit le doigt. */}
+            <Joystick touch={input.touch} />
 
-        <Hud
-          faithful={faithful}
-          district={district}
-          onRestart={onRestart}
-          onToggleStats={onToggleStats}
-        />
+            <Hud
+              faithful={faithful}
+              district={district}
+              onRestart={onRestart}
+              onQuit={onQuit}
+              onToggleStats={onToggleStats}
+            />
 
-        <Stats stats={stats} />
+            <Stats stats={stats} />
+          </>
+        ) : (
+          <View style={StyleSheet.absoluteFill}>
+            <MenuScreen
+              state={progression.state}
+              onPlay={onPlay}
+              onBuyGod={progression.buyGod}
+              onBuySkin={progression.buySkin}
+              onSelectGod={progression.selectGod}
+              onEquipSkin={progression.equipSkin}
+              onResetProgression={progression.reset}
+              showStats={showStats}
+              onToggleStats={setShowStats}
+            />
+          </View>
+        )}
       </View>
     </SafeAreaProvider>
   );

@@ -9,6 +9,143 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🏛️ Le dieu dans sa foule + le menu d'accueil (M12b, M13)
+
+**Résumé** — Deux changements, demandés ensemble. **(1)** Le dieu ne court plus
+en tête de file : une partie du cortège vise un point situé **devant** lui, et
+il se déplace au milieu de sa foule. **(2)** L'app ne démarre plus dans une
+partie mais sur un **menu à trois onglets** — Jouer, Magasin, Dieux — avec une
+monnaie (les **drachmes**), des divinités et des parures à acquérir, des
+paramètres, et une progression **enregistrée sur l'appareil**.
+
+### 1. Le dieu au milieu de sa foule
+
+Le cortège visait un point situé N mètres **derrière** le dieu sur son chemin
+(`PlayerTrail`). Correct, mais l'image était mauvaise : une locomotive suivie
+de son train.
+
+Le mécanisme n'a pas été remplacé, il a été **décalé**. On calcule le retard du
+fidèle de rang `crowdLeadShare × effectif` et on le retranche à tous les
+autres : les rangs de tête passent en retard **négatif**.
+
+| Pièce | Ce qu'elle fait |
+|---|---|
+| `PlayerTrail.sample(back < 0)` | Aucun point de chemin ne peut répondre — le dieu n'y est pas encore passé. On prolonge son **cap** en ligne droite. |
+| Cap lissé (`headingEase`) | À angle droit, un cap instantané ferait basculer toute la tête du cortège en une image. |
+| Éventail (`crowdWidthMax`) | Devant le dieu, il n'y a qu'une ligne : sans ouverture latérale, la tête défile en file indienne. Chaque fidèle garde sa place à gauche ou à droite (`side`, tiré à la conversion). |
+| Bulle (`godClearance`) | La foule entoure le dieu de tous côtés ; sans ce vide, elle l'avale. C'est ce qui remplace l'ancien garde-fou `lagMin`. |
+| Retour au chemin (`leadRecoverRadius`) | Un fidèle de tête vise **en ligne droite**, donc il ignore les façades. Décroché derrière un immeuble, il repasse par le chemin — sinon il pousse contre le mur pour l'éternité. |
+| Ordre des étapes | La bulle est écartée **avant** la répulsion, qui a alors le temps de rétablir les distances dans la même image. Faite après : 26 % de fidèles superposés au lieu de 10 %. |
+
+**Le fidèle échoué.** Le premier jet n'avait pas ce retour au chemin, et le
+banc l'a dit : sur deux parcours de soixante secondes sur trois, un fidèle de
+tête finissait **échoué à 68 unités** derrière un immeuble, sans jamais
+revenir. L'étalement moyen passait de 14 à 68 unités. C'est précisément le
+défaut que `PlayerTrail` avait été écrit pour corriger, réintroduit par la
+porte de devant : viser en ligne droite, c'est traverser les murs en
+intention. La règle qui en sort : **on ne projette en ligne droite que ce qui
+est près du dieu.**
+
+**Une erreur de raisonnement, et sa correction.** Le décalage a d'abord été
+calculé comme une *fraction de la longueur* du cortège. Résultat mesuré : **4 %
+des fidèles devant le dieu**, qui restait en tête. Les retards suivent une
+racine carrée, donc la foule est bien plus dense à l'arrière : décaler de la
+moitié de la longueur ne déplace presque personne. Le décalage se calcule
+désormais sur un **rang**, pas sur une distance.
+
+### 2. Le menu d'accueil
+
+Trois onglets en bas de l'écran (le pouce n'atteint pas le haut d'un téléphone,
+et une barre cesse d'être lisible au-delà de cinq entrées) :
+
+- **Jouer** — le dieu choisi, sa capacité, le record, le bouton *Jouer* et le
+  bouton *Paramètres*.
+- **Magasin** — trois rayons : les drachmes (paquets contre argent réel,
+  **affichés mais inertes**, voir plus bas), les divinités manquantes, les
+  parures. Un rayon n'affiche **jamais** ce qui est déjà possédé.
+- **Dieux** — le panthéon acquis, la divinité choisie, et les parures de
+  chacune (celles qui manquent apparaissent éteintes : ici, c'est une
+  collection, pas une vitrine).
+
+### Ajouté
+
+| Fichier | Rôle |
+|---|---|
+| `src/meta/progression.ts` | ⭐ Drachmes, dieux et parures possédés, dieu choisi, record. **Données pures** : ni React, ni Three.js, ni stockage. |
+| `src/meta/store.ts` | ⭐ Le catalogue : prix des dieux, parures, paquets de drachmes |
+| `src/meta/storage.ts` | La sauvegarde (AsyncStorage), écriture différée, lecture tolérante aux fautes |
+| `src/meta/useProgression.ts` | Le pont vers React — il ne décide de rien |
+| `src/ui/menu/*` | L'écran d'accueil : coquille, trois onglets, feuille de paramètres, briques communes, jetons de style |
+| `.claude/launch.json` | Lancement du banc web (`npm run web`) pour les captures |
+
+### Modifié
+
+| Fichier | Ce qui change |
+|---|---|
+| `src/systems/PlayerTrail.ts` | Retient la position et le **cap** du dieu ; `sample()` accepte un retard négatif |
+| `src/entities/Retinue.ts` | Décalage du cortège, éventail de tête, `clearGod()`, `setColor()` |
+| `src/entities/Player.ts` | `setColor()` — la parure repeint le matériau existant |
+| `src/core/Game.ts` | `pause()`, `resume()`, `setGod()`, `setAppearance()` |
+| `src/ui/Hud.tsx` | Bouton **Menu** : il termine la partie, et c'est lui qui transforme les fidèles en drachmes |
+| `App.tsx` | Deux écrans (menu / partie), la GLView reste montée, la boucle s'arrête |
+| `src/config.ts` | `crowdLeadShare`, `crowdLeadMax`, `crowdWidthMax`, `aheadArrive`, `headingEase`, `godClearance`, `leadRecoverRadius` ; `separationPasses` 2 → 3 |
+| `tools/bench.ts` | L'empilement est **moyenné** sur le parcours (voir ci-dessous) |
+| `package.json` | `@react-native-async-storage/async-storage` |
+
+### Vérifié (banc de mesure, `npm run bench`)
+
+Trois parcours de chaque scénario, le cortège tirant au sort la place de ses
+fidèles — un seul parcours ne dit rien.
+
+| Garde-fou | Avant | Après |
+|---|---|---|
+| Fidèles superposés — partie réelle | 6,0 % | **4,8 à 5,6 %** |
+| Fidèles superposés — cortège plein | 31,6 % | **25 %** |
+| Étalement moyen — partie réelle | 11 à 14 u | **14 à 17 u** |
+| Fidèles dans un mur | 0 | **0** |
+| Coût du cortège — partie réelle | 0,016 ms | 0,021 ms |
+| Coût du cortège — cortège plein | 0,293 ms | 0,387 ms |
+| Total processeur — cortège plein | 0,337 ms | **0,430 ms** (2,6 % du budget) |
+
+L'étalement monte de deux ou trois unités, et c'est **attendu** : la foule
+occupe désormais les deux côtés du dieu au lieu d'un seul.
+
+`npm run typecheck` passe.
+
+**Le banc mesurait mal.** L'empilement était relevé sur la **dernière image**
+du parcours. Or le joueur scripté tourne à angle droit toutes les 1 à 3
+secondes, et juste après un virage la foule est forcément tassée : selon
+l'instant où tombait la dernière image, le **même réglage** affichait 10 % ou
+23 %. Deux conclusions ont été tirées à l'envers avant qu'on s'en aperçoive. Il
+échantillonne désormais deux fois par seconde et moyenne — c'est ce qui a
+montré que le changement **améliore** les deux scénarios.
+
+### Deux décisions à noter
+
+**Les paquets de drachmes sont inertes, et le disent.** Un achat intégré
+demande un compte marchand, des identifiants de produit déclarés chez Apple et
+Google et une vérification côté serveur : c'est la **M46**, pas une case à
+cocher. Ils sont affichés quand même parce que la place qu'ils occupent à
+l'écran ne se décide pas après coup — et le bouton est désactivé plutôt que
+muet au premier appui.
+
+**Les paramètres n'affichent que ce qui existe.** Son, vibrations et qualité
+graphique (M35 à M39) n'y sont pas. Des interrupteurs qui ne font rien donnent
+l'impression d'un jeu cassé, pas d'un jeu en cours d'écriture.
+
+### Ce qui n'a PAS été fait ici, volontairement
+
+- **Les capacités** (M19-M27) : l'onglet Jouer les annonce, rien ne les
+  exécute. C'est écrit noir sur blanc à l'écran.
+- **Un vrai écran de fin de partie** (M38) : on quitte par le bouton *Menu*, et
+  c'est là que le score est encaissé.
+- **Le déblocage par exploit** (M15) : les dieux s'achètent en drachmes, ils ne
+  se méritent pas encore.
+- **L'apparence complète par dieu** (M14) : le corps du dieu et la teinte du
+  cortège suivent la parure, le reste (halo, traînée) attend.
+
+---
+
 ## 2026-09-03 — Claude — 🏛️ Milestone 12 : le roster des dieux
 
 **Résumé** — Le panthéon entre dans le code, **en données uniquement**. Les

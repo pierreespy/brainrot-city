@@ -29,7 +29,23 @@ export class PlayerTrail {
   /** Distance totale parcourue par le joueur. */
   private total = 0;
 
+  /**
+   * La position ACTUELLE du dieu, et le sens dans lequel il court.
+   *
+   * Le chemin ne dit que d'où l'on vient. Depuis que la foule entoure le dieu
+   * (M12b) il faut aussi savoir où l'on va : les fidèles de tête visent un
+   * point situé DEVANT lui, qu'aucun point de chemin ne peut fournir. On garde
+   * donc la tête du cortège et son cap, et on prolonge en ligne droite.
+   */
+  private headX: number;
+  private headZ: number;
+  /** Cap unitaire. Conservé quand le dieu s'arrête, sinon la foule pivoterait. */
+  private dirX = 0;
+  private dirZ = 1;
+
   constructor(x: number, z: number) {
+    this.headX = x;
+    this.headZ = z;
     this.push(x, z);
   }
 
@@ -37,6 +53,31 @@ export class PlayerTrail {
   update(x: number, z: number): void {
     const last = this.xs.length - 1;
     const step = Math.hypot(x - this.xs[last], z - this.zs[last]);
+
+    this.headX = x;
+    this.headZ = z;
+
+    // Le cap : de la dernière empreinte vers la position actuelle. Il se
+    // rafraîchit à chaque image — l'empreinte est à 35 cm au plus, donc il
+    // suit les virages sans retard — mais seulement si le dieu a bougé : à
+    // l'arrêt, on garde le dernier cap connu, sinon la tête du cortège
+    // pivoterait au gré des micro-déplacements.
+    if (step > 0.02) {
+      const toX = (x - this.xs[last]) / step;
+      const toZ = (z - this.zs[last]) / step;
+      // Le cap TOURNE PROGRESSIVEMENT. Il sert à projeter la tête du cortège
+      // devant le dieu ; à angle droit, un cap instantané ferait basculer
+      // cette projection d'un quart de tour en une image, et toute la tête
+      // se croiserait sur place pour rattraper la nouvelle direction.
+      const ease = CONFIG.retinue.headingEase;
+      this.dirX += (toX - this.dirX) * ease;
+      this.dirZ += (toZ - this.dirZ) * ease;
+      const length = Math.hypot(this.dirX, this.dirZ);
+      if (length > 0.0001) {
+        this.dirX /= length;
+        this.dirZ /= length;
+      }
+    }
 
     // On n'enregistre pas chaque frame : un point tous les 35 cm suffit à
     // décrire le chemin, et le tableau reste court.
@@ -87,6 +128,17 @@ export class PlayerTrail {
    * @returns la position, et l'indice où reprendre la recherche
    */
   sample(back: number, from: number, out: { x: number; z: number }): number {
+    // Retard NÉGATIF : le fidèle ne suit pas, il précède. Aucun point de
+    // chemin ne peut répondre — le dieu n'y est pas encore passé — alors on
+    // prolonge son cap en ligne droite. Le curseur n'est pas touché : ces
+    // fidèles-là ne consomment pas de chemin, et ceux qui viennent après
+    // retrouvent la recherche exactement où elle en était.
+    if (back <= 0) {
+      out.x = this.headX - this.dirX * back;
+      out.z = this.headZ - this.dirZ * back;
+      return from;
+    }
+
     const targetDistance = this.total - back;
 
     let i = Math.min(from, this.xs.length - 1);
@@ -109,12 +161,25 @@ export class PlayerTrail {
     return i;
   }
 
+  /** Le cap du dieu, unitaire — lu par le cortège pour s'étaler de front. */
+  get headingX(): number {
+    return this.dirX;
+  }
+
+  get headingZ(): number {
+    return this.dirZ;
+  }
+
   /** Longueur de chemin réellement disponible. */
   get length(): number {
     return this.total - this.travelled[this.start];
   }
 
   reset(x: number, z: number): void {
+    this.headX = x;
+    this.headZ = z;
+    this.dirX = 0;
+    this.dirZ = 1;
     this.xs.length = 0;
     this.zs.length = 0;
     this.travelled.length = 0;

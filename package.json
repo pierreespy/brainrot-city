@@ -13,6 +13,7 @@
     "bench": "tsc -p tsconfig.bench.json && node dist/bench/tools/bench.js"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~54.0.37",
     "expo-gl": "~16.0.10",
     "expo-status-bar": "~3.0.9",
