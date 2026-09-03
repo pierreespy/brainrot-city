@@ -99,7 +99,7 @@ onglet à l'autre. Une image par onglet aurait montré sa jonction pile au
 milieu du geste — le pire moment pour une coupure visible.
 
 **Lisibilité.** Deux voiles en dégradé (`expo-linear-gradient`, nouvelle
-dépendance SDK 54) assombrissent le haut (la bourse, l'accroche « Divine
+dépendance SDK 57) assombrissent le haut (la bourse, l'accroche « Divine
 City ») et le bas (la barre d'onglets) jusqu'à `COLORS.ground`, en laissant le
 centre de l'image visible. Les cartes, déjà opaques (`COLORS.panel`), n'ont
 pas eu besoin d'être retouchées. Le fond `COLORS.ground` de la barre d'onglets
@@ -1592,7 +1592,7 @@ application mobile Android + iOS**, destinée aux stores. Le projet passe donc d
 
 | Avant | Après |
 |---|---|
-| Vite (bundler web) | **Expo SDK 54** + Metro |
+| Vite (bundler web) | **Expo SDK 57** + Metro |
 | Page HTML + canvas | **React Native 0.81.5** + `expo-gl` |
 | Cible : navigateur | Cible : **iOS + Android**, web conservé comme banc de test |
 
