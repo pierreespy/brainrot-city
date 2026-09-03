@@ -21,12 +21,16 @@
  * d'onglets avance avec lui — d'où le `Animated.ScrollView` et la valeur
  * `scrollX` ci-dessous, plutôt qu'un simple `useState` d'onglet actif.
  *
- * ⚠️ Le fond (le temple) est UNIQUE et FIXE, posé une fois derrière le ruban
- * — pas une image par onglet. Une image par onglet montrerait sa jonction
- * pile au moment du glissement, le pire moment pour une coupure visible.
- * Deux voiles en dégradé (haut et bas) l'assombrissent juste assez pour que
- * le texte posé dessus (la bourse, l'accroche de l'onglet Jouer) reste
- * lisible, sans jamais le cacher au milieu de l'écran.
+ * ⚠️ Le fond (le temple) est DANS le ruban, pas fixé derrière : chaque page
+ * porte sa propre image (voir `Page` plus bas), donc il glisse avec le
+ * doigt, dans le même sens et à la même vitesse — le défilement natif s'en
+ * charge, sans interpolation à la main. Les trois onglets portent la même
+ * image, au même endroit : la jonction entre deux pages montre donc la même
+ * scène de part et d'autre, jamais un bord vide ni une coupure choquante.
+ *
+ * Le voile en dégradé (haut et bas), lui, reste FIXE — c'est un habillage de
+ * l'écran (la bourse, la barre d'onglets), pas une partie de la scène. Il
+ * est posé APRÈS le ruban pour dessiner par-dessus l'image qui glisse.
  */
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
@@ -151,20 +155,6 @@ export function MenuScreen({
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      {/* Le fond : une seule image plein écran, immobile — elle ne fait pas
-          partie du ruban et ne bouge donc jamais pendant le glissement. */}
-      <Image
-        source={require('../../../assets/wallpaper.jpg')}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      />
-      <LinearGradient
-        pointerEvents="none"
-        colors={[COLORS.ground, 'transparent', 'transparent', COLORS.ground]}
-        locations={[0, 0.22, 0.72, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-
       <View style={styles.header}>
         <Purse drachmas={state.drachmas} />
       </View>
@@ -274,6 +264,18 @@ export function MenuScreen({
         })}
       </View>
 
+      {/* Le voile de lisibilité, lui, ne bouge JAMAIS : c'est un habillage de
+          l'écran (la bourse en haut, la barre d'onglets en bas), pas une
+          partie de la scène. Il est posé EN DERNIER, donc AU-DESSUS du
+          ruban : c'est ce qui lui permet d'assombrir le temple qui glisse
+          dessous sans jamais bouger lui-même. */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={[COLORS.ground, 'transparent', 'transparent', COLORS.ground]}
+        locations={[0, 0.22, 0.72, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+
       <SettingsSheet
         visible={settingsOpen}
         onClose={closeSettings}
@@ -297,9 +299,26 @@ export function MenuScreen({
  * ⚠️ `nestedScrollEnabled` est ce qui permet, sur Android, de faire défiler le
  * magasin vers le bas alors qu'on est déjà dans un défilement horizontal.
  */
+/**
+ * Une page du ruban : une largeur d'écran, son propre défilement vertical, et
+ * SON EXEMPLAIRE du temple posé derrière son contenu.
+ *
+ * ⚠️ L'image vit ICI, dans la page — donc dans le ruban lui-même — plutôt
+ * que fixée derrière lui. C'est ce qui la fait bouger avec le doigt : elle
+ * n'est pas animée « à la main » (pas d'interpolation, pas de listener), le
+ * défilement natif s'en charge, exactement comme pour le reste de la page.
+ * Chaque onglet porte donc la même image, à la même place à l'écran — le
+ * passage de l'un à l'autre montre la même colline de part et d'autre du
+ * doigt, jamais un bord vide.
+ */
 function Page({ width, children }: { width: number; children: ReactNode }) {
   return (
     <View style={{ width }}>
+      <Image
+        source={require('../../../assets/wallpaper.jpg')}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      />
       <ScrollView
         style={styles.page}
         contentContainerStyle={styles.pageContent}

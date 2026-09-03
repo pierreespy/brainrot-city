@@ -9,6 +9,39 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🎞️ Le fond bouge avec le doigt, pas fixe derrière
+
+**Résumé** — Correction du changement précédent : le fond n'est PAS censé
+rester immobile pendant le glissement, il doit se déplacer avec — même sens,
+même vitesse que le doigt.
+
+**Le fond est maintenant DANS le ruban.** Chaque `Page` porte sa propre copie
+de `wallpaper.jpg`, posée derrière son contenu, à l'intérieur de
+l'`Animated.ScrollView`. Elle fait donc partie de ce qui défile : le
+défilement natif la déplace exactement comme le reste de la page, sans
+interpolation ni listener écrit à la main.
+
+**Pourquoi ça ne coupe pas au milieu de l'écran** — les trois onglets portent
+la MÊME image, affichée au MÊME endroit (`resizeMode="cover"`, même largeur de
+page). Au moment où deux pages se chevauchent pendant le glissement, leurs
+fonds sont donc pixel pour pixel identiques à la jonction : la colline se
+raccorde parfaitement, sans bord visible.
+
+Le voile en dégradé (haut/bas, pour la lisibilité de la bourse et de la barre
+d'onglets) reste lui FIXE : il n'est plus posé derrière le ruban mais
+au-dessus, en tout dernier dans l'arbre, pour continuer à assombrir l'image
+qui glisse dessous.
+
+**Fichiers touchés** — `src/ui/menu/MenuScreen.tsx`, `UPDATE.md`.
+
+**Vérifié** — `npm run typecheck` passe. Glissement simulé par de vrais
+événements tactiles (CDP `Input.dispatchTouchEvent`, pas un `scrollLeft`
+imposé qui aurait fait « sauter » la page) sur le banc web : capture en plein
+geste dans les deux sens (vers Dieux, vers Magasin), fond continu à la
+jonction, sans erreur console.
+
+---
+
 ## 2026-09-03 — Claude — 🖼️ Le fond du menu : le temple, fixe derrière le ruban
 
 **Résumé** — Le menu avait un fond uni (`#12141c`). Il a maintenant une image
