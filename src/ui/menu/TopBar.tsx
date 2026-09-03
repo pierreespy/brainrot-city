@@ -15,7 +15,7 @@ import { godById } from '../../entities/gods/roster';
 import { appearanceOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
 import { CurrencyPill, GodBadge } from './parts';
-import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE } from './theme';
+import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
 
 export function TopBar({
   state,
@@ -41,9 +41,9 @@ export function TopBar({
         <View style={styles.levelPlate}>
           <Text style={styles.levelText}>Niv {rank.level}</Text>
         </View>
-      </View>
-
-      <View style={styles.namePlate}>
+        {/* Le nom appartient au portrait, et se lit SOUS lui. Posé dans le
+            rang, il disputait sa largeur aux deux bourses, et se retrouvait
+            coupé à la première lettre dès que les sommes s'allongeaient. */}
         <Text style={styles.name} numberOfLines={1}>
           {god.label}
         </Text>
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     paddingBottom: SPACE.md,
   },
 
-  avatarWrap: { alignItems: 'center' },
+  avatarWrap: { alignItems: 'center', width: 88 },
   avatar: {
     width: 54,
     height: 54,
@@ -113,19 +113,9 @@ const styles = StyleSheet.create({
   },
   levelText: { ...TYPE.tiny, color: COLORS.onDark },
 
-  namePlate: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: SPACE.xs,
-    paddingHorizontal: SPACE.sm,
-    borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.bar,
-    borderWidth: 2,
-    borderColor: COLORS.frame,
-  },
-  name: { ...TYPE.title, ...TEXT_SHADOW, fontSize: 15, color: COLORS.onDark },
+  name: { ...TYPE.title, fontSize: 13, color: COLORS.text, marginTop: 2 },
 
-  purse: { flexDirection: 'row', gap: SPACE.sm },
+  purse: { flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: SPACE.sm },
 
   burger: {
     width: TOUCH_MIN - 6,

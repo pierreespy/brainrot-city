@@ -15,6 +15,11 @@
  * au démarrage, et depuis là aucun des trois autres n'est à plus de deux
  * glissements de pouce.
  *
+ * ⚠️ « Jouer » n'est pas une dalle comme les autres : c'est un MÉDAILLON
+ * posé à cheval sur la barre, au centre, deux fois plus grand. Il occupe la
+ * place qu'aurait eue son onglet — l'ordre du ruban ne change pas — mais il
+ * annonce l'action du menu, là où les trois autres n'annoncent qu'un lieu.
+ *
  * ⚠️ Les onglets ne sont pas quatre écrans qui se remplacent : ils sont
  * COUSUS côte à côte dans un même ruban horizontal que le doigt fait
  * glisser. Le contenu suit le doigt image par image, et le trait de la barre
@@ -53,9 +58,13 @@ import { PlayTab } from './PlayTab';
 import { SettingsSheet } from './SettingsSheet';
 import { ShopTab } from './ShopTab';
 import { TopBar } from './TopBar';
+import { Column } from './parts';
 import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE } from './theme';
 
 export type MenuTab = 'olympe' | 'play' | 'pass' | 'shop';
+
+/** Le médaillon « Jouer », et la place qu'il creuse au milieu de la barre. */
+const MEDALLION = 86;
 
 /** L'ordre à l'écran, de gauche à droite. « Jouer » en deuxième. */
 const TABS: { id: MenuTab; label: string; icon: string }[] = [
@@ -161,47 +170,57 @@ export function MenuScreen({
           onOpenShop={() => goTo('shop')}
         />
 
-        <Animated.ScrollView
-          ref={pagerRef as never}
-          style={styles.pager}
-          horizontal
-          pagingEnabled
-          directionalLockEnabled
-          decelerationRate="fast"
-          showsHorizontalScrollIndicator={false}
-          contentOffset={{ x: indexOf('play') * pageWidth, y: 0 }}
-          scrollEventThrottle={16}
-          onScroll={onScroll}
-          onContentSizeChange={() => {
-            if (placed.current) return;
-            placed.current = true;
-            pagerRef.current?.scrollTo({ x: indexOf('play') * pageWidth, y: 0, animated: false });
-          }}
-        >
-          <Backdrop width={pageWidth * TABS.length} />
+        <TempleCrown />
 
-          <Page width={pageWidth}>
-            <OlympeTab
-              state={state}
-              onSelectGod={onSelectGod}
-              onBuyGod={onBuyGod}
-              onBuySkin={onBuySkin}
-              onEquipSkin={onEquipSkin}
-            />
-          </Page>
+        <View style={styles.nave}>
+          <Animated.ScrollView
+            ref={pagerRef as never}
+            style={styles.pager}
+            horizontal
+            pagingEnabled
+            directionalLockEnabled
+            decelerationRate="fast"
+            showsHorizontalScrollIndicator={false}
+            contentOffset={{ x: indexOf('play') * pageWidth, y: 0 }}
+            scrollEventThrottle={16}
+            onScroll={onScroll}
+            onContentSizeChange={() => {
+              if (placed.current) return;
+              placed.current = true;
+              pagerRef.current?.scrollTo({ x: indexOf('play') * pageWidth, y: 0, animated: false });
+            }}
+          >
+            <Backdrop width={pageWidth * TABS.length} />
 
-          <Page width={pageWidth}>
-            <PlayTab state={state} onPlay={onPlay} onChangeGod={() => goTo('olympe')} />
-          </Page>
+            <Page width={pageWidth}>
+              <OlympeTab
+                state={state}
+                onSelectGod={onSelectGod}
+                onBuyGod={onBuyGod}
+                onBuySkin={onBuySkin}
+                onEquipSkin={onEquipSkin}
+              />
+            </Page>
 
-          <Page width={pageWidth}>
-            <PassTab state={state} />
-          </Page>
+            <Page width={pageWidth}>
+              <PlayTab state={state} onPlay={onPlay} onChangeGod={() => goTo('olympe')} />
+            </Page>
 
-          <Page width={pageWidth}>
-            <ShopTab state={state} onBuyGod={onBuyGod} onBuySkin={onBuySkin} />
-          </Page>
-        </Animated.ScrollView>
+            <Page width={pageWidth}>
+              <PassTab state={state} />
+            </Page>
+
+            <Page width={pageWidth}>
+              <ShopTab state={state} onBuyGod={onBuyGod} onBuySkin={onBuySkin} />
+            </Page>
+          </Animated.ScrollView>
+
+          {/* Les deux colonnes du temple. Elles sont posées APRÈS le ruban,
+              donc par-dessus l'image qui glisse, et ne prennent jamais le
+              doigt : le glissement horizontal part aussi depuis le bord. */}
+          <Column side="left" />
+          <Column side="right" />
+        </View>
 
         <TabBar index={index} pageWidth={pageWidth} scrollX={scrollX} onGo={goTo} />
       </SafeAreaView>
@@ -224,11 +243,18 @@ export function MenuScreen({
 }
 
 /**
- * La barre d'onglets : quatre dalles de marbre, et celle du milieu s'allume.
+ * La barre d'onglets : trois dalles de marbre, et le médaillon « Jouer » qui
+ * flotte au centre, à cheval sur la barre.
  *
  * ⚠️ L'onglet actif ne change pas seulement de couleur : il MONTE et
  * s'éclaire, et son intitulé passe à l'or. Distinguer un onglet par sa seule
  * teinte le rend illisible pour qui distingue mal les nuances.
+ *
+ * ⚠️ Le médaillon n'est pas dans le rang : il est en position absolue, au
+ * milieu exact de la barre. C'est pourquoi les trois dalles sont réparties en
+ * DEUX groupes de largeur égale, séparés par un vide (`dock`) : sans cette
+ * symétrie, le centre de la barre tomberait sur la dalle « Passe », et le
+ * médaillon la recouvrirait.
  */
 function TabBar({
   index,
@@ -241,47 +267,95 @@ function TabBar({
   scrollX: Animated.Value;
   onGo: (id: MenuTab) => void;
 }) {
+  const playing = index === indexOf('play');
+
+  const slab = (id: MenuTab) => {
+    const { label, icon } = TABS[indexOf(id)];
+    const i = indexOf(id);
+    const active = index === i;
+    return (
+      <Pressable
+        testID={`tab-${id}`}
+        onPress={() => onGo(id)}
+        accessibilityRole="tab"
+        accessibilityState={{ selected: active }}
+        accessibilityLabel={label}
+        android_ripple={{ color: 'rgba(255, 255, 255, 0.18)' }}
+        style={({ pressed }) => [styles.tab, active && styles.tabActive, pressed && styles.tabPressed]}
+      >
+        <Animated.Text
+          style={[
+            styles.tabIcon,
+            {
+              // L'icône grandit à mesure que l'onglet arrive sous le doigt :
+              // le passage d'un onglet à l'autre n'a pas d'à-coup.
+              transform: [
+                {
+                  scale: scrollX.interpolate({
+                    inputRange: [(i - 1) * pageWidth, i * pageWidth, (i + 1) * pageWidth],
+                    outputRange: [0.85, 1.15, 0.85],
+                    extrapolate: 'clamp',
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          {icon}
+        </Animated.Text>
+        <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>
+          {label}
+        </Text>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={styles.tabBar}>
-      {TABS.map(({ id, label, icon }, i) => {
-        const active = index === i;
-        return (
-          <Pressable
-            key={id}
-            testID={`tab-${id}`}
-            onPress={() => onGo(id)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: active }}
-            accessibilityLabel={label}
-            android_ripple={{ color: 'rgba(255, 255, 255, 0.18)' }}
-            style={({ pressed }) => [styles.tab, active && styles.tabActive, pressed && styles.tabPressed]}
-          >
-            <Animated.Text
-              style={[
-                styles.tabIcon,
-                {
-                  // L'icône grandit à mesure que l'onglet arrive sous le
-                  // doigt : le passage d'un onglet à l'autre n'a pas d'à-coup.
-                  transform: [
-                    {
-                      scale: scrollX.interpolate({
-                        inputRange: [(i - 1) * pageWidth, i * pageWidth, (i + 1) * pageWidth],
-                        outputRange: [0.85, 1.15, 0.85],
-                        extrapolate: 'clamp',
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              {icon}
-            </Animated.Text>
-            <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>
-              {label}
-            </Text>
-          </Pressable>
-        );
-      })}
+      <View style={styles.side}>{slab('olympe')}</View>
+
+      <View style={styles.dock} />
+
+      <View style={styles.side}>
+        {slab('pass')}
+        {slab('shop')}
+      </View>
+
+      <Pressable
+        testID="tab-play"
+        onPress={() => onGo('play')}
+        accessibilityRole="tab"
+        accessibilityState={{ selected: playing }}
+        accessibilityLabel="Jouer"
+        style={({ pressed }) => [styles.medallion, pressed && styles.medallionPressed]}
+      >
+        <LinearGradient
+          colors={playing ? [COLORS.goldLight, COLORS.gold] : [COLORS.panelRaised, COLORS.panelSunken]}
+          style={StyleSheet.absoluteFill}
+        />
+        <Text style={styles.medallionIcon}>⚔️</Text>
+        <Text style={styles.medallionLabel}>JOUER</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+/**
+ * Le haut du temple : le fronton et sa frise, entre le bandeau et le ruban.
+ *
+ * Il ne porte aucune information — c'est le linteau qui referme le cadre que
+ * les deux colonnes ouvrent sur les côtés. Sans lui, elles auraient l'air de
+ * deux barres posées au hasard des bords.
+ */
+function TempleCrown() {
+  return (
+    <View pointerEvents="none" style={styles.crown}>
+      <View style={styles.pediment} />
+      <View style={styles.frieze}>
+        {Array.from({ length: 16 }, (_, i) => (
+          <View key={i} style={styles.friezeNotch} />
+        ))}
+      </View>
     </View>
   );
 }
@@ -332,18 +406,71 @@ const styles = StyleSheet.create({
 
   backdrop: { position: 'absolute', top: 0, bottom: 0, left: 0 },
 
+  // La nef : le ruban, et les deux colonnes qui le bordent.
+  nave: { flex: 1 },
   pager: { flex: 1 },
-  page: { paddingHorizontal: SPACE.md },
+  // Les cartes s'arrêtent en deçà des colonnes, et au-dessus du médaillon.
+  page: { paddingHorizontal: SPACE.md + SPACE.sm, paddingBottom: MEDALLION / 3 },
+
+  crown: { backgroundColor: 'transparent' },
+  // Le fronton : un triangle, dessiné avec les bordures — la seule façon
+  // d'obtenir un angle en React Native, qui ne connaît que des rectangles.
+  pediment: {
+    alignSelf: 'center',
+    width: 0,
+    height: 0,
+    borderLeftWidth: 110,
+    borderRightWidth: 110,
+    borderBottomWidth: 18,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: COLORS.frame,
+  },
+  frieze: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    height: 12,
+    backgroundColor: COLORS.frameDark,
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: COLORS.frameDeep,
+  },
+  friezeNotch: { width: 6, height: 6, backgroundColor: COLORS.goldLight, opacity: 0.7 },
 
   tabBar: {
     flexDirection: 'row',
     gap: 2,
-    paddingHorizontal: SPACE.xs,
+    paddingHorizontal: SPACE.sm,
     paddingTop: SPACE.xs,
     backgroundColor: COLORS.bar,
     borderTopWidth: 3,
     borderTopColor: COLORS.frame,
   },
+  // Les deux moitiés de la barre, de part et d'autre du médaillon.
+  side: { flex: 1, flexDirection: 'row', gap: 2 },
+  dock: { width: MEDALLION + SPACE.sm },
+  // Le médaillon déborde en haut de la barre : il chevauche le ruban, et
+  // c'est ce débordement qui le fait lire comme un bouton posé dessus.
+  medallion: {
+    position: 'absolute',
+    // ⚠️ `alignSelf` ne centrerait QUE sur l'axe vertical dans une barre en
+    // rang : le centrage horizontal se fait à la main.
+    left: '50%',
+    marginLeft: -MEDALLION / 2,
+    top: -MEDALLION / 3,
+    width: MEDALLION,
+    height: MEDALLION,
+    borderRadius: MEDALLION / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: COLORS.frameDeep,
+    overflow: 'hidden',
+  },
+  medallionPressed: { transform: [{ scale: 0.94 }] },
+  medallionIcon: { fontSize: 30 },
+  medallionLabel: { ...TYPE.banner, fontSize: 13, color: COLORS.onGold },
   tab: {
     flex: 1,
     minHeight: TOUCH_MIN + 8,
@@ -358,6 +485,6 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: COLORS.frameDark, borderBottomWidth: 3, borderBottomColor: COLORS.gold },
   tabPressed: { opacity: 0.75 },
   tabIcon: { fontSize: 22 },
-  tabLabel: { ...TYPE.tab, ...TEXT_SHADOW, color: COLORS.onDark, opacity: 0.75 },
+  tabLabel: { ...TYPE.tab, ...TEXT_SHADOW, fontSize: 11, color: COLORS.onDark, opacity: 0.75 },
   tabLabelActive: { color: COLORS.gold, opacity: 1 },
 });
