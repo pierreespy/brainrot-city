@@ -129,6 +129,14 @@ l'ajout d'un dieu quasi gratuit.
 | **Hadès** 💀 | **Retour du Styx** | Récupère la moitié des fidèles perdus récemment | instantané | 30 s |
 | **Arès** ⚔️ | **Charge** | Ton cortège **vole** des fidèles aux cortèges rivaux | 4 s | 22 s |
 
+> 🎨 **Pense-bête pour le design visuel des dieux (M14, M40).** Prototyper
+> l'apparence des 7 dieux avec **Rodin (Hyper3D)** en premier : génération
+> illimitée gratuite, on ne paie qu'au téléchargement du modèle final gardé —
+> idéal pour itérer sur 7 styles avant d'en figer un. Meshy (mode Low Poly)
+> et Tripo restent les alternatives si besoin d'un contrôle plus fin du
+> nombre de triangles. Détails du pipeline complet dans la note plus bas,
+> section *"Ce qui n'est PAS décidé" → "Le style des personnages"*.
+
 **Comment les capacités sont conçues.** Chacune répond à un problème de jeu
 différent, pour que le choix du dieu soit un vrai choix :
 
