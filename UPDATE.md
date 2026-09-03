@@ -9,6 +9,34 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-03 — Claude — 🧹 Finit le passage à Expo SDK 57
+
+**Résumé** — Le passage à SDK 57 (`expo ~57.0.19`, React Native 0.86.3, React
+19.2.3) était déjà fait sur `main` ; ce commit règle ce qu'`expo-doctor`
+signalait encore.
+
+**`app.json`** — trois champs que SDK 57 n'accepte plus dans le schéma :
+`newArchEnabled` (la Nouvelle Architecture est désormais la seule qui
+existe, plus besoin de l'activer), `android.edgeToEdgeEnabled` (l'edge-to-edge
+est désormais toujours actif) et `splash` (remplacé par le plugin
+`expo-splash-screen`, ajouté avec la même couleur de fond et le même
+`resizeMode`).
+
+**`tsconfig.bench.json`** — `typescript` passe à `~6.0.3` (version attendue
+par SDK 57), qui refusait `moduleResolution: "Node"` (dépréciée, disparaîtra
+en TS 7). Retirée : sans elle, `module: "CommonJS"` suffit à faire tourner
+`npm run bench` sur Node sans avertissement.
+
+**Fichiers touchés** — `app.json`, `package.json`, `package-lock.json`
+(ajout d'`expo-splash-screen`, `typescript` → `~6.0.3`), `tsconfig.bench.json`,
+`UPDATE.md`.
+
+**Vérifié** — `npx expo-doctor` : 21/21. `npm run typecheck` passe. `npm run
+bench` tourne sans avertissement. Banc web relancé : menu et 3D s'affichent
+sans erreur console.
+
+---
+
 ## 2026-09-03 — Claude — 💎 L'ambroisie, et un menu plus « jeu mobile »
 
 **Résumé** — Deux monnaies au lieu d'une, et une mise en forme du menu qui

@@ -5,19 +5,13 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "backgroundColor": "#12141c",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#12141c"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.pierreespy.divinecity"
     },
     "android": {
       "package": "com.pierreespy.divinecity",
-      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "backgroundColor": "#12141c"
       }
@@ -25,6 +19,9 @@
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      ["expo-splash-screen", { "backgroundColor": "#12141c", "resizeMode": "contain" }]
+    ]
   }
 }
