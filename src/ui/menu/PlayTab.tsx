@@ -14,11 +14,10 @@
 
 import { useState, type ReactNode } from 'react';
 import { Image, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { godById } from '../../entities/gods/roster';
 import { DISTRICTS, type DistrictId } from '../../world/districts';
-import { flatColorOf, type Progression } from '../../meta/progression';
+import type { Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
-import { Bar, Banner, Button, Card, Coin, GodBadge, Plaque, Plate } from './parts';
+import { Bar, Banner, Button, Card, Coin, Plaque, Plate } from './parts';
 import { ART, DISTRICT_ICONS, PLATES } from './icons';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
 
@@ -47,8 +46,6 @@ const BEAK = 26;
 const BEAK_H = 14;
 
 export function PlayTab({ state, onPlay }: Props) {
-  const god = godById(state.selectedGod);
-  const appearance = flatColorOf(state);
   const rank = rankOf(state.bestScore);
 
   // Le quartier que le bec désigne : celui où la course COMMENCE, et c'est
@@ -208,18 +205,10 @@ export function PlayTab({ state, onPlay }: Props) {
 
           <Banner source={ART.course} height={82} />
 
-          <View style={styles.runBody}>
-            <GodBadge color={appearance.color} accent={appearance.accent} size={58} />
-            <View style={styles.runText}>
-              <Text style={styles.runGod} numberOfLines={1}>
-                {god.label}
-              </Text>
-              <Text style={styles.runDomain} numberOfLines={1}>
-                {god.domain}
-              </Text>
-            </View>
-          </View>
-
+          {/* ⚠️ Aucune divinité annoncée ici. La carte présente un MODE — le
+              mode histoire — et le dieu se choisit sur l'écran qui s'ouvre au
+              lancement, comme pour l'arène. La nommer d'avance promettrait
+              un choix déjà fait. */}
           <View style={styles.rewards}>
             <Text style={styles.rewardsLabel}>RÉCOMPENSE</Text>
             <View style={styles.reward}>
@@ -237,7 +226,7 @@ export function PlayTab({ state, onPlay }: Props) {
               testID="play"
               source={PLATES.continuer}
               onPress={onPlay}
-              hint={`Continuer avec ${god.label}`}
+              hint="Continuer la course sacrée"
             />
           ) : (
             <Button
@@ -246,7 +235,7 @@ export function PlayTab({ state, onPlay }: Props) {
               variant="primary"
               size="big"
               onPress={onPlay}
-              hint={`Lancer une course avec ${god.label}`}
+              hint="Lancer la course sacrée"
             />
           )}
         </Card>
@@ -418,10 +407,6 @@ const styles = StyleSheet.create({
   },
 
   run: { gap: SPACE.md },
-  runBody: { flexDirection: 'row', alignItems: 'center', gap: SPACE.md, marginTop: SPACE.md },
-  runText: { flex: 1, minWidth: 0 },
-  runGod: { ...TYPE.title, color: COLORS.text },
-  runDomain: { ...TYPE.body, fontSize: 12, color: COLORS.muted },
 
   rewards: {
     flexDirection: 'row',
