@@ -9,6 +9,32 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-04 — Claude — 🌫️ Le cadre porte son décor, et un voile plus opaque à l'intérieur
+
+**Résumé** — L'utilisateur a refait `temple_cadre.png` en y intégrant le
+décor : l'image n'est plus un cadre à centre transparent mais un montage
+**opaque** (1684 × 2528), ciel et parvis compris. Sur un onglet encadré,
+c'est donc elle seule qu'on voit — `wallpaper2.png` n'apparaît plus derrière
+(il reste chargé par le ruban, et sert toujours au glissement).
+
+- `FRAME_INSET` et `FRAME_PLAQUE` re-mesurés sur le nouveau dessin (liseré
+  d'or) : côtés 9,3 %, haut 14,5 %, bas 10 % ; tablette entre 5 % et 11,5 %.
+  Les anciennes fractions venaient de l'alpha de l'image précédente et
+  faisaient passer le contenu sous les colonnes.
+- Nouveau voile `COLORS.veilFramed` (0,75 contre 0,55 pour `veil`), posé
+  **dans le cadre uniquement**, entre les colonnes : le décor est maintenant
+  peint jusque dans l'image, et les cartes s'y perdaient. Étalé sur toute la
+  page, il éteindrait le cadre lui-même.
+
+**Fichiers touchés** — `src/ui/menu/MenuScreen.tsx`, `src/ui/menu/theme.ts`,
+`assets/README.md`, `UPDATE.md` (et `assets/temple_cadre.png`, remplacé par
+l'utilisateur).
+
+**Vérifié** — `tsc --noEmit` propre, rendu contrôlé au navigateur sur
+« Quêtes », « Boutique » et « Jouer » en 390 × 844.
+
+---
+
 ## 2026-09-04 — Claude — 🏛️ Le temple devient une image : un cadre dessiné sur chaque onglet sauf « Jouer »
 
 **Résumé** — Le fronton et les deux colonnes, jusqu'ici dessinés en vues et

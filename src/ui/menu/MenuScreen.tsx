@@ -72,22 +72,24 @@ const WALLPAPER_OTHER = require('../../../assets/wallpaper2.png');
 const TEMPLE_FRAME = require('../../../assets/temple_cadre.png');
 
 /**
- * Où s'arrête le dessin du cadre et où commence son vide, en fraction de
- * l'image (1024 × 1536) : c'est ce qui donne les marges du contenu.
+ * Où s'arrête le dessin du cadre et où commence son intérieur, en fraction de
+ * l'image (1684 × 2528) : c'est ce qui donne les marges du contenu, et la
+ * boîte du voile.
  *
- * ⚠️ Mesuré sur l'ALPHA de `temple_cadre.png`, pas estimé à l'œil. Le cadre
- * est étiré à la page, donc ces fractions restent justes quelle que soit la
- * taille de l'écran — mais elles cessent de l'être si l'image change : il
- * faut alors re-mesurer, sinon le contenu passe sous les colonnes.
+ * ⚠️ Mesuré sur l'image — le liseré d'or qui borde les colonnes, le linteau
+ * et le socle — pas estimé à l'œil. Le cadre est étiré à la page, donc ces
+ * fractions restent justes quelle que soit la taille de l'écran ; elles
+ * cessent de l'être dès que le dessin change, et il faut alors re-mesurer,
+ * sinon le contenu passe sous les colonnes.
  */
-const FRAME_INSET = { side: 0.113, top: 0.15, bottom: 0.055 };
+const FRAME_INSET = { side: 0.093, top: 0.145, bottom: 0.1 };
 
 /**
  * La tablette gravée du fronton, dans les mêmes fractions : c'est là que
  * s'inscrit le titre de l'onglet, plutôt que sur une seconde tablette posée
  * en dessous.
  */
-const FRAME_PLAQUE = { top: 0.042, height: 0.072, side: 0.19 };
+const FRAME_PLAQUE = { top: 0.05, height: 0.065, side: 0.2 };
 
 /** Le médaillon « Jouer », et la place qu'il creuse au milieu de la barre. */
 const MEDALLION = 86;
@@ -488,6 +490,20 @@ function Page({
             importantForAccessibility="no"
             style={{ width, height }}
           />
+          {/* Le voile, posé DANS le cadre et nulle part ailleurs : le décor
+              est peint jusque dans l'image, et les cartes s'y perdraient. Il
+              s'arrête aux colonnes, sinon il éteindrait le cadre lui-même. */}
+          <View
+            style={[
+              styles.veil,
+              {
+                left: width * FRAME_INSET.side,
+                right: width * FRAME_INSET.side,
+                top: height * FRAME_INSET.top,
+                bottom: height * FRAME_INSET.bottom,
+              },
+            ]}
+          />
         </View>
       )}
       {showFrame && title !== undefined && (
@@ -529,6 +545,7 @@ const styles = StyleSheet.create({
   // contraignent pas — elle se dessinerait en grand, fronton au milieu de la
   // page.
   frame: { position: 'absolute', left: 0, top: 0 },
+  veil: { position: 'absolute', backgroundColor: COLORS.veilFramed },
   // Sans cadre — « Jouer » — les cartes s'écartent quand même des bords, et
   // s'arrêtent au-dessus du médaillon.
   pageBare: { paddingHorizontal: SPACE.md + SPACE.sm, paddingBottom: MEDALLION / 3 },

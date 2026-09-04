@@ -43,20 +43,27 @@ Le temple dessiné qui entoure une page : fronton et tablette gravée en haut,
 colonnes sur les côtés, socle en bas. Il est posé sur **tous les onglets sauf
 « Jouer »**, et le titre de l'onglet s'écrit dans sa tablette.
 
-Son centre est **transparent** : c'est par là que le décor se voit.
+L'image est **opaque, décor compris** : le paysage est peint jusque dans le
+cadre, plutôt que laissé transparent sur `wallpaper2.png`. C'est elle, et
+elle seule, qu'on voit sur un onglet encadré.
 
 | | |
 | --- | --- |
 | Chemin | `assets/temple_cadre.png` |
-| Format | PNG à fond transparent |
-| Taille | 1024 × 1536 px |
+| Format | PNG |
+| Taille | 1684 × 2528 px |
 
 ⚠️ Le cadre est **étiré** à la page, et les marges du contenu sont écrites en
 fractions de l'image dans `MenuScreen.tsx` (`FRAME_INSET`, `FRAME_PLAQUE`),
-mesurées sur son alpha : vide intérieur à 11,3 % des côtés, 15 % du haut,
-5,5 % du bas ; tablette du fronton entre 4,2 % et 11,4 % de la hauteur. Si le
-dessin change de proportions, il faut re-mesurer ces fractions, sinon le
+mesurées sur le liseré d'or du dessin : intérieur à 9,3 % des côtés, 14,5 %
+du haut, 10 % du bas ; tablette du fronton entre 5 % et 11,5 % de la hauteur.
+Si le dessin change de proportions, il faut re-mesurer ces fractions, sinon le
 contenu passe sous les colonnes et le titre sort de sa tablette.
+
+⚠️ Un **voile clair** (`COLORS.veilFramed`) est posé dans cet intérieur, et
+nulle part ailleurs : le décor est peint jusque dans le cadre, et les cartes
+s'y perdraient. Il s'arrête aux colonnes — étalé sur toute la page, il
+éteindrait le cadre lui-même.
 
 Après remplacement, relance Metro en vidant son cache, sinon l'ancienne image
 reste servie :
