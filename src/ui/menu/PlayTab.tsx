@@ -15,7 +15,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { godById } from '../../entities/gods/roster';
 import { DISTRICTS } from '../../world/districts';
-import { appearanceOf, type Progression } from '../../meta/progression';
+import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
 import { Bar, Button, Card, Coin, GodBadge, Plaque } from './parts';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
@@ -44,7 +44,7 @@ const CHAPTERS = [
 
 export function PlayTab({ state, onPlay, onChangeGod }: Props) {
   const god = godById(state.selectedGod);
-  const appearance = appearanceOf(state);
+  const appearance = flatColorOf(state);
   const rank = rankOf(state.bestScore);
 
   return (
@@ -116,7 +116,7 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
           <Text style={styles.rewardsLabel}>RÉCOMPENSE</Text>
           <View style={styles.reward}>
             <Coin size={14} />
-            <Text style={styles.rewardText}>1 drachme pour 3 fidèles</Text>
+            <Text style={styles.rewardText}>1 or pour 3 fidèles</Text>
           </View>
         </View>
 

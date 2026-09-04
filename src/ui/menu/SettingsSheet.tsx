@@ -71,14 +71,14 @@ export function SettingsSheet({
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Progression</Text>
             <Text style={styles.rowSub}>
-              Drachmes, divinités et parures sont enregistrés sur cet appareil.
+              L'or, les divinités et les parures sont enregistrés sur cet appareil.
             </Text>
           </View>
 
           {confirmingReset ? (
             <View style={styles.confirm}>
               <Text style={styles.confirmText}>
-                Tout effacer ? Les divinités acquises et les drachmes seront perdus, sans
+                Tout effacer ? Les divinités acquises et l'or seront perdus, sans
                 retour possible.
               </Text>
               <View style={styles.confirmRow}>

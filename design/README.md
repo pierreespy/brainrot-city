@@ -37,7 +37,7 @@ Rien n'est inventé quand le code a déjà tranché :
 - les **sept dieux de `src/entities/gods/roster.ts`** (M12) — couleurs,
   domaines, capacités, et qui est débloqué d'emblée ;
 - les prix de `src/meta/store.ts` — `GOD_PRICES`, `PURCHASABLE` (parures),
-  `COIN_PACKS` (drachmes contre argent réel, packs et prix réels) ;
+  `GOLD_PACKS` (or contre argent réel, packs et prix réels) ;
 - la copie exacte de `PlayTab.tsx`, `ShopTab.tsx` et `GodsTab.tsx` (accroche,
   pitch, notes, libellés de bouton).
 
@@ -46,7 +46,7 @@ dans l'app demandera `expo-font` ; ce n'est pas encore fait.
 
 ## Ce qui reste à décider
 
-- L'onglet Jouer affiche un solde et un record d'**exemple** (2 480 drachmes,
+- L'onglet Jouer affiche un solde et un record d'**exemple** (2 480 or,
   708 fidèles) : une partie fraîche démarre à 0. Choisis de vrais chiffres
   quand tu auras joué.
 - Le trait doré + libellé de la barre d'onglets remplace les icônes de la

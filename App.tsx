@@ -4,7 +4,7 @@
  * Son rôle reste volontairement mince :
  *   1. tenir la surface de dessin 3D (GLView) et le jeu posé dessus ;
  *   2. décider de ce qu'on regarde — le MENU ou la PARTIE ;
- *   3. faire passer la progression (drachmes, dieux, parures) de l'un à l'autre.
+ *   3. faire passer la progression (or, dieux, parures) de l'un à l'autre.
  *
  * ⚠️ La surface 3D reste MONTÉE quand le menu est affiché ; seule la boucle
  * de jeu s'arrête (`game.pause()`). Démonter la GLView détruirait le contexte
@@ -34,7 +34,7 @@ import { Game, type GameStats } from './src/core/Game';
 import { createRenderer } from './src/core/createRenderer';
 import { InputManager } from './src/systems/input/InputManager';
 import { godById } from './src/entities/gods/roster';
-import { appearanceOf } from './src/meta/progression';
+import { flatColorOf } from './src/meta/progression';
 import { useProgression } from './src/meta/useProgression';
 import { Joystick } from './src/ui/Joystick';
 import { Hud } from './src/ui/Hud';
@@ -113,7 +113,7 @@ export default function App() {
   const applyLoadout = useCallback(() => {
     const game = gameRef.current;
     if (game === null) return;
-    const { color, accent } = appearanceOf(progression.state);
+    const { color, accent } = flatColorOf(progression.state);
     game.setGod(godById(progression.state.selectedGod));
     game.setAppearance(color, accent);
   }, [progression.state]);
@@ -130,7 +130,7 @@ export default function App() {
   }, [applyLoadout]);
 
   /**
-   * Fin de partie : le cortège devient des drachmes, et le menu revient.
+   * Fin de partie : le cortège devient de l'or, et le menu revient.
    *
    * ⚠️ On encaisse ici, et nulle part ailleurs. Créditer au fil des
    * conversions obligerait à écrire la sauvegarde en pleine boucle de jeu.

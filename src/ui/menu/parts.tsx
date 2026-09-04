@@ -13,7 +13,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, RADIUS, SPACE, TOUCH_MIN, TYPE, hex } from './theme';
 
@@ -55,7 +55,7 @@ export function Card({
 }: {
   children: ReactNode;
   selected?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }) {
   return <View style={[styles.card, selected && styles.cardSelected, style]}>{children}</View>;
 }
@@ -155,7 +155,7 @@ export function Coin({ size = 18 }: { size?: number }) {
 
 /**
  * La couronne de laurier : la monnaie rare, celle des dieux. Volontairement
- * d'une autre SILHOUETTE que le disque de la drachme, pour se reconnaître
+ * d'une autre SILHOUETTE que le disque de l'or, pour se reconnaître
  * d'un coup d'œil même daltonien.
  */
 export function Laurel({ size = 18 }: { size?: number }) {

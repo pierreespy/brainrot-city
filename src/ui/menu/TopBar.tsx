@@ -12,7 +12,7 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { godById } from '../../entities/gods/roster';
-import { appearanceOf, type Progression } from '../../meta/progression';
+import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
 import { CurrencyPill, GodBadge } from './parts';
 import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
@@ -27,7 +27,7 @@ export function TopBar({
   onOpenShop: () => void;
 }) {
   const god = godById(state.selectedGod);
-  const appearance = appearanceOf(state);
+  const appearance = flatColorOf(state);
   const rank = rankOf(state.bestScore);
 
   return (
@@ -51,16 +51,16 @@ export function TopBar({
 
       <View style={styles.purse}>
         <CurrencyPill
-          testID="drachmas"
+          testID="gold"
           tone="gold"
-          value={state.drachmas}
-          hint="Ouvrir la boutique, rayon drachmes"
+          value={state.gold}
+          hint="Ouvrir la boutique, rayon or"
           onAdd={onOpenShop}
         />
         <CurrencyPill
-          testID="ambrosia"
+          testID="laurels"
           tone="laurel"
-          value={state.ambrosia}
+          value={state.laurels}
           hint="Ouvrir la boutique, rayon lauriers"
           onAdd={onOpenShop}
         />

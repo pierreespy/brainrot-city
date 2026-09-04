@@ -16,7 +16,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GOD_ORDER, GODS, godById, type GodId } from '../../entities/gods/roster';
 import { godPrice, ownsGod, ownsSkin, type Progression } from '../../meta/progression';
 import { skinsOf } from '../../meta/store';
-import { Button, Card, Coin, GodBadge, Plaque } from './parts';
+import { Button, Card, Coin, GodBadge, Laurel, Plaque } from './parts';
 import { COLORS, RADIUS, SPACE, TYPE, hex } from './theme';
 
 interface Props {
@@ -101,6 +101,7 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
           <View style={styles.skins}>
             {skins.map((skin) => {
               const has = ownsSkin(state, skin.id);
+              const legendary = skin.tier === 'legendaire';
               return (
                 <Pressable
                   key={skin.id}
@@ -113,13 +114,21 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
                     pressed && styles.pressed,
                   ]}
                 >
-                  <View style={[styles.skinDot, { backgroundColor: hex(skin.color), borderColor: hex(skin.accent) }]} />
+                  <View
+                    style={[
+                      styles.skinDot,
+                      {
+                        backgroundColor: hex(legendary ? god.appearance.color : skin.color),
+                        borderColor: legendary ? COLORS.gold : hex(skin.accent),
+                      },
+                    ]}
+                  />
                   <Text style={styles.skinLabel} numberOfLines={1}>
                     {skin.label}
                   </Text>
                   {!has && (
                     <View style={styles.skinPrice}>
-                      <Coin size={12} />
+                      {legendary ? <Laurel size={12} /> : <Coin size={12} />}
                       <Text style={styles.skinPriceText}>{skin.price}</Text>
                     </View>
                   )}
@@ -145,7 +154,7 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
               testID="buy-god"
               label="Débloquer"
               variant="primary"
-              disabled={state.drachmas < price}
+              disabled={state.gold < price}
               price={
                 <>
                   <Coin size={14} />
@@ -153,7 +162,7 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
                 </>
               }
               onPress={() => onBuyGod(looking)}
-              hint={`Débloquer ${god.label} pour ${price} drachmes`}
+              hint={`Débloquer ${god.label} pour ${price} or`}
               style={styles.action}
             />
           )}

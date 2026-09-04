@@ -1,6 +1,6 @@
 /**
- * store.ts — le catalogue du magasin : prix, parures, paquets de drachmes et
- * d'ambroisie.
+ * store.ts — le catalogue du magasin : prix, parures, paquets d'or et de
+ * lauriers.
  *
  * ⚠️ Pourquoi ce fichier n'est PAS dans `entities/gods/roster.ts`.
  *
@@ -17,19 +17,54 @@
 
 import { GOD_ORDER, GODS, type GodId } from '../entities/gods/roster';
 
-/** Une parure : la même divinité, d'une autre couleur. */
-export interface Skin {
+/**
+ * Une parure a désormais deux paliers, pas juste deux niveaux de prix :
+ *
+ * - **commune** : la même divinité, d'une autre couleur — le petit achat
+ *   qu'on refait, payé en or.
+ * - **légendaire** : une tenue entièrement différente (un modèle 3D à part,
+ *   voir `src/core/AssetLoader.ts`), payée en lauriers.
+ *
+ * L'union discriminée par `tier` (plutôt qu'un type unique à champs
+ * optionnels) empêche STRUCTURELLEMENT une parure légendaire de porter son
+ * propre `accent` : le halo du cortège reste toujours celui du dieu
+ * (`GodAppearance.accent`, dans le roster), quelle que soit la tenue portée
+ * — ce n'est pas une convention à respecter, le type ne laisse pas le champ
+ * exister sur `LegendarySkin`.
+ */
+export type SkinTier = 'commune' | 'legendaire';
+
+interface SkinBase {
   readonly id: string;
   readonly godId: GodId;
   /** Le nom affiché — court, il tient sur une vignette. */
   readonly label: string;
+}
+
+/** Le corps recoloré du dieu — le halo du cortège reste celui du roster. */
+export interface CommonSkin extends SkinBase {
+  readonly tier: 'commune';
   /** Le corps du dieu. */
   readonly color: number;
   /** Le halo et la teinte du cortège. */
   readonly accent: number;
-  /** En drachmes. 0 = fournie avec le dieu. */
+  /** En or. 0 = fournie avec le dieu. */
   readonly price: number;
 }
+
+/** Une tenue entièrement différente — un modèle 3D à part, pas une teinte. */
+export interface LegendarySkin extends SkinBase {
+  readonly tier: 'legendaire';
+  /**
+   * Clé résolue par la table `require()` statique d'`AssetLoader.ts` — un
+   * chemin construit dynamiquement ne serait pas vu par Metro au bundling.
+   */
+  readonly modelRef: string;
+  /** En lauriers. */
+  readonly price: number;
+}
+
+export type Skin = CommonSkin | LegendarySkin;
 
 /**
  * L'identifiant de la parure d'origine d'un dieu.
@@ -42,12 +77,13 @@ export function defaultSkinId(godId: GodId): string {
   return `${godId}-origine`;
 }
 
-/** La parure d'origine, fabriquée à partir de la ligne du dieu. */
-function originSkin(godId: GodId): Skin {
+/** La parure d'origine, fabriquée à partir de la ligne du dieu. Toujours commune. */
+function originSkin(godId: GodId): CommonSkin {
   const god = GODS[godId];
   return {
     id: defaultSkinId(godId),
     godId,
+    tier: 'commune',
     label: 'Origine',
     color: god.appearance.color,
     accent: god.appearance.accent,
@@ -56,7 +92,7 @@ function originSkin(godId: GodId): Skin {
 }
 
 /**
- * Les parures achetables.
+ * Les parures communes achetables.
  *
  * ⚠️ Les couleurs suivent la règle posée en M11 et rappelée par le roster :
  * la caméra plonge sur un sol clair (marbre, terre battue), donc une parure
@@ -65,14 +101,18 @@ function originSkin(godId: GodId): Skin {
  * qui porte la couleur du cortège.
  */
 const PURCHASABLE: readonly Skin[] = [
-  { id: 'hermes-nuit', godId: 'hermes', label: 'Nuit', color: 0x1e3a8a, accent: 0x93c5fd, price: 120 },
-  { id: 'hermes-olive', godId: 'hermes', label: 'Olivier', color: 0x3f6212, accent: 0xbef264, price: 120 },
-  { id: 'zeus-orage', godId: 'zeus', label: 'Orage', color: 0x3f3f46, accent: 0xfef08a, price: 150 },
-  { id: 'aphrodite-aurore', godId: 'aphrodite', label: 'Aurore', color: 0x9d174d, accent: 0xfecdd3, price: 150 },
-  { id: 'poseidon-abysse', godId: 'poseidon', label: 'Abysse', color: 0x134e4a, accent: 0x5eead4, price: 150 },
-  { id: 'athena-bronze', godId: 'athena', label: 'Bronze', color: 0x78350f, accent: 0xfcd34d, price: 150 },
-  { id: 'hades-braise', godId: 'hades', label: 'Braise', color: 0x431407, accent: 0xfb923c, price: 150 },
-  { id: 'ares-fer', godId: 'ares', label: 'Fer', color: 0x44403c, accent: 0xe7e5e4, price: 150 },
+  { id: 'hermes-nuit', godId: 'hermes', tier: 'commune', label: 'Nuit', color: 0x1e3a8a, accent: 0x93c5fd, price: 120 },
+  { id: 'hermes-olive', godId: 'hermes', tier: 'commune', label: 'Olivier', color: 0x3f6212, accent: 0xbef264, price: 120 },
+  { id: 'zeus-orage', godId: 'zeus', tier: 'commune', label: 'Orage', color: 0x3f3f46, accent: 0xfef08a, price: 150 },
+  { id: 'aphrodite-aurore', godId: 'aphrodite', tier: 'commune', label: 'Aurore', color: 0x9d174d, accent: 0xfecdd3, price: 150 },
+  { id: 'poseidon-abysse', godId: 'poseidon', tier: 'commune', label: 'Abysse', color: 0x134e4a, accent: 0x5eead4, price: 150 },
+  { id: 'athena-bronze', godId: 'athena', tier: 'commune', label: 'Bronze', color: 0x78350f, accent: 0xfcd34d, price: 150 },
+  { id: 'hades-braise', godId: 'hades', tier: 'commune', label: 'Braise', color: 0x431407, accent: 0xfb923c, price: 150 },
+  { id: 'ares-fer', godId: 'ares', tier: 'commune', label: 'Fer', color: 0x44403c, accent: 0xe7e5e4, price: 150 },
+  // Les parures légendaires viennent ici, une fois qu'un premier modèle 3D
+  // de tenue existe (voir assets/models/README.md) — aucune tant qu'aucun
+  // .glb n'est déposé, pour ne pas référencer un modelRef qui pointe vers
+  // rien.
 ];
 
 /** Toutes les parures d'un dieu, l'origine en tête. */
@@ -95,7 +135,7 @@ export function purchasableSkins(): Skin[] {
 }
 
 /**
- * Le prix d'un dieu, en drachmes.
+ * Le prix d'un dieu, en or.
  *
  * Les deux dieux fournis d'emblée (`unlockedFromStart`) n'y figurent pas :
  * on ne vend pas ce que le joueur possède déjà.
@@ -111,7 +151,7 @@ export const GOD_PRICES: Readonly<Record<GodId, number>> = {
 };
 
 /**
- * Les paquets de drachmes contre argent réel.
+ * Les paquets d'or contre argent réel.
  *
  * ⚠️ Ils sont AFFICHÉS mais INERTES, et c'est délibéré. Un achat intégré
  * demande un compte marchand, des identifiants de produit déclarés chez Apple
@@ -119,40 +159,40 @@ export const GOD_PRICES: Readonly<Record<GodId, number>> = {
  * pas une case à cocher. Les poser maintenant sert à voir la place qu'ils
  * prennent à l'écran — celle-là ne se découvre pas après coup.
  */
-export interface CoinPack {
+export interface GoldPack {
   readonly id: string;
-  readonly drachmas: number;
+  readonly gold: number;
   /** Le prix affiché, tel quel. Aucune conversion, aucune promesse. */
   readonly price: string;
   /** Mis en avant sur la rangée. Un seul, sinon plus rien ne ressort. */
   readonly featured: boolean;
 }
 
-export const COIN_PACKS: readonly CoinPack[] = [
-  { id: 'bourse', drachmas: 500, price: '1,99 €', featured: false },
-  { id: 'coffre', drachmas: 1500, price: '4,99 €', featured: true },
-  { id: 'tresor', drachmas: 4000, price: '9,99 €', featured: false },
+export const GOLD_PACKS: readonly GoldPack[] = [
+  { id: 'bourse', gold: 500, price: '1,99 €', featured: false },
+  { id: 'coffre', gold: 1500, price: '4,99 €', featured: true },
+  { id: 'tresor', gold: 4000, price: '9,99 €', featured: false },
 ];
 
 /**
- * Les paquets d'ambroisie contre argent réel.
+ * Les paquets de lauriers contre argent réel.
  *
- * Même principe que `CoinPack`, gardé comme un type à part plutôt que
- * généralisé : l'ambroisie est une monnaie plus rare que la drachme (moins
+ * Même principe que `GoldPack`, gardé comme un type à part plutôt que
+ * généralisé : le laurier est une monnaie plus rare que l'or (moins
  * d'unités, prix plus élevé), pas la même chose sous un autre nom — un
- * champ `drachmas` partagé pour les deux aurait été trompeur à relire.
+ * champ `gold` partagé pour les deux aurait été trompeur à relire.
  *
- * ⚠️ INERTS, comme `COIN_PACKS` : même raison (M46), voir plus haut.
+ * ⚠️ INERTS, comme `GOLD_PACKS` : même raison (M46), voir plus haut.
  */
-export interface AmbrosiaPack {
+export interface LaurelPack {
   readonly id: string;
-  readonly ambrosia: number;
+  readonly laurels: number;
   readonly price: string;
   readonly featured: boolean;
 }
 
-export const AMBROSIA_PACKS: readonly AmbrosiaPack[] = [
-  { id: 'larme', ambrosia: 50, price: '2,99 €', featured: false },
-  { id: 'coupe', ambrosia: 180, price: '7,99 €', featured: true },
-  { id: 'amphore', ambrosia: 500, price: '17,99 €', featured: false },
+export const LAUREL_PACKS: readonly LaurelPack[] = [
+  { id: 'larme', laurels: 50, price: '2,99 €', featured: false },
+  { id: 'coupe', laurels: 180, price: '7,99 €', featured: true },
+  { id: 'amphore', laurels: 500, price: '17,99 €', featured: false },
 ];
