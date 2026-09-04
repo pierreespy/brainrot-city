@@ -11,6 +11,7 @@ README voisin explique comment le remplacer.
 | Fichier | Où il s'affiche |
 | --- | --- |
 | `olympe.png` | L'onglet **Olympe**, dans la barre du bas |
+| `quetes.png` | L'onglet **Quêtes** |
 | `passe.png` | L'onglet **Passe** |
 | `boutique.png` | L'onglet **Boutique** |
 | `piece-or.png` | La monnaie **or** : bourse du bandeau, prix, récompenses |
@@ -22,6 +23,9 @@ README voisin explique comment le remplacer.
 | `volcan.png` | Le médaillon de l'**Acropole** — détouré de `volcanbon.jpg` |
 | `bouton-match.png` | La plaque « TROUVER MATCH », sur la carte de l'arène |
 | `bouton-continuer.png` | La plaque « CONTINUER », sur la carte de la course |
+| `ligue.png` | Le cadre du bandeau de **ligue**, en tête de l'onglet Jouer |
+| `course.png` | Le bandeau peint de la carte **La course sacrée** |
+| `arene.png` | Le bandeau peint de la carte **Arène en ligne** |
 
 Les quatre médaillons sont appariés par **sujet**, pas par rang : la vague va
 au Port, les pins au Bois sacré, le volcan à l'Acropole, et les colonnes à
@@ -75,6 +79,22 @@ Deux conséquences visibles :
   pastille « bientôt ». Le mode n'existe pas encore ; la plaque l'annonce sans
   le promettre.
 
+## Prélever dans une maquette
+
+Trois sources ne sont pas des icônes mais des **maquettes de cartes entières**,
+titres et chiffres compris : `ligue.jpg`, `arene en ligne.jpg` et
+`épopée sacrée.jpg`. On n'en garde que l'illustration, avec `--recadre` :
+
+- le titre d'une carte est déjà écrit par le code, et le voir deux fois — une
+  fois gravé dans l'image, une fois en Cinzel juste au-dessus — se remarque
+  aussitôt ;
+- surtout, les CHIFFRES d'une maquette sont faux par nature. « Étape 7 / 10 »,
+  « 4 850 », « x10 » sont ceux du dessin, pas ceux du joueur. Cuits dans
+  l'image, ils mentiraient dès la première partie.
+
+`--recadre` ne détoure rien : à l'intérieur d'une carte il n'y a pas de
+damier, seulement du dessin. Il découpe, redimensionne, et s'arrête là.
+
 ## Un état cuit dans le dessin, et comment il a été réglé
 
 ⚠️ Une image de médaillon ne doit porter AUCUN état. L'application calcule
@@ -110,6 +130,13 @@ python3 tools/detourer.py "images/foret.jpg"           assets/ui/foret.png     2
 python3 tools/detourer.py "images/volcanbon.jpg"       assets/ui/volcan.png    256x256
 python3 tools/detourer.py "images/bouton match.jpg"    assets/ui/bouton-match.png     768x768
 python3 tools/detourer.py "images/bouton continuer.jpg" assets/ui/bouton-continuer.png 768x768
+python3 tools/detourer.py "images/quetes.jpg"          assets/ui/quetes.png    256x256
 python3 tools/detourer.py "images/desert.jpg"          assets/ui/desert.png    256x256 \
     --cercle 512,575,444
+python3 tools/detourer.py "images/ligue.jpg"           assets/ui/ligue.png     512x512 \
+    --recadre 33,19,994,242
+python3 tools/detourer.py "images/arene en ligne.jpg"  assets/ui/arene.png     800x800 \
+    --recadre 108,116,918,348
+python3 tools/detourer.py "images/épopée sacrée.jpg"   assets/ui/course.png    860x860 \
+    --recadre 86,176,942,304
 ```

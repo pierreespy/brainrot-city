@@ -9,6 +9,13 @@ dessous :
     python3 tools/detourer.py "images/desert.jpg" assets/ui/desert.png 256x256 \
         --cercle 512,575,444
 
+Une MAQUETTE de carte entiere, elle, ne se detoure pas : on y preleve la seule
+illustration, en laissant dehors les titres et les chiffres qui y sont ecrits
+et que l'application, elle, calcule :
+
+    python3 tools/detourer.py "images/arene en ligne.jpg" assets/ui/arene.png \
+        800x800 --recadre 108,116,918,348
+
 ⚠️ Ce script ne fait PAS partie de l'application : il ne tourne ni au
 lancement ni à la construction, et rien dans `src/` ne l'importe. Il sert une
 fois, à la main, quand une image de travail entre dans `assets/ui/`. Il demande
@@ -196,8 +203,21 @@ def clip_circle(alpha, spec):
     return Image.fromarray((np.asarray(alpha) * inside).astype(np.uint8))
 
 
-def run(src, dst, box=None, circle=None):
+def run(src, dst, box=None, circle=None, crop=None):
     im = Image.open(src).convert('RGB')
+
+    if crop is not None:
+        # Une MAQUETTE, pas une icône : on en prélève l'illustration, et il
+        # n'y a rien à détourer — le damier n'est qu'autour de la carte, pas
+        # dans le tableau qu'on découpe. On sort donc tout de suite, opaque.
+        left, top, right, bottom = (int(v) for v in crop.split(','))
+        out = im.crop((left, top, right, bottom))
+        if box:
+            out.thumbnail(box, Image.LANCZOS)
+        out.save(dst, 'PNG', optimize=True)
+        print(f'{dst}  {out.size[0]}x{out.size[1]}  recadré, sans détourage')
+        return
+
     rgb = np.asarray(im)
     lum = np.asarray(im.convert('L'))
     h, w = lum.shape
@@ -268,10 +288,14 @@ def run(src, dst, box=None, circle=None):
 
 if __name__ == '__main__':
     a = sys.argv[1:]
-    circle = None
+    circle = crop = None
     if '--cercle' in a:
         i = a.index('--cercle')
         circle = a[i + 1]
         a = a[:i] + a[i + 2:]
+    if '--recadre' in a:
+        i = a.index('--recadre')
+        crop = a[i + 1]
+        a = a[:i] + a[i + 2:]
     size = tuple(int(v) for v in a[2].split('x')) if len(a) > 2 else None
-    run(a[0], a[1], size, circle)
+    run(a[0], a[1], size, circle, crop)

@@ -28,6 +28,26 @@ export const ICONS = {
   or: require('../../../assets/ui/piece-or.png') as ImageSourcePropType,
   /** La couronne de laurier : la monnaie rare, celle des dieux. */
   laurier: require('../../../assets/ui/laurier.png') as ImageSourcePropType,
+  /** Le rouleau scellé — l'onglet des quêtes. */
+  quetes: require('../../../assets/ui/quetes.png') as ImageSourcePropType,
+} as const;
+
+/**
+ * Les illustrations de carte : des bandeaux peints, pas des icônes.
+ *
+ * ⚠️ Elles sont prélevées dans des MAQUETTES de cartes entières, dont on a
+ * laissé dehors les titres et les chiffres — « Étape 7 / 10 », « 4 850 » —
+ * que l'application calcule elle-même et qui, cuits dans l'image, auraient
+ * menti dès la première partie. Ne garder que le tableau est ce qui les rend
+ * réutilisables (voir l'option `--recadre` de `tools/detourer.py`).
+ */
+export const ART = {
+  /** Le cadre de parchemin du bandeau de ligue. Vide, à dessein. */
+  ligue: require('../../../assets/ui/ligue.png') as ImageSourcePropType,
+  /** Les dunes et leur chimère, sur la carte de la course. */
+  course: require('../../../assets/ui/course.png') as ImageSourcePropType,
+  /** Les combattants sous l'orage, sur la carte de l'arène. */
+  arene: require('../../../assets/ui/arene.png') as ImageSourcePropType,
 } as const;
 
 /**

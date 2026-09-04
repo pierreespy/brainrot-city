@@ -1,36 +1,36 @@
 /**
- * MenuScreen.tsx — l'écran d'accueil et ses quatre onglets.
+ * MenuScreen.tsx — l'écran d'accueil et ses cinq onglets.
  *
- * C'est le seul fichier qui sait qu'il existe quatre onglets. Chacun d'eux
+ * C'est le seul fichier qui sait combien il y a d'onglets. Chacun d'eux
  * ignore les autres, et aucun ne connaît le jeu : le menu reçoit des
  * fonctions (« jouer », « acheter ») et les appelle. La 3D peut être en train
  * de tourner derrière, ou pas du tout, cela ne le regarde pas.
  *
- * ⚠️ Les onglets sont EN BAS, et il y en a quatre. Le pouce n'atteint pas le
+ * ⚠️ Les onglets sont EN BAS, et il y en a CINQ. Le pouce n'atteint pas le
  * haut d'un téléphone moderne, et une barre d'onglets cesse d'être lisible
- * au-delà de cinq entrées : la place restante vaut pour un cinquième onglet,
- * pas pour un sixième.
+ * au-delà de cinq entrées : la barre est donc pleine. Un sixième onglet
+ * demanderait d'en fusionner deux, pas d'en serrer un de plus.
  *
- * ⚠️ « Jouer » est en DEUXIÈME position, pas au bord. C'est l'onglet ouvert
- * au démarrage, et depuis là aucun des trois autres n'est à plus de deux
- * glissements de pouce.
+ * ⚠️ « Jouer » est au MILIEU, et c'est ce qui décide du reste. Il est ouvert
+ * au démarrage, et deux dalles le bordent de chaque côté : aucun onglet n'est
+ * à plus de deux glissements de pouce, et la barre est symétrique.
  *
  * ⚠️ « Jouer » n'est pas une dalle comme les autres : c'est un MÉDAILLON
  * posé à cheval sur la barre, au centre, deux fois plus grand. Il occupe la
  * place qu'aurait eue son onglet — l'ordre du ruban ne change pas — mais il
- * annonce l'action du menu, là où les trois autres n'annoncent qu'un lieu.
+ * annonce l'action du menu, là où les quatre autres n'annoncent qu'un lieu.
  *
- * ⚠️ Les onglets ne sont pas quatre écrans qui se remplacent : ils sont
+ * ⚠️ Les onglets ne sont pas cinq écrans qui se remplacent : ils sont
  * COUSUS côte à côte dans un même ruban horizontal que le doigt fait
  * glisser. Le contenu suit le doigt image par image, et le trait de la barre
  * d'onglets avance avec lui — d'où le `Animated.ScrollView` et la valeur
  * `scrollX` ci-dessous, plutôt qu'un simple `useState` d'onglet actif.
  *
- * ⚠️ Le décor est UNE SEULE image, large de quatre écrans, posée DANS le
- * ruban (voir `Backdrop`). Le magasin en montre un quart, « Jouer » le
- * suivant, et ainsi de suite : le doigt fait voyager le regard le long d'un
- * même paysage, sans interpolation à la main — le défilement natif s'en
- * charge.
+ * ⚠️ Le décor est UNE SEULE image, large de TOUS les onglets réunis, posée
+ * DANS le ruban (voir `Backdrop`). Chacun en montre une tranche, dans
+ * l'ordre : le doigt fait voyager le regard le long d'un même paysage, sans
+ * interpolation à la main — le défilement natif s'en charge. Sa largeur suit
+ * `TABS.length`, donc ajouter un onglet ne demande rien de plus ici.
  *
  * ⚠️ Le bandeau du haut et la barre d'onglets, eux, ne bougent JAMAIS : ce
  * sont des habillages de l'écran, pas des morceaux de la scène. Ils sont
@@ -57,29 +57,32 @@ import type { Progression } from '../../meta/progression';
 import { OlympeTab } from './OlympeTab';
 import { PassTab } from './PassTab';
 import { PlayTab } from './PlayTab';
+import { QuetesTab } from './QuetesTab';
 import { SettingsSheet } from './SettingsSheet';
 import { ShopTab } from './ShopTab';
 import { TopBar } from './TopBar';
 import { Column } from './parts';
 import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE } from './theme';
 
-export type MenuTab = 'olympe' | 'play' | 'pass' | 'shop';
+export type MenuTab = 'olympe' | 'quetes' | 'play' | 'pass' | 'shop';
 
 /** Le médaillon « Jouer », et la place qu'il creuse au milieu de la barre. */
 const MEDALLION = 86;
 
 /**
- * L'ordre à l'écran, de gauche à droite. « Jouer » en deuxième.
+ * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
+ * deux dalles de chaque côté.
  *
- * ⚠️ Les trois dalles portent une IMAGE, le médaillon central un caractère.
- * Ce n'est pas un oubli : un onglet nomme un LIEU — le temple, le casque du
- * passe, l'amphore de la boutique — et une image dessinée le montre mieux
- * qu'un émoji, dont le tracé change d'un téléphone à l'autre. « Jouer », lui,
- * ne nomme pas un lieu mais un geste, et il est déjà dit par la taille du
- * médaillon et par son intitulé gravé.
+ * ⚠️ Les quatre dalles portent une IMAGE, le médaillon central un caractère.
+ * Ce n'est pas un oubli : un onglet nomme un LIEU ou un OBJET — le temple, le
+ * rouleau des quêtes, le casque du passe, l'amphore de la boutique — et une
+ * image dessinée le montre mieux qu'un émoji, dont le tracé change d'un
+ * téléphone à l'autre. « Jouer », lui, ne nomme pas un lieu mais un geste, et
+ * il est déjà dit par la taille du médaillon et par son intitulé gravé.
  */
 const TABS: { id: MenuTab; label: string; icon: ImageSourcePropType | null }[] = [
   { id: 'olympe', label: 'Olympe', icon: ICONS.olympe },
+  { id: 'quetes', label: 'Quêtes', icon: ICONS.quetes },
   { id: 'play', label: 'Jouer', icon: null },
   { id: 'pass', label: 'Passe', icon: ICONS.passe },
   { id: 'shop', label: 'Boutique', icon: ICONS.boutique },
@@ -214,6 +217,10 @@ export function MenuScreen({
             </Page>
 
             <Page width={pageWidth}>
+              <QuetesTab state={state} />
+            </Page>
+
+            <Page width={pageWidth}>
               <PlayTab state={state} onPlay={onPlay} onChangeGod={() => goTo('olympe')} />
             </Page>
 
@@ -254,7 +261,7 @@ export function MenuScreen({
 }
 
 /**
- * La barre d'onglets : trois dalles de marbre, et le médaillon « Jouer » qui
+ * La barre d'onglets : quatre dalles de marbre, et le médaillon « Jouer » qui
  * flotte au centre, à cheval sur la barre.
  *
  * ⚠️ L'onglet actif ne change pas seulement de couleur : il MONTE et
@@ -262,10 +269,10 @@ export function MenuScreen({
  * teinte le rend illisible pour qui distingue mal les nuances.
  *
  * ⚠️ Le médaillon n'est pas dans le rang : il est en position absolue, au
- * milieu exact de la barre. C'est pourquoi les trois dalles sont réparties en
- * DEUX groupes de largeur égale, séparés par un vide (`dock`) : sans cette
- * symétrie, le centre de la barre tomberait sur la dalle « Passe », et le
- * médaillon la recouvrirait.
+ * milieu exact de la barre. C'est pourquoi les quatre dalles sont réparties
+ * en DEUX groupes de largeur égale, séparés par un vide (`dock`) : sans cette
+ * symétrie, le centre de la barre ne tomberait pas dans le vide, et le
+ * médaillon recouvrirait une dalle.
  */
 function TabBar({
   index,
@@ -333,7 +340,10 @@ function TabBar({
 
   return (
     <View style={styles.tabBar}>
-      <View style={styles.side}>{slab('olympe')}</View>
+      <View style={styles.side}>
+        {slab('olympe')}
+        {slab('quetes')}
+      </View>
 
       <View style={styles.dock} />
 

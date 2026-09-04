@@ -83,6 +83,35 @@ export function Column({ side }: { side: 'left' | 'right' }) {
   );
 }
 
+/**
+ * Le bandeau peint d'une carte : une illustration, pleine largeur.
+ *
+ * ⚠️ En `cover`, donc RECADRÉE plutôt que déformée. Ces tableaux sont larges
+ * et bas ; sur un téléphone étroit, ce sont leurs bords qui partent, et le
+ * sujet est au centre. Les étirer à la carte tordrait les colonnes.
+ *
+ * Le cadre sombre et les coins arrondis appartiennent au bandeau, pas à la
+ * carte : c'est ce qui le fait lire comme un tableau ACCROCHÉ sur le
+ * parchemin, et non comme un trou découpé dedans.
+ */
+export function Banner({
+  source,
+  height = 96,
+}: {
+  source: ImageSourcePropType;
+  height?: number;
+}) {
+  return (
+    <Image
+      source={source}
+      resizeMode="cover"
+      style={[styles.banner, { height }]}
+      accessible={false}
+      importantForAccessibility="no"
+    />
+  );
+}
+
 /* ----------------------------------------------------------------- boutons */
 
 interface ButtonProps {
@@ -440,6 +469,13 @@ const styles = StyleSheet.create({
     padding: SPACE.md,
   },
   cardSelected: { borderColor: COLORS.borderStrong, borderWidth: 3, backgroundColor: COLORS.panelRaised },
+
+  banner: {
+    width: '100%',
+    borderRadius: RADIUS.sm,
+    borderWidth: 2,
+    borderColor: COLORS.frameDark,
+  },
 
   column: { position: 'absolute', top: 0, bottom: 0, width: 12 },
   columnLeft: { left: -2 },

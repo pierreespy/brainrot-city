@@ -13,13 +13,13 @@
  */
 
 import type { ReactNode } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { godById } from '../../entities/gods/roster';
 import { DISTRICTS, type DistrictId } from '../../world/districts';
 import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
-import { Bar, Button, Card, Coin, GodBadge, Plaque, Plate } from './parts';
-import { DISTRICT_ICONS, PLATES } from './icons';
+import { Bar, Banner, Button, Card, Coin, GodBadge, Plaque, Plate } from './parts';
+import { ART, DISTRICT_ICONS, PLATES } from './icons';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
 
 interface Props {
@@ -57,8 +57,13 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
       nestedScrollEnabled
     >
       {/* Le rang. Il tient en une ligne parce qu'il ne se joue pas : il se
-          constate, et il se compare à la partie d'hier. */}
-      <Card style={styles.league}>
+          constate, et il se compare à la partie d'hier.
+
+          C'est le seul bloc à porter un CADRE dessiné plutôt que le parchemin
+          commun : c'est la ligne d'état du joueur, et on doit la retrouver
+          sans la lire. L'image est étirée, ce qu'elle supporte — elle n'a pas
+          de sujet, juste des coins ferrés. */}
+      <ImageBackground source={ART.ligue} style={styles.league} imageStyle={styles.leagueFrame}>
         <View style={styles.leagueHead}>
           <Text style={styles.leagueCrest}>🦅</Text>
           <View style={styles.leagueText}>
@@ -74,7 +79,7 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
             ? `Meilleur cortège : ${state.bestScore.toLocaleString('fr-FR')} fidèles`
             : "Aucune course encore : le premier cortège fixera le rang."}
         </Text>
-      </Card>
+      </ImageBackground>
 
       {/* Les quartiers de la course, dans l'ordre où on les traverse. */}
       <View style={styles.chapters}>
@@ -104,6 +109,8 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
           ressembler à ce bouton-là. */}
       <Card style={styles.run} selected>
         <Plaque title="La course sacrée" tone="gold" />
+
+        <Banner source={ART.course} height={82} />
 
         <View style={styles.runBody}>
           <GodBadge color={appearance.color} accent={appearance.accent} size={58} />
@@ -157,6 +164,8 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
         title="Arène en ligne"
         text="Affronter un autre joueur, en direct. Le mode n'est pas encore écrit."
       >
+        <Banner source={ART.arene} height={104} />
+
         {/* La plaque de l'arène, ÉTEINTE. Elle annonce l'appel du mode sans
             le promettre : la pastille « bientôt » reste juste au-dessus, et
             le bouton refuse le doigt plutôt que de mener nulle part. */}
@@ -209,7 +218,21 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { paddingVertical: SPACE.sm, gap: SPACE.md, paddingBottom: SPACE.xl },
 
-  league: { gap: SPACE.sm },
+  // Le cadre dessiné remplace le parchemin ET la bordure de la carte : les
+  // marges tiennent compte des coins ferrés, qui mordent sur l'intérieur.
+  league: { gap: SPACE.sm, paddingVertical: SPACE.md, paddingHorizontal: SPACE.lg },
+  // ⚠️ Les trois lignes comptent. Sans `width`/`height`, l'image de fond
+  // garde sa taille NATIVE — 512 points de large — et sort du cadre par la
+  // droite ; et `stretch` se pose ici, pas en `resizeMode` sur la balise, où
+  // il n'atteint pas l'image sur le web. Étirer convient à ce dessin : il n'a
+  // pas de sujet, juste des coins ferrés qu'un cinquième de largeur en moins
+  // ne déforme pas.
+  leagueFrame: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'stretch',
+    borderRadius: RADIUS.sm,
+  },
   leagueHead: { flexDirection: 'row', alignItems: 'center', gap: SPACE.sm },
   leagueCrest: { fontSize: 30 },
   leagueChest: { fontSize: 24 },
