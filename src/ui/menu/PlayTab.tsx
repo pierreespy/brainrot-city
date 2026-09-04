@@ -84,15 +84,22 @@ export function PlayTab({ state, onPlay }: Props) {
           sans la lire. L'image est étirée, ce qu'elle supporte — elle n'a pas
           de sujet, juste des coins ferrés. */}
       <ImageBackground source={ART.ligue} style={styles.league} imageStyle={styles.leagueFrame}>
-        {/* ⚠️ Le blason a sa largeur reproduite à droite, en spatule vide.
-            Sans elle, centrer la LIGNE centre le blason ET le titre comme un
-            seul bloc — or l'œil lit le titre, pas le bloc, et un blason posé
-            à gauche sans contrepoids laisse le titre paraître décalé vers la
-            droite alors que la ligne, elle, est exactement centrée. La
-            spatule rend au titre la largeur qui lui revient : celle du
-            cadre, moins le blason des deux côtés. */}
+        {/* ⚠️ Le blason est HORS FLUX (`position: absolute`) : posé sur le
+            bord gauche plutôt que placé à côté du titre dans une ligne. Une
+            ligne icône+titre centrée COMME UN BLOC ne centre que le bloc —
+            le blason ancre le bloc à gauche, et un long titre en sort décalé
+            vers la droite, ce qu'aucune largeur de compensation ne corrige
+            de façon fiable (la police gravée n'a pas la même largeur sur le
+            web, où on la mesure, et sur le téléphone, où on la lit). Hors
+            flux, le blason ne dispute plus la largeur au titre : celui-ci se
+            centre seul sur le cadre entier, et se retrouve juste centré. */}
         <View style={styles.leagueHead}>
-          <Text style={styles.leagueCrest} accessible={false} importantForAccessibility="no">
+          <Text
+            style={styles.leagueCrest}
+            accessible={false}
+            importantForAccessibility="no"
+            pointerEvents="none"
+          >
             🦅
           </Text>
           {/* `numberOfLines={2}` : un niveau à trois chiffres ne tient plus
@@ -102,7 +109,6 @@ export function PlayTab({ state, onPlay }: Props) {
           <Text style={styles.leagueName} numberOfLines={2}>
             LIGUE OLYMPIENNE : NIVEAU {rank.level}
           </Text>
-          <View style={styles.leagueCrestSpacer} />
         </View>
         {/* ⚠️ Des TROPHÉES, pas des fidèles. Le rang se calcule bien sur le
             meilleur cortège (voir `rank.ts`), mais ce qui monte d'un palier à
@@ -320,15 +326,10 @@ const styles = StyleSheet.create({
     resizeMode: 'stretch',
     borderRadius: RADIUS.sm,
   },
-  leagueHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACE.xs,
-  },
-  // Largeur jumelle : le blason à gauche, la spatule à droite. C'est cette
-  // paire qui centre le TITRE, pas la ligne entière (voir plus haut).
-  leagueCrest: { fontSize: 20, width: 20, textAlign: 'center' },
-  leagueCrestSpacer: { width: 20 },
+  // `position: relative` : le repère du blason, posé hors flux (voir
+  // plus haut). Sans lui, son `absolute` se poserait sur la carte entière.
+  leagueHead: { position: 'relative', minHeight: 22, justifyContent: 'center' },
+  leagueCrest: { position: 'absolute', left: 0, top: 0, fontSize: 20, width: 20, textAlign: 'center' },
   // ⚠️ `letterSpacing` retombe à 0.6 : celui de `TYPE.label` (1,4) est taillé
   // pour un intitulé de section, court. Sur les vingt-sept lettres de ce
   // titre-ci, il ajoute à lui seul près de 40 points et pousse le rang à
@@ -338,7 +339,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.6,
     color: COLORS.text,
-    flex: 1,
     textAlign: 'center',
   },
   leagueSub: { ...TYPE.body, fontSize: 12, color: COLORS.muted, textAlign: 'center' },
