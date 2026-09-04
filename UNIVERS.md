@@ -180,48 +180,79 @@ monde) et un sens aux capacités d'Athéna, d'Arès et d'Hadès.
 
 ---
 
-## La drachme
+## L'or
 
-La monnaie de la cité — celle qu'on gagne en jouant, et celle qui achète les
-divinités et leurs parures.
+**État : renommée le 2026-09-04, depuis « la drachme ».** La monnaie de la
+cité — celle qu'on gagne en jouant, et celle qui achète les divinités et
+leurs parures communes.
 
 Le choix du mot n'est pas un détail d'habillage. « Pièces », « gemmes » ou
-« cristaux » sont le vocabulaire de n'importe quel jeu ; la drachme est le
+« cristaux » sont le vocabulaire de n'importe quel jeu ; l'or est le
 vocabulaire de **cette** cité, au même titre que les fidèles, les mortels et
-l'Acropole. Un joueur qui voit « 340 drachmes » sait encore où il est.
+l'Acropole — le métal du trésor profane, celui qu'on amasse en vivant dans
+la cité, par opposition à ce qui vient de l'Olympe (voir le laurier,
+ci-dessous). Un joueur qui voit « 340 or » sait encore où il est.
 
-**Ce qu'elle achète**, et dans cet ordre d'importance :
+**Ce qu'il achète**, et dans cet ordre d'importance :
 
 1. **Les divinités** — le gros achat, celui qui change la façon de jouer
    quand les capacités existeront (M19-M27) ;
-2. **Les parures** — la même divinité, d'une autre couleur. Le petit achat
-   qu'on refait.
+2. **Les parures communes** — la même divinité, d'une autre couleur. Le
+   petit achat qu'on refait.
 
-**Ce qu'elle ne doit pas devenir** : un raccourci vers la fin du jeu. Une
+**Ce qu'il ne doit pas devenir** : un raccourci vers la fin du jeu. Une
 partie rapporte le tiers de son cortège. À un rythme d'une conversion par
 seconde, cela place la première divinité supplémentaire à quelques parties —
 assez proche pour donner envie, assez loin pour rester un but.
 
 ---
 
-## L'ambroisie
+## Le laurier
 
-**État : ajoutée le 2026-09-03.** La cité a une seconde monnaie, plus rare que
-la drachme — celle des dieux, pas des mortels.
+**État : ajoutée le 2026-09-03 sous le nom « ambroisie », renommée « laurier »
+le 2026-09-04.** La cité a une seconde monnaie, plus rare que l'or — celle
+des dieux, pas des mortels.
 
-Le choix suit la même règle que celui de la drachme : pas un mot de jeu
-générique (« gemmes », « cristaux »), mais un mot **de cet univers-là**.
-L'ambroisie est la nourriture de l'Olympe dans la mythologie grecque —
-réservée aux dieux, elle rend immortel celui qui la consomme. Le joueur qui
-voit « 40 ambroisie » à côté de « 340 drachmes » comprend sans légende
-laquelle des deux est la précieuse : les mortels comptent en drachmes, les
-dieux en ambroisie.
+Le choix suit la même règle que celui de l'or : pas un mot de jeu générique
+(« gemmes », « cristaux »), mais un mot **de cet univers-là**. La couronne de
+laurier est, dans la mythologie grecque, ce qui distingue le vainqueur et
+l'excellence — remise aux champions des Jeux, aux poètes inspirés d'Apollon.
+Moins immortelle que l'ambroisie qui l'a précédée dans ce rôle, mais plus
+juste pour ce qu'elle récompense désormais : non pas la survie des dieux,
+mais ce qui se **mérite**. Le joueur qui voit « 40 lauriers » à côté de
+« 340 or » comprend sans légende laquelle des deux est la précieuse : les
+mortels comptent en or, les dieux en lauriers.
 
-**Ce qu'elle achète** : rien encore. Comme les paquets de drachmes, les
-paquets d'ambroisie du magasin sont affichés mais **inertes** (voir plus
-bas) — la monétisation reste une décision de la M46, pas de ce chantier-ci.
-Ce que l'ambroisie achètera en premier (une parure rare, un raccourci de
-déblocage) reste à trancher **avec** cette décision.
+**Ce qu'il achète** : les **parures légendaires** — une tenue entièrement
+différente pour un dieu, pas une simple recoloration (voir « Les parures »
+ci-dessous). C'était la question laissée ouverte à l'ajout de cette monnaie ;
+elle est tranchée depuis le 2026-09-04. Les paquets de lauriers du magasin
+restent, eux, affichés mais **inertes** (voir plus bas) — la monétisation
+reste une décision de la M46, indépendante de ce que la monnaie achète en
+jeu.
+
+---
+
+## Les parures : deux paliers
+
+**État : ajoutée le 2026-09-04.** Une parure n'est plus un concept unique —
+elle a deux paliers, payés dans deux monnaies différentes :
+
+- **Commune** — la même divinité, d'une autre couleur. Payée en or, comme
+  aujourd'hui.
+- **Légendaire** — une tenue, un modèle 3D **entièrement différent** (pas une
+  recoloration). Payée en lauriers. C'est le premier achat sérieux de cette
+  monnaie, et la raison pour laquelle un skin légendaire mérite son prix : on
+  ne change pas la teinte d'un dieu, on change son allure.
+
+Une règle tient dans les deux cas : le halo et la traînée du cortège
+(l'accent) restent **toujours** ceux du dieu, quelle que soit la parure
+portée — même une tenue légendaire ne les redéfinit pas. C'est le corps, pas
+le sillage, qui change de parure.
+
+Le pipeline de production des modèles légendaires (génération externe,
+export `.glb`, intégration dans `src/core/AssetLoader.ts`) suit celui déjà
+posé pour l'apparence des dieux — voir la section suivante.
 
 ---
 
@@ -242,6 +273,6 @@ déblocage) reste à trancher **avec** cette décision.
   > plates). C'est le sujet de la **M40**.
 - **Le mode de jeu** — partie chronométrée, survie, ou objectif de conversion.
 - **La monétisation** — publicité, achat des dieux, ou rien. Le magasin
-  affiche déjà des paquets de drachmes et d'ambroisie contre argent réel,
-  mais ils sont **inertes** : la place à l'écran est prise, la décision ne
-  l'est pas (M46).
+  affiche déjà des paquets d'or et de lauriers contre argent réel, mais ils
+  sont **inertes** : la place à l'écran est prise, la décision ne l'est pas
+  (M46).

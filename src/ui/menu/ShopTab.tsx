@@ -2,8 +2,8 @@
  * ShopTab.tsx — la boutique.
  *
  * Quatre rayons, dans cet ordre : l'offre du jour (celle qui rapporte), les
- * lauriers, les divinités et leurs parures, et enfin la conversion des
- * drachmes en lauriers — la seule opération que le joueur peut réellement
+ * lauriers, les divinités et leurs parures, et enfin la conversion de
+ * l'or en lauriers — la seule opération que le joueur peut réellement
  * faire aujourd'hui.
  *
  * ⚠️ Un rayon n'affiche jamais ce que le joueur possède déjà. Un magasin qui
@@ -15,12 +15,18 @@
  * sont affichées quand même, pour que la place qu'elles occupent soit
  * décidée maintenant, et le bouton dit franchement qu'il ne marche pas
  * encore plutôt que de rester muet au premier appui.
+ *
+ * ⚠️ Les parures ont deux paliers, payés dans deux monnaies différentes :
+ * une **commune** (couleur différente) coûte de l'or, une **légendaire**
+ * (tenue/modèle 3D différent) coûte des lauriers. Le prix affiché porte
+ * donc toujours l'icône de SA monnaie — jamais un nombre nu, qui laisserait
+ * deviner laquelle des deux bourses va se vider.
  */
 
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GOD_ORDER, godById, type GodId } from '../../entities/gods/roster';
 import { godPrice, ownsGod, ownsSkin, type Progression } from '../../meta/progression';
-import { AMBROSIA_PACKS, COIN_PACKS, purchasableSkins } from '../../meta/store';
+import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, Plaque, SectionTitle } from './parts';
 import { COLORS, RADIUS, SPACE, TYPE, hex } from './theme';
 
@@ -35,7 +41,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
   const skins = purchasableSkins().filter(
     (skin) => ownsGod(state, skin.godId) && !ownsSkin(state, skin.id),
   );
-  const featured = COIN_PACKS.find((pack) => pack.featured) ?? COIN_PACKS[0];
+  const featured = GOLD_PACKS.find((pack) => pack.featured) ?? GOLD_PACKS[0];
 
   return (
     <ScrollView
@@ -53,7 +59,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
           <View style={styles.offerText}>
             <Text style={styles.offerName}>PACK STARTER OLYMPIEN</Text>
             <Text style={styles.offerDetail}>
-              {featured.drachmas.toLocaleString('fr-FR')} drachmes, une parure au choix et un
+              {featured.gold.toLocaleString('fr-FR')} or, une parure au choix et un
               coffre rare.
             </Text>
           </View>
@@ -63,10 +69,10 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
 
       <SectionTitle>Acheter des lauriers</SectionTitle>
       <View style={styles.packRow}>
-        {AMBROSIA_PACKS.map((pack) => (
+        {LAUREL_PACKS.map((pack) => (
           <View key={pack.id} style={[styles.pack, pack.featured && styles.packOn]}>
             <Laurel size={26} />
-            <Text style={styles.packAmount}>{pack.ambrosia.toLocaleString('fr-FR')}</Text>
+            <Text style={styles.packAmount}>{pack.laurels.toLocaleString('fr-FR')}</Text>
             <Text style={styles.packLabel}>lauriers</Text>
             <Button label={pack.price} onPress={() => undefined} disabled style={styles.packButton} />
           </View>
@@ -94,9 +100,9 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
                   testID={`buy-${id}`}
                   label={price.toLocaleString('fr-FR')}
                   variant="primary"
-                  disabled={state.drachmas < price}
+                  disabled={state.gold < price}
                   onPress={() => onBuyGod(id)}
-                  hint={`Acheter ${god.label} pour ${price} drachmes`}
+                  hint={`Acheter ${god.label} pour ${price} or`}
                   style={styles.rowButton}
                 />
               </Card>
@@ -109,26 +115,48 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
         <>
           <SectionTitle>Parures</SectionTitle>
           <View style={styles.skinRow}>
-            {skins.map((skin) => (
-              <Card key={skin.id} style={styles.skin}>
-                <View style={[styles.skinDot, { backgroundColor: hex(skin.color), borderColor: hex(skin.accent) }]} />
-                <Text style={styles.skinLabel} numberOfLines={1}>
-                  {skin.label}
-                </Text>
-                <Text style={styles.skinGod} numberOfLines={1}>
-                  {godById(skin.godId).label}
-                </Text>
-                <Button
-                  testID={`buy-${skin.id}`}
-                  label={skin.price.toLocaleString('fr-FR')}
-                  variant="primary"
-                  disabled={state.drachmas < skin.price}
-                  onPress={() => onBuySkin(skin.id)}
-                  hint={`Acheter la parure ${skin.label}`}
-                  style={styles.skinButton}
-                />
-              </Card>
-            ))}
+            {skins.map((skin) => {
+              const legendary = skin.tier === 'legendaire';
+              const godAppearance = godById(skin.godId).appearance;
+              // Une commune se reconnaît d'un coup d'œil à sa couleur ; une
+              // légendaire est un modèle 3D à part, pas encore prévisualisable
+              // ici — le cadre doré + le laurier en prix suffisent à la
+              // distinguer tant qu'il n'y a pas d'aperçu du modèle.
+              return (
+                <Card key={skin.id} style={[styles.skin, legendary && styles.skinLegendary]}>
+                  <View
+                    style={[
+                      styles.skinDot,
+                      {
+                        backgroundColor: hex(legendary ? godAppearance.color : skin.color),
+                        borderColor: legendary ? COLORS.gold : hex(skin.accent),
+                      },
+                    ]}
+                  />
+                  <Text style={styles.skinLabel} numberOfLines={1}>
+                    {skin.label}
+                  </Text>
+                  <Text style={styles.skinGod} numberOfLines={1}>
+                    {godById(skin.godId).label}
+                  </Text>
+                  <Button
+                    testID={`buy-${skin.id}`}
+                    label="Acheter"
+                    variant="primary"
+                    disabled={legendary ? state.laurels < skin.price : state.gold < skin.price}
+                    price={
+                      <>
+                        {legendary ? <Laurel size={14} /> : <Coin size={14} />}
+                        <Text style={styles.skinPrice}>{skin.price.toLocaleString('fr-FR')}</Text>
+                      </>
+                    }
+                    onPress={() => onBuySkin(skin.id)}
+                    hint={`Acheter la parure ${skin.label}`}
+                    style={styles.skinButton}
+                  />
+                </Card>
+              );
+            })}
           </View>
         </>
       )}
@@ -142,7 +170,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
       <SectionTitle>Conversion</SectionTitle>
       <Card style={styles.convert}>
         <Text style={styles.convertText}>
-          Changer des drachmes contre des lauriers ouvrira avec les achats.
+          Changer de l'or contre des lauriers ouvrira avec les achats.
         </Text>
         <View style={styles.convertRow}>
           <View style={styles.convertFrom}>
@@ -158,7 +186,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
       </Card>
 
       <Text style={styles.note}>
-        Les drachmes se gagnent en jouant : une pour trois fidèles convertis.
+        L'or se gagne en jouant : un pour trois fidèles convertis.
       </Text>
     </ScrollView>
   );
@@ -202,10 +230,14 @@ const styles = StyleSheet.create({
 
   skinRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE.sm },
   skin: { width: '31%', minWidth: 96, alignItems: 'center', gap: 2 },
+  // Le cadre doré signale une légendaire : pas de recoloration à montrer, il
+  // faut un autre repère visuel — cohérent avec le laurier de son prix.
+  skinLegendary: { borderColor: COLORS.gold, borderWidth: 2 },
   skinDot: { width: 30, height: 30, borderRadius: 15, borderWidth: 3 },
   skinLabel: { ...TYPE.strong, fontSize: 13, color: COLORS.text },
   skinGod: { ...TYPE.body, fontSize: 11, color: COLORS.muted },
   skinButton: { alignSelf: 'stretch', marginTop: SPACE.xs, minHeight: 34 },
+  skinPrice: { ...TYPE.price, fontSize: 13, color: COLORS.onGold },
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 

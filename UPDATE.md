@@ -9,6 +9,61 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-04 — Claude — 💰 La drachme devient l'or, l'ambroisie devient le laurier ; deux paliers de parures ; infrastructure de chargement des modèles 3D
+
+**Résumé** — Trois chantiers liés, décidés en discutant du pipeline d'intégration
+des designs 3D (personnages, map) :
+
+1. **Renommage des monnaies.** La drachme s'appelle désormais **l'or**, et
+   l'ambroisie **le laurier**. Renommage complet : identifiants de code
+   (`Progression.gold`/`laurels`, `GoldPack`/`GOLD_PACKS`,
+   `LaurelPack`/`LAUREL_PACKS`), UI affichée, et lore (`UNIVERS.md`, sections
+   « L'or » et « Le laurier », qui remplacent « La drachme » et
+   « L'ambroisie »). Le mot « laurier » était déjà utilisé par endroits dans
+   l'UI (`ShopTab.tsx`, `TopBar.tsx`) sans que le code sous-jacent suive — ce
+   chantier finit ce qui avait été entamé.
+2. **Deux paliers de parures.** Une parure est désormais soit **commune**
+   (même modèle, couleur différente, payée en or — le système existant),
+   soit **légendaire** (tenue/modèle 3D entièrement différent, payé en
+   lauriers — nouveau). Modélisé en union discriminée par `tier` dans
+   `src/meta/store.ts` (`CommonSkin` / `LegendarySkin`) pour qu'une parure
+   légendaire ne puisse structurellement pas redéfinir l'accent (halo du
+   cortège) : il reste toujours celui du dieu (`GodAppearance.accent`,
+   roster), quelle que soit la tenue portée. `progression.ts` : `buySkin()`
+   débite la bonne monnaie selon le palier ; `appearanceOf()` renvoie
+   maintenant une union `PlayerAppearance` (`flat` couleur ou `model`
+   référence 3D) ; nouvelle fonction `flatColorOf()` pour les endroits qui
+   ne savent pas encore afficher un modèle 3D (badges du menu, joueur en
+   jeu). `ShopTab.tsx`/`OlympeTab.tsx` distinguent visuellement les deux
+   paliers (cadre doré + icône laurier pour une légendaire). Résout la
+   question laissée ouverte dans `UNIVERS.md` sur ce que le laurier
+   achèterait en premier.
+3. **Infrastructure de chargement 3D** (pour du texte, voir les commits
+   précédents sur `main` : `expo-asset`, `metro.config.js`,
+   `src/core/AssetLoader.ts`, `assets/models/{gods,crowd,city}/`). Le
+   modèle de données des parures ci-dessus est prêt à référencer un
+   `modelRef` résolu par cette infrastructure, dès qu'un premier `.glb`
+   légendaire existe.
+
+**Fichiers touchés** — `src/meta/store.ts`, `src/meta/progression.ts`,
+`src/meta/useProgression.ts`, `App.tsx`, `src/ui/Hud.tsx`,
+`src/ui/menu/{TopBar,PlayTab,OlympeTab,SettingsSheet,ShopTab,parts}.tsx`,
+`UNIVERS.md`, `README.md`, `design/README.md`, `design/Main.dc.html`.
+
+**Vérifié** — `npm run typecheck` propre ; recherche exhaustive
+`drachm|ambrosi` sur le repo (hors `node_modules`) : plus aucune occurrence
+dans le code ni la doc active (cette entrée et les entrées historiques
+ci-dessous gardent le nom d'origine, volontairement — c'est un journal).
+
+**Pas encore fait** — Aucun skin légendaire réel dans le catalogue
+(`PURCHASABLE` de `store.ts`) tant qu'aucun `.glb` de tenue n'existe ; le
+rendu effectif d'un modèle légendaire dans `Player.ts` (permutation de mesh)
+attend la même chose. `assets/wallpaper.jpg` non vérifié pour un texte
+« drachme »/« ambroisie » incrusté dans l'image — à vérifier visuellement si
+besoin.
+
+---
+
 ## 2026-09-03 — Claude — 🐛 Le correctif WebGL précédent ne suffisait pas sur téléphone : nouvelle approche
 
 **Résumé** — Le correctif précédent (effacer le global

@@ -22,7 +22,7 @@ import { clearProgression, loadProgression, saveProgression } from './storage';
 
 export interface ProgressionApi {
   state: Progression;
-  /** Faux tant que la sauvegarde n'est pas relue : évite d'afficher 0 drachme puis 340. */
+  /** Faux tant que la sauvegarde n'est pas relue : évite d'afficher 0 or puis 340. */
   ready: boolean;
   buyGod: (godId: GodId) => void;
   buySkin: (skinId: string) => void;

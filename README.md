@@ -21,7 +21,7 @@ sont décrits dans **[`UNIVERS.md`](./UNIVERS.md)**.
 > Le **panthéon** existe côté données : sept dieux, chacun une ligne dans
 > `src/entities/gods/roster.ts`, et l'app s'ouvre désormais sur un **menu à
 > trois onglets** — Magasin, Jouer, Dieux — avec deux monnaies (les
-> **drachmes**, gagnées en jouant, et l'**ambroisie**, plus rare), des divinités et des parures à acquérir, et une progression
+> **or**, gagné en jouant, et les **lauriers**, plus rares), des divinités et des parures à acquérir, et une progression
 > **enregistrée sur l'appareil**. Le dieu court **au milieu de sa foule**, plus
 > en tête de file.
 
@@ -131,8 +131,8 @@ imprimé dessus.
     │   └── gods/roster.ts ⭐ Le panthéon : un dieu = une ligne de données
     │
     ├── meta/              Hors partie : ce que le joueur possède
-    │   ├── progression.ts ⭐ Drachmes, ambroisie, dieux, parures — données pures, testables
-    │   ├── store.ts       ⭐ Le catalogue : prix, parures, paquets de drachmes et d'ambroisie
+    │   ├── progression.ts ⭐ Or, lauriers, dieux, parures — données pures, testables
+    │   ├── store.ts       ⭐ Le catalogue : prix, parures (deux paliers), paquets d'or et de lauriers
     │   ├── storage.ts     La sauvegarde sur l'appareil (AsyncStorage)
     │   └── useProgression.ts  Le pont vers React
     │
@@ -154,7 +154,7 @@ imprimé dessus.
     │   └── menu/          ⭐ L'accueil : Jouer / Magasin / Dieux
     │       ├── MenuScreen.tsx   Le ruban des trois onglets et sa barre
     │       ├── PlayTab.tsx      Lancer une partie, et les paramètres
-    │       ├── ShopTab.tsx      Drachmes, ambroisie, divinités, parures
+    │       ├── ShopTab.tsx      Or, lauriers, divinités, parures
     │       ├── GodsTab.tsx      Le panthéon possédé et ses cosmétiques
     │       ├── SettingsSheet.tsx  La feuille de paramètres
     │       ├── parts.tsx        Les briques communes (bouton, carte, pastille)
@@ -594,7 +594,7 @@ l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
 | 12b | 🏛️ Le dieu au milieu de sa foule (cortège devant ET derrière) | ✅ Terminée |
 | 13 | 🏛️ Menu d'accueil — onglets Magasin / Jouer / Dieux (au glissé), paramètres | ✅ Terminée |
 | 14 | 🏛️ Panthéon — apparence différenciée par dieu **en jeu** | 🟡 Partielle (couleur du dieu et du cortège) |
-| 15 | 🏛️ Panthéon — déblocage progressif des dieux | 🟡 Partielle (achat en drachmes ; reste le déblocage par exploit) |
+| 15 | 🏛️ Panthéon — déblocage progressif des dieux | 🟡 Partielle (achat en or ; reste le déblocage par exploit) |
 | 16 | Mortel spécialisé — l'hoplite (valeur ×3) | ⬜ |
 | 17 | Mortel spécialisé — la prêtresse (recharge capacité) | ⬜ |
 | 18 | Mortel spécialisé — le philosophe (fuite) | ⬜ |
@@ -665,7 +665,7 @@ l'habillage. Le thème arrive ensuite, une fois qu'il y a un jeu à habiller.
   s'inventent en jouant, avec les capacités sous la main — c'est la M27.
   **M13 est faite**, et elle a débordé : l'écran de sélection est devenu un
   **menu à trois onglets** (Magasin, Jouer, Dieux), donc une économie
-  (les drachmes), un catalogue de parures et une sauvegarde. Le
+  (l'or), un catalogue de parures et une sauvegarde. Le
   dossier `src/meta/` tient tout cela **hors du jeu** : le moteur reçoit un
   dieu et deux couleurs, il ignore qu'elles ont été payées.
 - **M12b — Le dieu au milieu de sa foule.** Le cortège suivait en file, le

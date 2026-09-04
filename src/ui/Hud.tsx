@@ -20,7 +20,7 @@ interface Props {
   district: string;
   onRestart: () => void;
   /**
-   * Retour au menu. Il termine la partie : le score est encaissé en drachmes
+   * Retour au menu. Il termine la partie : le score est encaissé en or
    * à ce moment-là (voir `App.tsx`).
    */
   onQuit: () => void;
@@ -65,7 +65,7 @@ export function Hud({ faithful, district, onRestart, onQuit, onToggleStats }: Pr
             Le retour au menu. Il n'existait pas tant que le jeu commençait
             directement : maintenant qu'il y a un magasin, une partie doit
             pouvoir se terminer — c'est aussi le geste qui transforme les
-            fidèles en drachmes.
+            fidèles en or.
           */}
           <Pressable
             testID="quit"
