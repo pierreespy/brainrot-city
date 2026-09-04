@@ -83,50 +83,67 @@ export function PlayTab({ state, onPlay }: Props) {
           commun : c'est la ligne d'état du joueur, et on doit la retrouver
           sans la lire. L'image est étirée, ce qu'elle supporte — elle n'a pas
           de sujet, juste des coins ferrés. */}
-      <ImageBackground source={ART.ligue} style={styles.league} imageStyle={styles.leagueFrame}>
-        {/* ⚠️ Le blason est HORS FLUX (`position: absolute`) : posé sur le
-            bord gauche plutôt que placé à côté du titre dans une ligne. Une
-            ligne icône+titre centrée COMME UN BLOC ne centre que le bloc —
-            le blason ancre le bloc à gauche, et un long titre en sort décalé
-            vers la droite, ce qu'aucune largeur de compensation ne corrige
-            de façon fiable (la police gravée n'a pas la même largeur sur le
-            web, où on la mesure, et sur le téléphone, où on la lit). Hors
-            flux, le blason ne dispute plus la largeur au titre : celui-ci se
-            centre seul sur le cadre entier, et se retrouve juste centré. */}
-        <View style={styles.leagueHead}>
-          <Text
-            style={styles.leagueCrest}
-            accessible={false}
-            importantForAccessibility="no"
-            pointerEvents="none"
-          >
-            🦅
-          </Text>
-          {/* `numberOfLines={2}` : un niveau à trois chiffres ne tient plus
-              sur une ligne, et le laisser passer plutôt que le tronquer. Le
-              cadre n'a qu'un `minHeight` : une seconde ligne, rare, l'étire
-              au lieu de déborder. */}
-          <Text style={styles.leagueName} numberOfLines={2}>
-            LIGUE OLYMPIENNE : NIVEAU {rank.level}
+      {/* ⚠️ Le conteneur du cadre n'a AUCUNE marge intérieure : elle est
+          descendue d'un cran, dans `leagueInner`. Le dessin de fond est un
+          enfant en position absolue tiré aux quatre bords ; or une largeur
+          « 100 % » ne se mesure pas sur la même boîte des deux côtés — le web
+          la prend marge comprise, Yoga la prend marge déduite. Une marge sur
+          ce conteneur-ci dessinait donc un cadre plein écran sur le web et un
+          cadre rétréci, rentré vers la gauche, sur le téléphone : c'était le
+          « cadre pas centré ». Sans marge ici, les deux mesurent pareil.
+          `resizeMode` est en PROP autant qu'en style : le style seul ne
+          traverse pas jusqu'à l'image sur la nouvelle architecture iOS. */}
+      <ImageBackground
+        source={ART.ligue}
+        style={styles.league}
+        imageStyle={styles.leagueFrame}
+        resizeMode="stretch"
+      >
+        <View style={styles.leagueInner}>
+          {/* ⚠️ Le blason est HORS FLUX (`position: absolute`) : posé sur le
+              bord gauche plutôt que placé à côté du titre dans une ligne. Une
+              ligne icône+titre centrée COMME UN BLOC ne centre que le bloc —
+              le blason ancre le bloc à gauche, et un long titre en sort décalé
+              vers la droite, ce qu'aucune largeur de compensation ne corrige
+              de façon fiable (la police gravée n'a pas la même largeur sur le
+              web, où on la mesure, et sur le téléphone, où on la lit). Hors
+              flux, le blason ne dispute plus la largeur au titre : celui-ci se
+              centre seul sur le cadre entier, et se retrouve juste centré. */}
+          <View style={styles.leagueHead}>
+            <Text
+              style={styles.leagueCrest}
+              accessible={false}
+              importantForAccessibility="no"
+              pointerEvents="none"
+            >
+              🦅
+            </Text>
+            {/* `numberOfLines={2}` : un niveau à trois chiffres ne tient plus
+                sur une ligne, et le laisser passer plutôt que le tronquer. Le
+                cadre n'a qu'un `minHeight` : une seconde ligne, rare, l'étire
+                au lieu de déborder. */}
+            <Text style={styles.leagueName} numberOfLines={2}>
+              LIGUE OLYMPIENNE : NIVEAU {rank.level}
+            </Text>
+          </View>
+          {/* ⚠️ Des TROPHÉES, pas des fidèles. Le rang se calcule bien sur le
+              meilleur cortège (voir `rank.ts`), mais ce qui monte d'un palier à
+              l'autre est une échelle de ligue : la ligne du dessous, elle, dit
+              les fidèles, et les deux unités ne doivent pas se confondre. */}
+          <Bar
+            value={rank.progress}
+            max={rank.needed}
+            label={`${rank.progress} / ${rank.needed} trophées`}
+          />
+          {/* ⚠️ Une seule ligne, et donc une phrase COURTE pour l'état vide :
+              la cadette du cadre tient sur un rang, et une phrase plus longue
+              s'y coupait au milieu d'un mot. */}
+          <Text style={styles.leagueSub} numberOfLines={1}>
+            {state.bestScore > 0
+              ? `Meilleur cortège : ${state.bestScore.toLocaleString('fr-FR')} fidèles`
+              : 'Le premier cortège fixera le rang.'}
           </Text>
         </View>
-        {/* ⚠️ Des TROPHÉES, pas des fidèles. Le rang se calcule bien sur le
-            meilleur cortège (voir `rank.ts`), mais ce qui monte d'un palier à
-            l'autre est une échelle de ligue : la ligne du dessous, elle, dit
-            les fidèles, et les deux unités ne doivent pas se confondre. */}
-        <Bar
-          value={rank.progress}
-          max={rank.needed}
-          label={`${rank.progress} / ${rank.needed} trophées`}
-        />
-        {/* ⚠️ Une seule ligne, et donc une phrase COURTE pour l'état vide :
-            la cadette du cadre tient sur un rang, et une phrase plus longue
-            s'y coupait au milieu d'un mot. */}
-        <Text style={styles.leagueSub} numberOfLines={1}>
-          {state.bestScore > 0
-            ? `Meilleur cortège : ${state.bestScore.toLocaleString('fr-FR')} fidèles`
-            : 'Le premier cortège fixera le rang.'}
-        </Text>
       </ImageBackground>
 
       {/* Les quartiers de la course, dans l'ordre où on les traverse. */}
@@ -302,24 +319,27 @@ const styles = StyleSheet.create({
   // Tout y est CENTRÉ, en colonne. Avec l'aigle à gauche et rien à droite, un
   // rang aurait penché ; c'est d'ailleurs ce que la caisse à outils tenait en
   // équilibre, et elle n'annonçait rien.
-  league: {
-    minHeight: 146,
+  // ⚠️ SANS marge intérieure — elle appartient à `leagueInner`, un cran plus
+  // bas (voir le commentaire du rendu). Le dessin de fond se mesure sur ce
+  // conteneur-ci : lui donner une marge le rétrécissait sur téléphone.
+  league: { minHeight: 146, justifyContent: 'center' },
+  // ⚠️ Ces marges ne sont pas décoratives, elles sont MESURÉES sur le
+  // dessin. Les ferrures d'angle du cadre mordent sur un seizième de sa
+  // largeur et sur un sixième de sa hauteur ; en deçà, la jauge passe
+  // dessous et le meilleur cortège vient buter sur le bord bas. On garde
+  // donc le double de leur emprise, pour que rien n'affleure jamais.
+  leagueInner: {
     gap: SPACE.sm,
-    // ⚠️ Ces marges ne sont pas décoratives, elles sont MESURÉES sur le
-    // dessin. Les ferrures d'angle du cadre mordent sur un seizième de sa
-    // largeur et sur un sixième de sa hauteur ; en deçà, la jauge passe
-    // dessous et le meilleur cortège vient buter sur le bord bas. On garde
-    // donc le double de leur emprise, pour que rien n'affleure jamais.
     paddingVertical: SPACE.xl + SPACE.sm,
     paddingHorizontal: SPACE.xxl + SPACE.sm,
     justifyContent: 'center',
   },
   // ⚠️ Les trois lignes comptent. Sans `width`/`height`, l'image de fond
   // garde sa taille NATIVE — 512 points de large — et sort du cadre par la
-  // droite ; et `stretch` se pose ici, pas en `resizeMode` sur la balise, où
-  // il n'atteint pas l'image sur le web. Étirer convient à ce dessin : il n'a
-  // pas de sujet, juste des coins ferrés qu'un cinquième de largeur en moins
-  // ne déforme pas.
+  // droite ; et `stretch` se pose ici EN PLUS de la prop `resizeMode` du
+  // rendu : le style n'atteint pas l'image sur iOS, la prop ne l'atteint pas
+  // sur le web. Étirer convient à ce dessin : il n'a pas de sujet, juste des
+  // coins ferrés qu'un cinquième de largeur en moins ne déforme pas.
   leagueFrame: {
     width: '100%',
     height: '100%',

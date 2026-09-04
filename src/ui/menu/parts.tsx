@@ -50,9 +50,21 @@ export function Plaque({
   const gold = tone === 'gold';
 
   if (tone === 'frame') {
+    // ⚠️ La marge est sur le TEXTE, pas sur le conteneur du cadre. Le dessin
+    // de fond est un enfant en position absolue tiré aux quatre bords, et sa
+    // largeur « 100 % » ne se mesure pas sur la même boîte partout : le web
+    // la prend marge comprise, Yoga la prend marge déduite. Une marge ici
+    // dessinait donc un cadre juste sur le web et un cadre rétréci, rentré
+    // vers la gauche, sur le téléphone. `resizeMode` est en prop autant
+    // qu'en style : le style seul ne traverse pas jusqu'à l'image sur iOS.
     return (
-      <ImageBackground source={ART.ligue} style={styles.plaqueFramed} imageStyle={styles.plaqueSkin}>
-        <Text style={[styles.plaqueText, styles.plaqueInk]} numberOfLines={2}>
+      <ImageBackground
+        source={ART.ligue}
+        style={styles.plaqueFramed}
+        imageStyle={styles.plaqueSkin}
+        resizeMode="stretch"
+      >
+        <Text style={[styles.plaqueText, styles.plaqueInk, styles.plaqueFramedText]} numberOfLines={2}>
           {title.toUpperCase()}
         </Text>
       </ImageBackground>
@@ -469,13 +481,13 @@ const styles = StyleSheet.create({
   // mais plus la tablette est haute, plus le vide au-dessus et au-dessous
   // grandit, et plus l'œil doute d'un centrage qui est pourtant juste. Une
   // tablette remplie ne laisse pas la place au doute.
+  // ⚠️ SANS marge intérieure : elle est portée par le texte (voir plus haut).
   plaqueFramed: {
     minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: SPACE.xl,
-    paddingVertical: SPACE.xs,
   },
+  plaqueFramedText: { paddingHorizontal: SPACE.xl, paddingVertical: SPACE.xs },
   // ⚠️ `width`/`height` et `stretch` sont indispensables : sans eux l'image
   // de fond garde sa taille native et sort du cadre par la droite, et
   // `resizeMode` posé sur la balise n'atteint pas l'image sur le web.
