@@ -52,7 +52,7 @@ export function Plaque({
   if (tone === 'frame') {
     return (
       <ImageBackground source={ART.ligue} style={styles.plaqueFramed} imageStyle={styles.plaqueSkin}>
-        <Text style={styles.plaqueText} numberOfLines={2}>
+        <Text style={[styles.plaqueText, styles.plaqueInk]} numberOfLines={2}>
           {title.toUpperCase()}
         </Text>
       </ImageBackground>
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   // n'a plus à en peindre. Sa hauteur est celle des deux autres, pour qu'un
   // titre ne saute pas d'un onglet à l'autre.
   plaqueFramed: {
-    minHeight: 52,
+    minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: SPACE.xl,
@@ -475,6 +475,13 @@ const styles = StyleSheet.create({
   // de fond garde sa taille native et sort du cadre par la droite, et
   // `resizeMode` posé sur la balise n'atteint pas l'image sur le web.
   plaqueSkin: { width: '100%', height: '100%', resizeMode: 'stretch', borderRadius: RADIUS.sm },
+  // ⚠️ Deux points vers le bas, et ils ne sont pas cosmétiques. Centrer un
+  // texte, en React Native, centre sa BOÎTE DE LIGNE — ascendante et
+  // descendante comprises. Le Cinzel n'a que des capitales : sa descendante
+  // reste vide, et la boîte centrée laisse l'encre haute. Le cadre étant plus
+  // haut que les autres tablettes, l'écart s'y voit. On centre donc ce qui se
+  // regarde — les lettres — plutôt que ce qui se mesure.
+  plaqueInk: { transform: [{ translateY: 2 }] },
 
   plaqueMarble: {
     backgroundColor: COLORS.panelRaised,

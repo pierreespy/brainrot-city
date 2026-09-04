@@ -53,10 +53,17 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
   const appearance = flatColorOf(state);
   const rank = rankOf(state.bestScore);
 
-  // Le quartier où l'on en est : le DERNIER dont le niveau est franchi. Les
-  // chapitres sont rangés par niveau croissant, donc c'est le plus avancé des
-  // atteints — jamais celui d'après, qui n'est pas encore une étape.
-  const here = [...CHAPTERS].reverse().find((c) => rank.level >= c.level) ?? CHAPTERS[0];
+  // Le quartier que le bec désigne : celui où la course COMMENCE, et c'est
+  // l'Agora — le pâté (0, 0), le départ de chaque partie (voir
+  // `world/districts.ts`).
+  //
+  // ⚠️ Ce n'est volontairement PAS le dernier palier franchi. La ville est
+  // entière dès la première course : les niveaux marquent une étape, ils
+  // n'ouvrent pas un quartier, et une partie au rang 29 se court exactement
+  // comme la première. Un bec sur le Bois sacré promettrait donc un lieu où
+  // la course ne mène pas plus qu'ailleurs. Le jour où un palier ouvrira
+  // vraiment un quartier, c'est ici, et ici seulement, que le bec suivra.
+  const here = CHAPTERS[0];
 
   // L'abscisse du milieu du quartier courant, MESURÉE plutôt que calculée.
   // Les colonnes se partagent la largeur en `flex`, avec un écart entre
@@ -81,18 +88,15 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
       <ImageBackground source={ART.ligue} style={styles.league} imageStyle={styles.leagueFrame}>
         <View style={styles.leagueHead}>
           <Text style={styles.leagueCrest}>🦅</Text>
-          <View style={styles.leagueText}>
-            <Text style={styles.leagueName} numberOfLines={1}>
-              LIGUE OLYMPIENNE : NIVEAU {rank.level}
-            </Text>
-            <Bar value={rank.progress} max={rank.needed} label={`${rank.progress} / ${rank.needed} fidèles`} />
-          </View>
-          <Text style={styles.leagueChest}>🧰</Text>
+          <Text style={styles.leagueName} numberOfLines={1}>
+            LIGUE OLYMPIENNE : NIVEAU {rank.level}
+          </Text>
         </View>
-        <Text style={styles.leagueSub}>
+        <Bar value={rank.progress} max={rank.needed} label={`${rank.progress} / ${rank.needed} fidèles`} />
+        <Text style={styles.leagueSub} numberOfLines={1}>
           {state.bestScore > 0
             ? `Meilleur cortège : ${state.bestScore.toLocaleString('fr-FR')} fidèles`
-            : "Aucune course encore : le premier cortège fixera le rang."}
+            : 'Aucune course encore : le premier cortège fixera le rang.'}
         </Text>
       </ImageBackground>
 
@@ -116,7 +120,7 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
               accessible
               accessibilityLabel={
                 reached
-                  ? `${DISTRICTS[chapter.id].label}${current ? ', quartier en cours' : ''}`
+                  ? `${DISTRICTS[chapter.id].label}${current ? ', départ de la course' : ''}`
                   : `${DISTRICTS[chapter.id].label}, à partir du niveau ${chapter.level}`
               }
             >
@@ -270,9 +274,20 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { paddingVertical: SPACE.sm, gap: SPACE.md, paddingBottom: SPACE.xl },
 
-  // Le cadre dessiné remplace le parchemin ET la bordure de la carte : les
-  // marges tiennent compte des coins ferrés, qui mordent sur l'intérieur.
-  league: { gap: SPACE.sm, paddingVertical: SPACE.md, paddingHorizontal: SPACE.lg },
+  // Le cadre dessiné remplace le parchemin ET la bordure de la carte. Il est
+  // assez HAUT pour porter les trois lignes du rang — l'aigle et le niveau,
+  // la jauge, le meilleur cortège — sans que la dernière frôle le bord bas :
+  // c'est le bloc d'état du joueur, et il se lit d'un regard ou pas du tout.
+  //
+  // Tout y est CENTRÉ, en colonne. Avec l'aigle à gauche et rien à droite, un
+  // rang aurait penché ; c'est d'ailleurs ce que la caisse à outils tenait en
+  // équilibre, et elle n'annonçait rien.
+  league: {
+    gap: SPACE.sm,
+    paddingVertical: SPACE.lg,
+    paddingHorizontal: SPACE.xl,
+    justifyContent: 'center',
+  },
   // ⚠️ Les trois lignes comptent. Sans `width`/`height`, l'image de fond
   // garde sa taille NATIVE — 512 points de large — et sort du cadre par la
   // droite ; et `stretch` se pose ici, pas en `resizeMode` sur la balise, où
@@ -285,12 +300,15 @@ const styles = StyleSheet.create({
     resizeMode: 'stretch',
     borderRadius: RADIUS.sm,
   },
-  leagueHead: { flexDirection: 'row', alignItems: 'center', gap: SPACE.sm },
-  leagueCrest: { fontSize: 30 },
-  leagueChest: { fontSize: 24 },
-  leagueText: { flex: 1, minWidth: 0, gap: SPACE.xs },
-  leagueName: { ...TYPE.label, fontSize: 11, color: COLORS.text },
-  leagueSub: { ...TYPE.body, fontSize: 12, color: COLORS.muted },
+  leagueHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACE.sm,
+  },
+  leagueCrest: { fontSize: 26 },
+  leagueName: { ...TYPE.label, fontSize: 12, color: COLORS.text },
+  leagueSub: { ...TYPE.body, fontSize: 12, color: COLORS.muted, textAlign: 'center' },
 
   chapters: { flexDirection: 'row', justifyContent: 'space-between', gap: SPACE.sm },
   chapter: { flex: 1, alignItems: 'center', gap: SPACE.xs },
