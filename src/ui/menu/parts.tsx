@@ -13,8 +13,18 @@
  */
 
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ImageSourcePropType,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ICONS } from './icons';
 import { COLORS, FONTS, RADIUS, SPACE, TOUCH_MIN, TYPE, hex } from './theme';
 
 /* ------------------------------------------------------------------ cadres */
@@ -141,16 +151,33 @@ export function Button({
 /* --------------------------------------------------------------- monnaies */
 
 /**
- * La pièce d'or : un disque, avec le reflet qui le distingue d'un pion plat.
- * La même pièce partout — bourse, prix, récompense — pour qu'on reconnaisse
- * ce qu'on est en train de gagner sans lire un mot.
+ * Le jeton d'une monnaie : son image, à la taille demandée.
+ *
+ * ⚠️ Il est INVISIBLE aux lecteurs d'écran. Il ne dit rien que le nombre posé
+ * juste à côté ne dise déjà : annoncé, il ferait lire « image, 1 200 » à
+ * chaque prix de la boutique.
+ */
+function Token({ source, size }: { source: ImageSourcePropType; size: number }) {
+  return (
+    <Image
+      source={source}
+      // `contain` : la pièce est presque carrée, la couronne non. Étirer l'une
+      // à la boîte de l'autre les déformerait toutes les deux.
+      resizeMode="contain"
+      style={{ width: size, height: size }}
+      accessible={false}
+      importantForAccessibility="no"
+    />
+  );
+}
+
+/**
+ * La pièce d'or : le cheval frappé dans le métal. La même pièce partout —
+ * bourse, prix, récompense — pour qu'on reconnaisse ce qu'on est en train de
+ * gagner sans lire un mot.
  */
 export function Coin({ size = 18 }: { size?: number }) {
-  return (
-    <View style={[styles.coin, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[styles.coinFace, { fontSize: size * 0.62 }]}>⚡</Text>
-    </View>
-  );
+  return <Token source={ICONS.or} size={size} />;
 }
 
 /**
@@ -159,11 +186,7 @@ export function Coin({ size = 18 }: { size?: number }) {
  * d'un coup d'œil même daltonien.
  */
 export function Laurel({ size = 18 }: { size?: number }) {
-  return (
-    <View style={[styles.laurel, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[styles.laurelFace, { fontSize: size * 0.66 }]}>🌿</Text>
-    </View>
-  );
+  return <Token source={ICONS.laurier} size={size} />;
 }
 
 /**
@@ -390,23 +413,6 @@ const styles = StyleSheet.create({
   buttonPrice: { flexDirection: 'row', alignItems: 'center', gap: SPACE.xs, marginTop: 2 },
 
   /* monnaies */
-  coin: {
-    backgroundColor: COLORS.gold,
-    borderWidth: 1.5,
-    borderColor: COLORS.goldShadow,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  coinFace: { color: COLORS.onGold, lineHeight: undefined },
-  laurel: {
-    backgroundColor: COLORS.panelRaised,
-    borderWidth: 1.5,
-    borderColor: COLORS.laurel,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  laurelFace: { color: COLORS.laurel },
-
   pill: {
     flexDirection: 'row',
     alignItems: 'center',

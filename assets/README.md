@@ -1,11 +1,17 @@
 # assets
 
+Deux sortes d'images, et elles ne se rangent pas au même endroit :
+
+- **le décor** — `wallpaper.jpg`, ci-dessous ;
+- **les icônes de l'interface** — `ui/`, qui a son propre README : la pièce
+  d'or, la couronne de laurier et les trois icônes d'onglets.
+
 ## wallpaper.jpg — le décor du menu
 
-C'est **la seule image du menu**. Les quatre onglets n'en portent pas quatre
-exemplaires : ils se partagent celle-ci, large de quatre écrans. L'Olympe en
-montre le premier quart, « Jouer » le deuxième, le passe de combat le
-troisième, la boutique le dernier — le doigt fait voyager le regard le long
+C'est **la seule image de FOND du menu**. Les quatre onglets n'en portent pas
+quatre exemplaires : ils se partagent celle-ci, large de quatre écrans.
+L'Olympe en montre le premier quart, « Jouer » le deuxième, le passe de combat
+le troisième, la boutique le dernier — le doigt fait voyager le regard le long
 du même paysage.
 
 Pour changer le décor, **remplace ce fichier**. Rien d'autre à toucher : ni le

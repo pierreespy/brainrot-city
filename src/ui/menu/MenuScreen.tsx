@@ -48,8 +48,10 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ICONS } from './icons';
 import type { GodId } from '../../entities/gods/roster';
 import type { Progression } from '../../meta/progression';
 import { OlympeTab } from './OlympeTab';
@@ -66,12 +68,21 @@ export type MenuTab = 'olympe' | 'play' | 'pass' | 'shop';
 /** Le médaillon « Jouer », et la place qu'il creuse au milieu de la barre. */
 const MEDALLION = 86;
 
-/** L'ordre à l'écran, de gauche à droite. « Jouer » en deuxième. */
-const TABS: { id: MenuTab; label: string; icon: string }[] = [
-  { id: 'olympe', label: 'Olympe', icon: '🏛️' },
-  { id: 'play', label: 'Jouer', icon: '⚔️' },
-  { id: 'pass', label: 'Passe', icon: '🛡️' },
-  { id: 'shop', label: 'Boutique', icon: '🏺' },
+/**
+ * L'ordre à l'écran, de gauche à droite. « Jouer » en deuxième.
+ *
+ * ⚠️ Les trois dalles portent une IMAGE, le médaillon central un caractère.
+ * Ce n'est pas un oubli : un onglet nomme un LIEU — le temple, le casque du
+ * passe, l'amphore de la boutique — et une image dessinée le montre mieux
+ * qu'un émoji, dont le tracé change d'un téléphone à l'autre. « Jouer », lui,
+ * ne nomme pas un lieu mais un geste, et il est déjà dit par la taille du
+ * médaillon et par son intitulé gravé.
+ */
+const TABS: { id: MenuTab; label: string; icon: ImageSourcePropType | null }[] = [
+  { id: 'olympe', label: 'Olympe', icon: ICONS.olympe },
+  { id: 'play', label: 'Jouer', icon: null },
+  { id: 'pass', label: 'Passe', icon: ICONS.passe },
+  { id: 'shop', label: 'Boutique', icon: ICONS.boutique },
 ];
 
 const indexOf = (id: MenuTab) => TABS.findIndex((t) => t.id === id);
@@ -283,26 +294,36 @@ function TabBar({
         android_ripple={{ color: 'rgba(255, 255, 255, 0.18)' }}
         style={({ pressed }) => [styles.tab, active && styles.tabActive, pressed && styles.tabPressed]}
       >
-        <Animated.Text
-          style={[
-            styles.tabIcon,
-            {
-              // L'icône grandit à mesure que l'onglet arrive sous le doigt :
-              // le passage d'un onglet à l'autre n'a pas d'à-coup.
-              transform: [
-                {
-                  scale: scrollX.interpolate({
-                    inputRange: [(i - 1) * pageWidth, i * pageWidth, (i + 1) * pageWidth],
-                    outputRange: [0.85, 1.15, 0.85],
-                    extrapolate: 'clamp',
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          {icon}
-        </Animated.Text>
+        {icon !== null && (
+          <Animated.Image
+            source={icon}
+            // `contain` : le fronton est large, le casque plus encore, et
+            // l'amphore haute. Ils partagent la même BOÎTE, pas le même
+            // cadrage — les étirer à un carré les déformerait.
+            resizeMode="contain"
+            // L'intitulé sous l'icône dit déjà l'onglet, et la dalle porte
+            // son propre `accessibilityLabel` : annoncée, l'image ferait
+            // entendre le nom deux fois.
+            accessible={false}
+            importantForAccessibility="no"
+            style={[
+              styles.tabIcon,
+              {
+                // L'icône grandit à mesure que l'onglet arrive sous le doigt :
+                // le passage d'un onglet à l'autre n'a pas d'à-coup.
+                transform: [
+                  {
+                    scale: scrollX.interpolate({
+                      inputRange: [(i - 1) * pageWidth, i * pageWidth, (i + 1) * pageWidth],
+                      outputRange: [0.85, 1.15, 0.85],
+                      extrapolate: 'clamp',
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
+        )}
         <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>
           {label}
         </Text>
@@ -484,7 +505,13 @@ const styles = StyleSheet.create({
   // L'onglet actif est une dalle éclairée, posée sur la barre sombre.
   tabActive: { backgroundColor: COLORS.frameDark, borderBottomWidth: 3, borderBottomColor: COLORS.gold },
   tabPressed: { opacity: 0.75 },
-  tabIcon: { fontSize: 22 },
+  // La boîte de l'icône, la même pour les trois : sans hauteur fixe, une
+  // amphore haute pousserait son intitulé plus bas que celui du fronton, et
+  // la barre cesserait d'être alignée.
+  // Elle est plus LARGE que haute : le casque du passe porte deux ailes
+  // déployées, et dans une boîte carrée ce sont elles qui prennent la place,
+  // laissant le casque lui-même illisible.
+  tabIcon: { width: 38, height: 28 },
   tabLabel: { ...TYPE.tab, ...TEXT_SHADOW, fontSize: 11, color: COLORS.onDark, opacity: 0.75 },
   tabLabelActive: { color: COLORS.gold, opacity: 1 },
 });
