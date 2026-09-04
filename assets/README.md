@@ -33,8 +33,8 @@ une page pleine largeur :
   rognés sur un téléphone étroit, et beaucoup plus sur un écran large.
 - **Le haut et le bas restent calmes.** Le bandeau du profil et la barre
   d'onglets s'y posent en permanence.
-- **L'image passe au second plan.** Un brouillard clair la recouvre pour que
-  le parchemin des cartes s'y détache ; inutile d'y chercher du détail fin.
+
+L'image est affichée telle quelle, sans voile ni opacité par-dessus.
 
 Après remplacement, relance Metro en vidant son cache, sinon l'ancienne image
 reste servie :

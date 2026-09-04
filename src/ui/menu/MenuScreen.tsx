@@ -408,8 +408,8 @@ function TempleCrown() {
  * il occuperait une sixième place dans le ruban et décalerait les onglets
  * d'un écran. Posé en premier, il est aussi dessiné dessous.
  *
- * Le brouillard clair par-dessus n'est pas décoratif : le parchemin des
- * cartes se perdrait sur une photo aussi contrastée.
+ * Pas de brouillard par-dessus : les images sont montrées telles quelles,
+ * sans voile ni opacité.
  */
 function Backdrop({ pageWidth }: { pageWidth: number }) {
   return (
@@ -422,10 +422,6 @@ function Backdrop({ pageWidth }: { pageWidth: number }) {
           resizeMode="cover"
         />
       ))}
-      <LinearGradient
-        colors={[COLORS.veil, 'rgba(248, 238, 214, 0.35)', COLORS.veil]}
-        style={StyleSheet.absoluteFill}
-      />
     </View>
   );
 }
