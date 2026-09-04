@@ -20,7 +20,7 @@ import { useRef } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
-import { Bar, Button, Card, Coin, Plaque, Tile } from './parts';
+import { Bar, Button, Card, Coin, Tile } from './parts';
 import { COLORS, SPACE, TYPE } from './theme';
 
 /** Le nombre de paliers d'une saison. */
@@ -83,8 +83,6 @@ export function PassTab({ state }: { state: Progression }) {
 
   return (
     <View style={styles.root}>
-      <Plaque title="Passe de combat : saison du temple" />
-
       <Card style={styles.board}>
         <View style={styles.tracks}>
           <View style={styles.spine}>

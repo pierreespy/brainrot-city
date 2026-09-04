@@ -105,19 +105,6 @@ export function Card({
   return <View style={[styles.card, selected && styles.cardSelected, style]}>{children}</View>;
 }
 
-/** La colonne cannelée qui borde le grand cadre d'un onglet. */
-export function Column({ side }: { side: 'left' | 'right' }) {
-  return (
-    <LinearGradient
-      pointerEvents="none"
-      colors={['#fdf6e6', '#e4d2ae', '#fdf6e6']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={[styles.column, side === 'left' ? styles.columnLeft : styles.columnRight]}
-    />
-  );
-}
-
 /**
  * Le bandeau peint d'une carte : une illustration, pleine largeur.
  *
@@ -537,10 +524,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.frameDark,
   },
-
-  column: { position: 'absolute', top: 0, bottom: 0, width: 12 },
-  columnLeft: { left: -2 },
-  columnRight: { right: -2 },
 
   /* boutons */
   button: {

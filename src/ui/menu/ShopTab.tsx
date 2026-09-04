@@ -27,7 +27,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GOD_ORDER, godById, type GodId } from '../../entities/gods/roster';
 import { godPrice, ownsGod, ownsSkin, type Progression } from '../../meta/progression';
 import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins } from '../../meta/store';
-import { Button, Card, Coin, GodBadge, Laurel, Plaque, SectionTitle } from './parts';
+import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
 import { COLORS, RADIUS, SPACE, TYPE, hex } from './theme';
 
 interface Props {
@@ -50,8 +50,6 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
     >
-      <Plaque title="Boutique" />
-
       <SectionTitle>Offre du jour</SectionTitle>
       <Card style={styles.offer} selected>
         <View style={styles.offerBody}>

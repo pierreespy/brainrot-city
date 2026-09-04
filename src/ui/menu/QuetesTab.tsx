@@ -18,7 +18,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
-import { Bar, Card, Coin, Laurel, Plaque, SectionTitle } from './parts';
+import { Bar, Card, Coin, Laurel, SectionTitle } from './parts';
 import { COLORS, SPACE, TYPE } from './theme';
 
 /** Une quête : un intitulé, un but, et de quoi lire l'avance dans l'état. */
@@ -100,8 +100,6 @@ export function QuetesTab({ state }: { state: Progression }) {
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
     >
-      <Plaque title="Quêtes" />
-
       <Card style={styles.tally}>
         <Text style={styles.tallyText}>
           {finished === all.length

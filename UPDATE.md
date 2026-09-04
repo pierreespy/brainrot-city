@@ -9,6 +9,41 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-04 — Claude — 🏛️ Le temple devient une image : un cadre dessiné sur chaque onglet sauf « Jouer »
+
+**Résumé** — Le fronton et les deux colonnes, jusqu'ici dessinés en vues et
+dégradés (`TempleCrown`, `Column`), sont remplacés par une seule image,
+`assets/temple_cadre.png` (fournie par l'utilisateur). Elle est posée sur
+chaque page du ruban **sauf « Jouer »**, qui montre sa scène en grand.
+
+- `Page` prend maintenant `framed` et `title`. Le cadre est étiré à la page,
+  posé sous le contenu, et le contenu s'écarte de ses bords via `FRAME_INSET`
+  — des fractions **mesurées sur l'alpha de l'image**, pas estimées.
+- Le titre de l'onglet s'écrit dans la tablette du fronton (`FRAME_PLAQUE`).
+  Les quatre onglets encadrés ne posent donc plus leur propre `<Plaque>` :
+  deux tablettes empilées auraient fait lire le titre deux fois. « Passe de
+  combat : saison du temple » devient « Passe de combat » — la tablette est
+  large d'un titre, pas d'une phrase.
+- Deux pièges rencontrés, et corrigés, à ne pas réintroduire :
+  1. **La hauteur d'une page est imposée** (`height`, mesurée sur la nef).
+     Dans un ruban horizontal, toutes les pages prennent la hauteur de la
+     plus haute : sans cela, l'onglet le plus long étirait le cadre de tous
+     les autres, et le fronton tombait au milieu de la page.
+  2. **La taille du cadre est écrite**, pas déduite d'un `StyleSheet.absoluteFill` :
+     une `Image` porte sa taille native (1024 × 1536) et quatre côtés à zéro
+     ne la contraignent pas — elle se dessinait en grand.
+
+**Fichiers touchés** — `src/ui/menu/MenuScreen.tsx`, `src/ui/menu/parts.tsx`
+(`Column` supprimé, plus utilisé), `src/ui/menu/QuetesTab.tsx`,
+`OlympeTab.tsx`, `PassTab.tsx`, `ShopTab.tsx` (titre retiré),
+`assets/README.md`, `UPDATE.md`.
+
+**Vérifié** — `tsc --noEmit` propre, et rendu réel contrôlé au navigateur
+(`expo start --web`, captures en 390 × 844) sur « Quêtes », « Boutique » et
+« Jouer ».
+
+---
+
 ## 2026-09-04 — Claude — 🔀 Réordonnancement des onglets ; deux fonds d'écran distincts
 
 **Résumé** — Deux changements sur `MenuScreen.tsx` :

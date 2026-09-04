@@ -39,8 +39,6 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
 
   return (
     <View style={styles.root}>
-      <Plaque title="Olympe" />
-
       <ScrollView style={styles.grid} contentContainerStyle={styles.gridContent} nestedScrollEnabled>
         <View style={styles.row}>
           {GOD_ORDER.map((id) => (

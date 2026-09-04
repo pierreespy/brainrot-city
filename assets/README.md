@@ -3,6 +3,7 @@
 Deux sortes d'images, et elles ne se rangent pas au même endroit :
 
 - **le décor** — `wallpaper1.png` et `wallpaper2.png`, ci-dessous ;
+- **le cadre du menu** — `temple_cadre.png`, ci-dessous ;
 - **les icônes de l'interface** — `ui/`, qui a son propre README : la pièce
   d'or, la couronne de laurier et les trois icônes d'onglets.
 
@@ -35,6 +36,27 @@ une page pleine largeur :
   d'onglets s'y posent en permanence.
 
 L'image est affichée telle quelle, sans voile ni opacité par-dessus.
+
+## temple_cadre.png — le cadre du menu
+
+Le temple dessiné qui entoure une page : fronton et tablette gravée en haut,
+colonnes sur les côtés, socle en bas. Il est posé sur **tous les onglets sauf
+« Jouer »**, et le titre de l'onglet s'écrit dans sa tablette.
+
+Son centre est **transparent** : c'est par là que le décor se voit.
+
+| | |
+| --- | --- |
+| Chemin | `assets/temple_cadre.png` |
+| Format | PNG à fond transparent |
+| Taille | 1024 × 1536 px |
+
+⚠️ Le cadre est **étiré** à la page, et les marges du contenu sont écrites en
+fractions de l'image dans `MenuScreen.tsx` (`FRAME_INSET`, `FRAME_PLAQUE`),
+mesurées sur son alpha : vide intérieur à 11,3 % des côtés, 15 % du haut,
+5,5 % du bas ; tablette du fronton entre 4,2 % et 11,4 % de la hauteur. Si le
+dessin change de proportions, il faut re-mesurer ces fractions, sinon le
+contenu passe sous les colonnes et le titre sort de sa tablette.
 
 Après remplacement, relance Metro en vidant son cache, sinon l'ancienne image
 reste servie :

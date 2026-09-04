@@ -60,7 +60,6 @@ import { QuetesTab } from './QuetesTab';
 import { SettingsSheet } from './SettingsSheet';
 import { ShopTab } from './ShopTab';
 import { TopBar } from './TopBar';
-import { Column } from './parts';
 import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE } from './theme';
 
 export type MenuTab = 'olympe' | 'quetes' | 'play' | 'pass' | 'shop';
@@ -68,6 +67,27 @@ export type MenuTab = 'olympe' | 'quetes' | 'play' | 'pass' | 'shop';
 /** Le décor de « Jouer », et celui, partagé, de tous les autres onglets. */
 const WALLPAPER_PLAY = require('../../../assets/wallpaper1.png');
 const WALLPAPER_OTHER = require('../../../assets/wallpaper2.png');
+
+/** Le temple dessiné qui encadre une page — fronton, colonnes et socle. */
+const TEMPLE_FRAME = require('../../../assets/temple_cadre.png');
+
+/**
+ * Où s'arrête le dessin du cadre et où commence son vide, en fraction de
+ * l'image (1024 × 1536) : c'est ce qui donne les marges du contenu.
+ *
+ * ⚠️ Mesuré sur l'ALPHA de `temple_cadre.png`, pas estimé à l'œil. Le cadre
+ * est étiré à la page, donc ces fractions restent justes quelle que soit la
+ * taille de l'écran — mais elles cessent de l'être si l'image change : il
+ * faut alors re-mesurer, sinon le contenu passe sous les colonnes.
+ */
+const FRAME_INSET = { side: 0.113, top: 0.15, bottom: 0.055 };
+
+/**
+ * La tablette gravée du fronton, dans les mêmes fractions : c'est là que
+ * s'inscrit le titre de l'onglet, plutôt que sur une seconde tablette posée
+ * en dessous.
+ */
+const FRAME_PLAQUE = { top: 0.042, height: 0.072, side: 0.19 };
 
 /** Le médaillon « Jouer », et la place qu'il creuse au milieu de la barre. */
 const MEDALLION = 86;
@@ -123,6 +143,11 @@ export function MenuScreen({
   const [index, setIndex] = useState(indexOf('play'));
   const indexRef = useRef(index);
   indexRef.current = index;
+
+  // La hauteur d'une page, mesurée : le cadre est étiré à la page, et ses
+  // marges hautes et basses se comptent donc sur la hauteur, pas la largeur
+  // (les pourcentages de Yoga, eux, se mesurent tous sur la largeur).
+  const [naveHeight, setNaveHeight] = useState(0);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
@@ -187,9 +212,7 @@ export function MenuScreen({
           onOpenShop={() => goTo('shop')}
         />
 
-        <TempleCrown />
-
-        <View style={styles.nave}>
+        <View style={styles.nave} onLayout={(e) => setNaveHeight(e.nativeEvent.layout.height)}>
           <Animated.ScrollView
             ref={pagerRef as never}
             style={styles.pager}
@@ -209,11 +232,11 @@ export function MenuScreen({
           >
             <Backdrop pageWidth={pageWidth} />
 
-            <Page width={pageWidth}>
+            <Page width={pageWidth} height={naveHeight} framed title="Quêtes">
               <QuetesTab state={state} />
             </Page>
 
-            <Page width={pageWidth}>
+            <Page width={pageWidth} height={naveHeight} framed title="Olympe">
               <OlympeTab
                 state={state}
                 onSelectGod={onSelectGod}
@@ -223,24 +246,18 @@ export function MenuScreen({
               />
             </Page>
 
-            <Page width={pageWidth}>
+            <Page width={pageWidth} height={naveHeight}>
               <PlayTab state={state} onPlay={onPlay} />
             </Page>
 
-            <Page width={pageWidth}>
+            <Page width={pageWidth} height={naveHeight} framed title="Passe de combat">
               <PassTab state={state} />
             </Page>
 
-            <Page width={pageWidth}>
+            <Page width={pageWidth} height={naveHeight} framed title="Boutique">
               <ShopTab state={state} onBuyGod={onBuyGod} onBuySkin={onBuySkin} />
             </Page>
           </Animated.ScrollView>
-
-          {/* Les deux colonnes du temple. Elles sont posées APRÈS le ruban,
-              donc par-dessus l'image qui glisse, et ne prennent jamais le
-              doigt : le glissement horizontal part aussi depuis le bord. */}
-          <Column side="left" />
-          <Column side="right" />
         </View>
 
         <TabBar index={index} pageWidth={pageWidth} scrollX={scrollX} onGo={goTo} />
@@ -375,26 +392,6 @@ function TabBar({
 }
 
 /**
- * Le haut du temple : le fronton et sa frise, entre le bandeau et le ruban.
- *
- * Il ne porte aucune information — c'est le linteau qui referme le cadre que
- * les deux colonnes ouvrent sur les côtés. Sans lui, elles auraient l'air de
- * deux barres posées au hasard des bords.
- */
-function TempleCrown() {
-  return (
-    <View pointerEvents="none" style={styles.crown}>
-      <View style={styles.pediment} />
-      <View style={styles.frieze}>
-        {Array.from({ length: 16 }, (_, i) => (
-          <View key={i} style={styles.friezeNotch} />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-/**
  * Le décor : DEUX images, une par onglet selon ce qu'il montre — « Jouer »
  * a la sienne (`wallpaper1.png`), les quatre autres partagent la même
  * (`wallpaper2.png`).
@@ -431,9 +428,90 @@ function Backdrop({ pageWidth }: { pageWidth: number }) {
  *
  * ⚠️ Elle est TRANSPARENTE, et c'est ce qui laisse voir le décor commun posé
  * dessous. Lui donner un fond couperait l'image en quatre.
+ *
+ * ⚠️ `framed` pose le temple dessiné (`temple_cadre.png`) sur la page :
+ * fronton en haut, colonnes sur les côtés, socle en bas. Toutes les pages le
+ * portent SAUF « Jouer », qui montre sa scène en grand.
+ *
+ * Le cadre est ÉTIRÉ à la page, pas cadré : c'est un encadrement, et ses
+ * bords doivent tomber sur ceux de la page quel que soit le téléphone. Il est
+ * posé en premier, donc sous le contenu, et le contenu s'écarte de ses
+ * marges (`FRAME_INSET`) pour ne pas passer sous les colonnes.
+ *
+ * ⚠️ Le titre de l'onglet s'écrit DANS la tablette du fronton. C'est pour
+ * cela qu'aucun onglet encadré ne pose plus sa propre `Plaque` : la tablette
+ * est déjà dessinée dans le cadre, et deux tablettes empilées feraient lire
+ * le titre deux fois.
  */
-function Page({ width, children }: { width: number; children: ReactNode }) {
-  return <View style={[styles.page, { width }]}>{children}</View>;
+function Page({
+  width,
+  height,
+  framed = false,
+  title,
+  children,
+}: {
+  width: number;
+  height: number;
+  framed?: boolean;
+  title?: string;
+  children: ReactNode;
+}) {
+  // Tant que la page n'est pas mesurée, on ne connaît pas ses marges hautes
+  // et basses : le cadre attend plutôt que de se poser de travers.
+  const showFrame = framed && height > 0;
+
+  return (
+    <View
+      style={[
+        styles.page,
+        // ⚠️ La hauteur est IMPOSÉE, pas laissée au contenu. Dans un ruban
+        // horizontal, toutes les pages prennent la hauteur de la plus haute :
+        // sans cela, un onglet au contenu long étirerait le cadre de tous les
+        // autres bien au-delà de l'écran, et le fronton descendrait au milieu
+        // de la page.
+        { width, height: height > 0 ? height : undefined },
+        showFrame
+          ? {
+              paddingHorizontal: width * FRAME_INSET.side,
+              paddingTop: height * FRAME_INSET.top,
+              paddingBottom: height * FRAME_INSET.bottom,
+            }
+          : styles.pageBare,
+      ]}
+    >
+      {showFrame && (
+        <View pointerEvents="none" style={[styles.frame, { width, height }]}>
+          <Image
+            source={TEMPLE_FRAME}
+            resizeMode="stretch"
+            accessible={false}
+            importantForAccessibility="no"
+            style={{ width, height }}
+          />
+        </View>
+      )}
+      {showFrame && title !== undefined && (
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          accessibilityRole="header"
+          style={[
+            styles.frameTitle,
+            {
+              top: height * FRAME_PLAQUE.top,
+              height: height * FRAME_PLAQUE.height,
+              lineHeight: height * FRAME_PLAQUE.height,
+              left: width * FRAME_PLAQUE.side,
+              right: width * FRAME_PLAQUE.side,
+            },
+          ]}
+        >
+          {title.toUpperCase()}
+        </Text>
+      )}
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -442,37 +520,28 @@ const styles = StyleSheet.create({
 
   backdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, flexDirection: 'row' },
 
-  // La nef : le ruban, et les deux colonnes qui le bordent.
+  // La nef : le ruban et ses pages.
   nave: { flex: 1 },
   pager: { flex: 1 },
-  // Les cartes s'arrêtent en deçà des colonnes, et au-dessus du médaillon.
-  page: { paddingHorizontal: SPACE.md + SPACE.sm, paddingBottom: MEDALLION / 3 },
-
-  crown: { backgroundColor: 'transparent' },
-  // Le fronton : un triangle, dessiné avec les bordures — la seule façon
-  // d'obtenir un angle en React Native, qui ne connaît que des rectangles.
-  pediment: {
-    alignSelf: 'center',
-    width: 0,
-    height: 0,
-    borderLeftWidth: 110,
-    borderRightWidth: 110,
-    borderBottomWidth: 18,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: COLORS.frame,
+  page: {},
+  // ⚠️ La taille du cadre est ÉCRITE, pas déduite d'un `absoluteFill` : une
+  // image porte sa taille native (1024 × 1536), et quatre côtés à zéro ne la
+  // contraignent pas — elle se dessinerait en grand, fronton au milieu de la
+  // page.
+  frame: { position: 'absolute', left: 0, top: 0 },
+  // Sans cadre — « Jouer » — les cartes s'écartent quand même des bords, et
+  // s'arrêtent au-dessus du médaillon.
+  pageBare: { paddingHorizontal: SPACE.md + SPACE.sm, paddingBottom: MEDALLION / 3 },
+  // Le titre gravé dans la tablette du fronton. `lineHeight` égale la hauteur
+  // de la boîte : c'est ce qui le centre dans la tablette sans marge à régler
+  // à la main.
+  frameTitle: {
+    ...TYPE.banner,
+    position: 'absolute',
+    fontSize: 20,
+    color: COLORS.text,
+    textAlign: 'center',
   },
-  frieze: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    height: 12,
-    backgroundColor: COLORS.frameDark,
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: COLORS.frameDeep,
-  },
-  friezeNotch: { width: 6, height: 6, backgroundColor: COLORS.goldLight, opacity: 0.7 },
 
   tabBar: {
     flexDirection: 'row',
