@@ -79,13 +79,6 @@ export const COLORS = {
    * l'éclaircir la fait passer au second plan sans la faire disparaître.
    */
   veil: 'rgba(248, 238, 214, 0.55)',
-  /**
-   * Le voile posé DANS le cadre du temple, entre ses colonnes. Plus opaque
-   * que le précédent : le décor y est peint jusque dans le cadre — nuages,
-   * colonnes, parvis — et un brouillard léger laissait les cartes se perdre
-   * dedans.
-   */
-  veilFramed: 'rgba(248, 238, 214, 0.75)',
 
   /** Un acquis, une étape franchie. */
   done: '#4c8b3f',

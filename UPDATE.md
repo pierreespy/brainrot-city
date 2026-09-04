@@ -9,6 +9,18 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-04 — Claude — 🌤️ Le voile intérieur est retiré
+
+**Résumé** — Le voile ajouté juste en dessous (`COLORS.veilFramed`, posé
+entre les colonnes) est supprimé à la demande de l'utilisateur : le cadre se
+montre tel quel, sans filtre. La couleur du thème part avec lui, et les
+marges du contenu (`FRAME_INSET`) ne bougent pas.
+
+**Fichiers touchés** — `src/ui/menu/MenuScreen.tsx`, `src/ui/menu/theme.ts`,
+`assets/README.md`, `UPDATE.md`.
+
+---
+
 ## 2026-09-04 — Claude — 🌫️ Le cadre porte son décor, et un voile plus opaque à l'intérieur
 
 **Résumé** — L'utilisateur a refait `temple_cadre.png` en y intégrant le

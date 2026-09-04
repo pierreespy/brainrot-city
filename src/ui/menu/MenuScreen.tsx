@@ -490,20 +490,6 @@ function Page({
             importantForAccessibility="no"
             style={{ width, height }}
           />
-          {/* Le voile, posé DANS le cadre et nulle part ailleurs : le décor
-              est peint jusque dans l'image, et les cartes s'y perdraient. Il
-              s'arrête aux colonnes, sinon il éteindrait le cadre lui-même. */}
-          <View
-            style={[
-              styles.veil,
-              {
-                left: width * FRAME_INSET.side,
-                right: width * FRAME_INSET.side,
-                top: height * FRAME_INSET.top,
-                bottom: height * FRAME_INSET.bottom,
-              },
-            ]}
-          />
         </View>
       )}
       {showFrame && title !== undefined && (
@@ -545,7 +531,6 @@ const styles = StyleSheet.create({
   // contraignent pas — elle se dessinerait en grand, fronton au milieu de la
   // page.
   frame: { position: 'absolute', left: 0, top: 0 },
-  veil: { position: 'absolute', backgroundColor: COLORS.veilFramed },
   // Sans cadre — « Jouer » — les cartes s'écartent quand même des bords, et
   // s'arrêtent au-dessus du médaillon.
   pageBare: { paddingHorizontal: SPACE.md + SPACE.sm, paddingBottom: MEDALLION / 3 },

@@ -60,10 +60,8 @@ du haut, 10 % du bas ; tablette du fronton entre 5 % et 11,5 % de la hauteur.
 Si le dessin change de proportions, il faut re-mesurer ces fractions, sinon le
 contenu passe sous les colonnes et le titre sort de sa tablette.
 
-⚠️ Un **voile clair** (`COLORS.veilFramed`) est posé dans cet intérieur, et
-nulle part ailleurs : le décor est peint jusque dans le cadre, et les cartes
-s'y perdraient. Il s'arrête aux colonnes — étalé sur toute la page, il
-éteindrait le cadre lui-même.
+Aucun voile n'est posé par-dessus : l'image se montre telle quelle, et c'est
+au dessin lui-même de rester assez calme pour porter les cartes.
 
 Après remplacement, relance Metro en vidant son cache, sinon l'ancienne image
 reste servie :
