@@ -73,8 +73,7 @@ const TEMPLE_FRAME = require('../../../assets/temple_cadre.png');
 
 /**
  * Où s'arrête le dessin du cadre et où commence son intérieur, en fraction de
- * l'image (1684 × 2528) : c'est ce qui donne les marges du contenu, et la
- * boîte du voile.
+ * l'image (1393 × 2475) : c'est ce qui donne les marges du contenu.
  *
  * ⚠️ Mesuré sur l'image — le liseré d'or qui borde les colonnes, le linteau
  * et le socle — pas estimé à l'œil. Le cadre est étiré à la page, donc ces
@@ -82,14 +81,14 @@ const TEMPLE_FRAME = require('../../../assets/temple_cadre.png');
  * cessent de l'être dès que le dessin change, et il faut alors re-mesurer,
  * sinon le contenu passe sous les colonnes.
  */
-const FRAME_INSET = { side: 0.093, top: 0.145, bottom: 0.1 };
+const FRAME_INSET = { side: 0.122, top: 0.185, bottom: 0.14 };
 
 /**
  * La tablette gravée du fronton, dans les mêmes fractions : c'est là que
  * s'inscrit le titre de l'onglet, plutôt que sur une seconde tablette posée
  * en dessous.
  */
-const FRAME_PLAQUE = { top: 0.05, height: 0.065, side: 0.2 };
+const FRAME_PLAQUE = { top: 0.098, height: 0.059, side: 0.2 };
 
 /** Le médaillon « Jouer », et la place qu'il creuse au milieu de la barre. */
 const MEDALLION = 86;
@@ -493,23 +492,25 @@ function Page({
         </View>
       )}
       {showFrame && title !== undefined && (
-        <Text
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          accessibilityRole="header"
+        // ⚠️ Le titre est centré par sa BOÎTE, pas par un `lineHeight` égal à
+        // la hauteur de la tablette : iOS ne répartit pas ce surplus de part
+        // et d'autre du texte comme le web, et le titre montait sur le toit.
+        <View
+          pointerEvents="none"
           style={[
-            styles.frameTitle,
+            styles.framePlaque,
             {
               top: height * FRAME_PLAQUE.top,
               height: height * FRAME_PLAQUE.height,
-              lineHeight: height * FRAME_PLAQUE.height,
               left: width * FRAME_PLAQUE.side,
               right: width * FRAME_PLAQUE.side,
             },
           ]}
         >
-          {title.toUpperCase()}
-        </Text>
+          <Text numberOfLines={1} adjustsFontSizeToFit accessibilityRole="header" style={styles.frameTitle}>
+            {title.toUpperCase()}
+          </Text>
+        </View>
       )}
       {children}
     </View>
@@ -534,16 +535,10 @@ const styles = StyleSheet.create({
   // Sans cadre — « Jouer » — les cartes s'écartent quand même des bords, et
   // s'arrêtent au-dessus du médaillon.
   pageBare: { paddingHorizontal: SPACE.md + SPACE.sm, paddingBottom: MEDALLION / 3 },
-  // Le titre gravé dans la tablette du fronton. `lineHeight` égale la hauteur
-  // de la boîte : c'est ce qui le centre dans la tablette sans marge à régler
-  // à la main.
-  frameTitle: {
-    ...TYPE.banner,
-    position: 'absolute',
-    fontSize: 20,
-    color: COLORS.text,
-    textAlign: 'center',
-  },
+  // La tablette du fronton : une boîte posée sur le dessin, qui centre son
+  // titre dans les deux sens.
+  framePlaque: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  frameTitle: { ...TYPE.banner, fontSize: 20, color: COLORS.text, textAlign: 'center' },
 
   tabBar: {
     flexDirection: 'row',

@@ -43,20 +43,21 @@ Le temple dessiné qui entoure une page : fronton et tablette gravée en haut,
 colonnes sur les côtés, socle en bas. Il est posé sur **tous les onglets sauf
 « Jouer »**, et le titre de l'onglet s'écrit dans sa tablette.
 
-L'image est **opaque, décor compris** : le paysage est peint jusque dans le
-cadre, plutôt que laissé transparent sur `wallpaper2.png`. C'est elle, et
-elle seule, qu'on voit sur un onglet encadré.
+L'image porte **son décor et son fond** : ciel autour du temple, marbre à
+l'intérieur du cadre. C'est elle, et elle seule, qu'on voit sur un onglet
+encadré.
 
 | | |
 | --- | --- |
 | Chemin | `assets/temple_cadre.png` |
 | Format | PNG |
-| Taille | 1684 × 2528 px |
+| Taille | 1393 × 2475 px (portrait, ratio ~9:16) |
 
 ⚠️ Le cadre est **étiré** à la page, et les marges du contenu sont écrites en
 fractions de l'image dans `MenuScreen.tsx` (`FRAME_INSET`, `FRAME_PLAQUE`),
-mesurées sur le liseré d'or du dessin : intérieur à 9,3 % des côtés, 14,5 %
-du haut, 10 % du bas ; tablette du fronton entre 5 % et 11,5 % de la hauteur.
+mesurées sur le liseré d'or du dessin : intérieur à 12,2 % des côtés, 18,5 %
+du haut, 14 % du bas ; tablette du fronton entre 9,8 % et 15,7 % de la
+hauteur, et entre 20 % et 80 % de la largeur.
 Si le dessin change de proportions, il faut re-mesurer ces fractions, sinon le
 contenu passe sous les colonnes et le titre sort de sa tablette.
 

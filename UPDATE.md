@@ -9,6 +9,26 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-04 — Claude — 📐 Nouveau cadre (marbre) : fractions re-mesurées, titre recentré pour iOS
+
+**Résumé** — L'utilisateur a redessiné `temple_cadre.png` (1393 × 2475, ratio
+~9:16, intérieur en marbre plein). Deux corrections :
+
+1. `FRAME_INSET` et `FRAME_PLAQUE` re-mesurés sur ce dessin : intérieur à
+   12,2 % des côtés, 18,5 % du haut, 14 % du bas ; tablette entre 9,8 % et
+   15,7 % de la hauteur. **Ces fractions sont à re-mesurer à chaque nouveau
+   dessin** — c'est la troisième fois qu'elles changent.
+2. Le titre du fronton est centré par sa BOÎTE (une vue `alignItems` /
+   `justifyContent` centrés) et non plus par un `lineHeight` égal à la
+   hauteur de la tablette. iOS ne répartit pas ce surplus autour du texte
+   comme le web : le titre montait sur le toit sur téléphone alors qu'il
+   était juste au navigateur.
+
+**Fichiers touchés** — `src/ui/menu/MenuScreen.tsx`, `assets/README.md`,
+`UPDATE.md` (et `assets/temple_cadre.png`, remplacé par l'utilisateur).
+
+---
+
 ## 2026-09-04 — Claude — 🌤️ Le voile intérieur est retiré
 
 **Résumé** — Le voile ajouté juste en dessous (`COLORS.veilFramed`, posé
