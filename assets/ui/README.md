@@ -19,7 +19,7 @@ README voisin explique comment le remplacer.
 | `desert.png` | Le médaillon de l'**Agora**, sur la frise de l'onglet Jouer |
 | `vague.png` | Le médaillon du **Port** |
 | `foret.png` | Le médaillon du **Bois sacré** |
-| `volcan.png` | Le médaillon de l'**Acropole** |
+| `volcan.png` | Le médaillon de l'**Acropole** — détouré de `volcanbon.jpg` |
 | `bouton-match.png` | La plaque « TROUVER MATCH », sur la carte de l'arène |
 | `bouton-continuer.png` | La plaque « CONTINUER », sur la carte de la course |
 
@@ -75,17 +75,41 @@ Deux conséquences visibles :
   pastille « bientôt ». Le mode n'existe pas encore ; la plaque l'annonce sans
   le promettre.
 
-## Deux états cuits dans le dessin
+## Un état cuit dans le dessin, et comment il a été réglé
 
-⚠️ `desert.jpg` et `volcan.jpg` portent un état **dessiné dans l'image** :
-un halo doré pour l'un, un cadenas pour l'autre. Or l'application calcule
-l'état d'un chapitre à partir du niveau du joueur — un cadre d'or quand il est
-atteint, un voile quand il ne l'est pas.
+⚠️ Une image de médaillon ne doit porter AUCUN état. L'application calcule
+elle-même si un chapitre est atteint — cadre d'or quand il l'est, voile quand
+il ne l'est pas — à partir du niveau du joueur. Un halo ou un cadenas dessiné
+dans le fichier contredit ce calcul un chapitre sur deux.
 
-Le halo du désert a été retiré, en recadrant sur le cercle du médaillon
-(option `--cercle`, voir `tools/detourer.py`). **Le cadenas du volcan, lui,
-reste** : il chevauche le disque, on ne peut pas le découper sans entamer le
-dessin. L'Acropole aura donc l'air verrouillée même une fois le niveau 30
-atteint. Pour y remédier, il faut **régénérer `images/volcan.jpg` sans le
-cadenas**, comme `vague.jpg` et `foret.jpg` qui n'en portent pas, puis relancer
-le détourage.
+Les deux sources qui en portaient un ont été traitées différemment, parce que
+la géométrie ne laissait pas le choix :
+
+- **`desert.jpg`** porte un halo doré, DESSINÉ par-dessus le damier. Là, il n'y
+  a plus de damier à reconnaître — les carreaux n'y alternent plus — donc
+  aucune analyse ne peut le retirer. Le halo étant hors du disque, on recadre
+  sur le cercle du médaillon (option `--cercle`, voir `tools/detourer.py`).
+- **`volcan.jpg`** portait un cadenas, et lui chevauchait le disque : impossible
+  à découper sans entamer le dessin. Il a fallu régénérer l'image. C'est
+  **`volcanbon.jpg`** qui sert aujourd'hui, et c'est la bonne façon de s'en
+  sortir — corriger la source plutôt que rattraper au découpage.
+
+## Refaire un fichier
+
+Les commandes exactes, une par image :
+
+```
+python3 tools/detourer.py "images/Olympe.jpg"          assets/ui/olympe.png    256x256
+python3 tools/detourer.py "images/passe de combat.jpg" assets/ui/passe.png     256x256
+python3 tools/detourer.py "images/boutique.jpg"        assets/ui/boutique.png  256x256
+python3 tools/detourer.py "images/pièce-or.jpg"        assets/ui/piece-or.png  192x192
+python3 tools/detourer.py "images/laurier.jpg"         assets/ui/laurier.png   192x192
+python3 tools/detourer.py "images/zeus joueur.jpg"     assets/ui/zeus.png      256x256
+python3 tools/detourer.py "images/vague.jpg"           assets/ui/vague.png     256x256
+python3 tools/detourer.py "images/foret.jpg"           assets/ui/foret.png     256x256
+python3 tools/detourer.py "images/volcanbon.jpg"       assets/ui/volcan.png    256x256
+python3 tools/detourer.py "images/bouton match.jpg"    assets/ui/bouton-match.png     768x768
+python3 tools/detourer.py "images/bouton continuer.jpg" assets/ui/bouton-continuer.png 768x768
+python3 tools/detourer.py "images/desert.jpg"          assets/ui/desert.png    256x256 \
+    --cercle 512,575,444
+```
