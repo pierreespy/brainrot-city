@@ -26,11 +26,10 @@
  * d'onglets avance avec lui — d'où le `Animated.ScrollView` et la valeur
  * `scrollX` ci-dessous, plutôt qu'un simple `useState` d'onglet actif.
  *
- * ⚠️ Le décor est UNE SEULE image, large de TOUS les onglets réunis, posée
- * DANS le ruban (voir `Backdrop`). Chacun en montre une tranche, dans
- * l'ordre : le doigt fait voyager le regard le long d'un même paysage, sans
- * interpolation à la main — le défilement natif s'en charge. Sa largeur suit
- * `TABS.length`, donc ajouter un onglet ne demande rien de plus ici.
+ * ⚠️ Le décor est posé DANS le ruban (voir `Backdrop`), en tranches d'une
+ * page chacune : « Jouer » montre `wallpaper1.png`, les quatre autres
+ * onglets partagent `wallpaper2.png`. Le doigt fait glisser ces tranches
+ * sans interpolation à la main — le défilement natif s'en charge.
  *
  * ⚠️ Le bandeau du haut et la barre d'onglets, eux, ne bougent JAMAIS : ce
  * sont des habillages de l'écran, pas des morceaux de la scène. Ils sont
@@ -66,6 +65,10 @@ import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE } from './theme';
 
 export type MenuTab = 'olympe' | 'quetes' | 'play' | 'pass' | 'shop';
 
+/** Le décor de « Jouer », et celui, partagé, de tous les autres onglets. */
+const WALLPAPER_PLAY = require('../../../assets/wallpaper1.png');
+const WALLPAPER_OTHER = require('../../../assets/wallpaper2.png');
+
 /** Le médaillon « Jouer », et la place qu'il creuse au milieu de la barre. */
 const MEDALLION = 86;
 
@@ -81,8 +84,8 @@ const MEDALLION = 86;
  * il est déjà dit par la taille du médaillon et par son intitulé gravé.
  */
 const TABS: { id: MenuTab; label: string; icon: ImageSourcePropType | null }[] = [
-  { id: 'olympe', label: 'Olympe', icon: ICONS.olympe },
   { id: 'quetes', label: 'Quêtes', icon: ICONS.quetes },
+  { id: 'olympe', label: 'Olympe', icon: ICONS.olympe },
   { id: 'play', label: 'Jouer', icon: null },
   { id: 'pass', label: 'Passe', icon: ICONS.passe },
   { id: 'shop', label: 'Boutique', icon: ICONS.boutique },
@@ -204,7 +207,11 @@ export function MenuScreen({
               pagerRef.current?.scrollTo({ x: indexOf('play') * pageWidth, y: 0, animated: false });
             }}
           >
-            <Backdrop width={pageWidth * TABS.length} />
+            <Backdrop pageWidth={pageWidth} />
+
+            <Page width={pageWidth}>
+              <QuetesTab state={state} />
+            </Page>
 
             <Page width={pageWidth}>
               <OlympeTab
@@ -214,10 +221,6 @@ export function MenuScreen({
                 onBuySkin={onBuySkin}
                 onEquipSkin={onEquipSkin}
               />
-            </Page>
-
-            <Page width={pageWidth}>
-              <QuetesTab state={state} />
             </Page>
 
             <Page width={pageWidth}>
@@ -341,8 +344,8 @@ function TabBar({
   return (
     <View style={styles.tabBar}>
       <View style={styles.side}>
-        {slab('olympe')}
         {slab('quetes')}
+        {slab('olympe')}
       </View>
 
       <View style={styles.dock} />
@@ -392,27 +395,33 @@ function TempleCrown() {
 }
 
 /**
- * Le décor : UNE image, large des quatre onglets réunis.
+ * Le décor : DEUX images, une par onglet selon ce qu'il montre — « Jouer »
+ * a la sienne (`wallpaper1.png`), les quatre autres partagent la même
+ * (`wallpaper2.png`).
  *
- * ⚠️ Elle vit DANS le ruban — c'est un enfant de la zone qui défile, pas un
- * calque posé derrière l'écran. C'est ce qui la fait bouger avec le doigt
- * sans une ligne d'animation.
+ * ⚠️ Il vit DANS le ruban — c'est un enfant de la zone qui défile, pas un
+ * calque posé derrière l'écran. C'est ce qui le fait bouger avec le doigt
+ * sans une ligne d'animation : chaque tranche est simplement la largeur
+ * d'une page, rangée dans le même ordre que les onglets.
  *
- * ⚠️ Elle est en position absolue, donc HORS du rang des pages : sans cela
- * elle occuperait une cinquième place dans le ruban et décalerait les
- * onglets d'un écran. Posée en premier, elle est aussi dessinée dessous.
+ * ⚠️ Il est en position absolue, donc HORS du rang des pages : sans cela
+ * il occuperait une sixième place dans le ruban et décalerait les onglets
+ * d'un écran. Posé en premier, il est aussi dessiné dessous.
  *
  * Le brouillard clair par-dessus n'est pas décoratif : le parchemin des
  * cartes se perdrait sur une photo aussi contrastée.
  */
-function Backdrop({ width }: { width: number }) {
+function Backdrop({ pageWidth }: { pageWidth: number }) {
   return (
-    <View pointerEvents="none" style={[styles.backdrop, { width }]}>
-      <Image
-        source={require('../../../assets/wallpaper.jpg')}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      />
+    <View pointerEvents="none" style={[styles.backdrop, { width: pageWidth * TABS.length }]}>
+      {TABS.map((tab) => (
+        <Image
+          key={tab.id}
+          source={tab.id === 'play' ? WALLPAPER_PLAY : WALLPAPER_OTHER}
+          style={{ width: pageWidth, height: '100%' }}
+          resizeMode="cover"
+        />
+      ))}
       <LinearGradient
         colors={[COLORS.veil, 'rgba(248, 238, 214, 0.35)', COLORS.veil]}
         style={StyleSheet.absoluteFill}
@@ -435,7 +444,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.ground },
   safe: { flex: 1 },
 
-  backdrop: { position: 'absolute', top: 0, bottom: 0, left: 0 },
+  backdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, flexDirection: 'row' },
 
   // La nef : le ruban, et les deux colonnes qui le bordent.
   nave: { flex: 1 },

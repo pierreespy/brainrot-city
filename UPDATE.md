@@ -9,6 +9,35 @@ vérifié, et ce qui a été supprimé ou cassé.
 
 ---
 
+## 2026-09-04 — Claude — 🔀 Réordonnancement des onglets ; deux fonds d'écran distincts
+
+**Résumé** — Deux changements sur `MenuScreen.tsx` :
+
+1. **Ordre des onglets.** Nouvel ordre à l'écran : Quêtes, Olympe, Jouer,
+   Passe, Boutique (Quêtes et Olympe échangés par rapport à avant). Le
+   médaillon « Jouer » reste au milieu. Trois endroits à synchroniser dans
+   le même fichier : le tableau `TABS` (qui pilote aussi l'ordre du ruban de
+   pages), l'ordre des `<Page>` dans l'`Animated.ScrollView`, et l'ordre des
+   `slab(...)` du côté gauche de la barre d'onglets.
+2. **Deux fonds d'écran au lieu d'un.** Le décor n'est plus une seule image
+   panoramique partagée par tous les onglets : `Backdrop` affiche désormais
+   `assets/wallpaper1.png` sur la tranche de l'onglet « Jouer », et
+   `assets/wallpaper2.png` sur celle des quatre autres onglets. Le décor
+   reste un enfant du ruban qui défile (une image par tranche de
+   `pageWidth`, alignées dans le même ordre que `TABS`), donc le glissement
+   au doigt continue de fonctionner sans code d'interpolation.
+
+**Fichiers touchés** — `src/ui/menu/MenuScreen.tsx`, `assets/README.md`,
+`metro.config.js` (commentaire), `assets/wallpaper.jpg` (supprimé, remplacé
+par `assets/wallpaper1.png` et `assets/wallpaper2.png` — pour l'instant des
+PNG transparents 1×1 en attendant les vraies images).
+
+**Pas encore fait** — Les deux fichiers `wallpaper1.png`/`wallpaper2.png`
+sont des espaces réservés : il faut les remplacer par les vraies images
+(voir `assets/README.md` pour le format attendu).
+
+---
+
 ## 2026-09-04 — Claude — 💰 La drachme devient l'or, l'ambroisie devient le laurier ; deux paliers de parures ; infrastructure de chargement des modèles 3D
 
 **Résumé** — Trois chantiers liés, décidés en discutant du pipeline d'intégration
