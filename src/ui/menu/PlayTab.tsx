@@ -92,11 +92,22 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
             LIGUE OLYMPIENNE : NIVEAU {rank.level}
           </Text>
         </View>
-        <Bar value={rank.progress} max={rank.needed} label={`${rank.progress} / ${rank.needed} fidèles`} />
+        {/* ⚠️ Des TROPHÉES, pas des fidèles. Le rang se calcule bien sur le
+            meilleur cortège (voir `rank.ts`), mais ce qui monte d'un palier à
+            l'autre est une échelle de ligue : la ligne du dessous, elle, dit
+            les fidèles, et les deux unités ne doivent pas se confondre. */}
+        <Bar
+          value={rank.progress}
+          max={rank.needed}
+          label={`${rank.progress} / ${rank.needed} trophées`}
+        />
+        {/* ⚠️ Une seule ligne, et donc une phrase COURTE pour l'état vide :
+            la cadette du cadre tient sur un rang, et une phrase plus longue
+            s'y coupait au milieu d'un mot. */}
         <Text style={styles.leagueSub} numberOfLines={1}>
           {state.bestScore > 0
             ? `Meilleur cortège : ${state.bestScore.toLocaleString('fr-FR')} fidèles`
-            : 'Aucune course encore : le premier cortège fixera le rang.'}
+            : 'Le premier cortège fixera le rang.'}
         </Text>
       </ImageBackground>
 
@@ -283,9 +294,15 @@ const styles = StyleSheet.create({
   // rang aurait penché ; c'est d'ailleurs ce que la caisse à outils tenait en
   // équilibre, et elle n'annonçait rien.
   league: {
+    minHeight: 146,
     gap: SPACE.sm,
-    paddingVertical: SPACE.lg,
-    paddingHorizontal: SPACE.xl,
+    // ⚠️ Ces marges ne sont pas décoratives, elles sont MESURÉES sur le
+    // dessin. Les ferrures d'angle du cadre mordent sur un seizième de sa
+    // largeur et sur un sixième de sa hauteur ; en deçà, la jauge passe
+    // dessous et le meilleur cortège vient buter sur le bord bas. On garde
+    // donc le double de leur emprise, pour que rien n'affleure jamais.
+    paddingVertical: SPACE.xl + SPACE.sm,
+    paddingHorizontal: SPACE.xxl + SPACE.sm,
     justifyContent: 'center',
   },
   // ⚠️ Les trois lignes comptent. Sans `width`/`height`, l'image de fond

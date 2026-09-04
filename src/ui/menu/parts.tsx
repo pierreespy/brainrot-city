@@ -464,24 +464,28 @@ const styles = StyleSheet.create({
   // Le cadre dessiné porte déjà sa bordure et son parchemin : la tablette
   // n'a plus à en peindre. Sa hauteur est celle des deux autres, pour qu'un
   // titre ne saute pas d'un onglet à l'autre.
+  // ⚠️ La hauteur est SERRÉE sur le texte, à dessein. Le parchemin du cadre
+  // est centré dans son dessin, donc centrer la boîte centre les lettres ;
+  // mais plus la tablette est haute, plus le vide au-dessus et au-dessous
+  // grandit, et plus l'œil doute d'un centrage qui est pourtant juste. Une
+  // tablette remplie ne laisse pas la place au doute.
   plaqueFramed: {
-    minHeight: 56,
+    minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: SPACE.xl,
-    paddingVertical: SPACE.sm,
+    paddingVertical: SPACE.xs,
   },
   // ⚠️ `width`/`height` et `stretch` sont indispensables : sans eux l'image
   // de fond garde sa taille native et sort du cadre par la droite, et
   // `resizeMode` posé sur la balise n'atteint pas l'image sur le web.
   plaqueSkin: { width: '100%', height: '100%', resizeMode: 'stretch', borderRadius: RADIUS.sm },
-  // ⚠️ Deux points vers le bas, et ils ne sont pas cosmétiques. Centrer un
-  // texte, en React Native, centre sa BOÎTE DE LIGNE — ascendante et
-  // descendante comprises. Le Cinzel n'a que des capitales : sa descendante
-  // reste vide, et la boîte centrée laisse l'encre haute. Le cadre étant plus
-  // haut que les autres tablettes, l'écart s'y voit. On centre donc ce qui se
-  // regarde — les lettres — plutôt que ce qui se mesure.
-  plaqueInk: { transform: [{ translateY: 2 }] },
+  // ⚠️ Un point et demi vers le bas, MESURÉ sur le rendu, pas estimé. Centrer
+  // un texte centre sa BOÎTE DE LIGNE — ascendante et descendante comprises.
+  // Le Cinzel n'a que des capitales : sa descendante reste vide, et la boîte
+  // centrée laisse l'encre exactement 1,5 point trop haut. On centre donc ce
+  // qui se regarde, les lettres, plutôt que ce qui se mesure.
+  plaqueInk: { transform: [{ translateY: 1.5 }] },
 
   plaqueMarble: {
     backgroundColor: COLORS.panelRaised,
