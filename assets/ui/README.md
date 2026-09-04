@@ -23,7 +23,8 @@ README voisin explique comment le remplacer.
 | `volcan.png` | Le médaillon de l'**Acropole** — détouré de `volcanbon.jpg` |
 | `bouton-match.png` | La plaque « TROUVER MATCH », sur la carte de l'arène |
 | `bouton-continuer.png` | La plaque « CONTINUER », sur la carte de la course |
-| `ligue.png` | Le cadre du bandeau de **ligue**, en tête de l'onglet Jouer |
+| `bouton-divinite.png` | La plaque « CHANGER DE DIVINITÉ », sous la précédente |
+| `ligue.png` | Le cadre du bandeau de **ligue**, et le titre de la carte de la course |
 | `course.png` | Le bandeau peint de la carte **La course sacrée** |
 | `arene.png` | Le bandeau peint de la carte **Arène en ligne** |
 
@@ -78,6 +79,13 @@ Deux conséquences visibles :
 - « TROUVER MATCH » est posée **éteinte** sur la carte de l'arène, sous sa
   pastille « bientôt ». Le mode n'existe pas encore ; la plaque l'annonce sans
   le promettre.
+- « CHANGER DE DIVINITÉ » remplace le bouton de bois qui portait le même
+  libellé. C'est la seule des trois dont l'action existait déjà.
+
+`ligue.png`, lui, sert **deux fois** : au bandeau de rang et au titre de la
+carte de la course (`Plaque tone="frame"`). C'est voulu — un même cadre pour
+deux plaques du même écran les rattache au même objet, là où le titre doré
+d'avant sortait du lot sans rien annoncer de plus.
 
 ## Prélever dans une maquette
 
@@ -130,6 +138,7 @@ python3 tools/detourer.py "images/foret.jpg"           assets/ui/foret.png     2
 python3 tools/detourer.py "images/volcanbon.jpg"       assets/ui/volcan.png    256x256
 python3 tools/detourer.py "images/bouton match.jpg"    assets/ui/bouton-match.png     768x768
 python3 tools/detourer.py "images/bouton continuer.jpg" assets/ui/bouton-continuer.png 768x768
+python3 tools/detourer.py "images/changer de divinité.jpg" assets/ui/bouton-divinite.png 768x768
 python3 tools/detourer.py "images/quetes.jpg"          assets/ui/quetes.png    256x256
 python3 tools/detourer.py "images/desert.jpg"          assets/ui/desert.png    256x256 \
     --cercle 512,575,444

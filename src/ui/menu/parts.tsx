@@ -15,6 +15,7 @@
 import type { ReactNode } from 'react';
 import {
   Image,
+  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
@@ -24,7 +25,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ICONS } from './icons';
+import { ART, ICONS } from './icons';
 import { COLORS, FONTS, RADIUS, SPACE, TOUCH_MIN, TYPE, hex } from './theme';
 
 /* ------------------------------------------------------------------ cadres */
@@ -34,8 +35,30 @@ import { COLORS, FONTS, RADIUS, SPACE, TOUCH_MIN, TYPE, hex } from './theme';
  * de marbre encadrée d'or. C'est le seul titre visible d'un onglet — il n'y
  * a pas de barre de navigation par-dessus.
  */
-export function Plaque({ title, tone = 'marble' }: { title: string; tone?: 'marble' | 'gold' }) {
+export function Plaque({
+  title,
+  tone = 'marble',
+}: {
+  title: string;
+  /**
+   * `marble` : la tablette claire, le titre d'un onglet. `gold` : l'or, pour
+   * ce qui se joue. `frame` : le cadre DESSINÉ, à coins ferrés — celui du
+   * bandeau de ligue, réutilisé pour la carte de la course.
+   */
+  tone?: 'marble' | 'gold' | 'frame';
+}) {
   const gold = tone === 'gold';
+
+  if (tone === 'frame') {
+    return (
+      <ImageBackground source={ART.ligue} style={styles.plaqueFramed} imageStyle={styles.plaqueSkin}>
+        <Text style={styles.plaqueText} numberOfLines={2}>
+          {title.toUpperCase()}
+        </Text>
+      </ImageBackground>
+    );
+  }
+
   return (
     <View style={[styles.plaque, gold ? styles.plaqueGold : styles.plaqueMarble]}>
       <Text style={[styles.plaqueText, gold && styles.plaqueTextGold]} numberOfLines={2}>
@@ -438,6 +461,21 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderBottomWidth: 4,
   },
+  // Le cadre dessiné porte déjà sa bordure et son parchemin : la tablette
+  // n'a plus à en peindre. Sa hauteur est celle des deux autres, pour qu'un
+  // titre ne saute pas d'un onglet à l'autre.
+  plaqueFramed: {
+    minHeight: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACE.xl,
+    paddingVertical: SPACE.sm,
+  },
+  // ⚠️ `width`/`height` et `stretch` sont indispensables : sans eux l'image
+  // de fond garde sa taille native et sort du cadre par la droite, et
+  // `resizeMode` posé sur la balise n'atteint pas l'image sur le web.
+  plaqueSkin: { width: '100%', height: '100%', resizeMode: 'stretch', borderRadius: RADIUS.sm },
+
   plaqueMarble: {
     backgroundColor: COLORS.panelRaised,
     borderColor: COLORS.frame,

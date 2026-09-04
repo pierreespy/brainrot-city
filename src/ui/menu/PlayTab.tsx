@@ -49,6 +49,11 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
   const appearance = flatColorOf(state);
   const rank = rankOf(state.bestScore);
 
+  // Le quartier où l'on en est : le DERNIER dont le niveau est franchi. Les
+  // chapitres sont rangés par niveau croissant, donc c'est le plus avancé des
+  // atteints — jamais celui d'après, qui n'est pas encore une étape.
+  const here = [...CHAPTERS].reverse().find((c) => rank.level >= c.level) ?? CHAPTERS[0];
+
   return (
     <ScrollView
       style={styles.root}
@@ -85,8 +90,18 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
       <View style={styles.chapters}>
         {CHAPTERS.map((chapter) => {
           const reached = rank.level >= chapter.level;
+          const current = chapter.id === here.id;
           return (
-            <View key={chapter.id} style={styles.chapter}>
+            <View
+              key={chapter.id}
+              style={styles.chapter}
+              accessible
+              accessibilityLabel={
+                reached
+                  ? `${DISTRICTS[chapter.id].label}${current ? ', quartier en cours' : ''}`
+                  : `${DISTRICTS[chapter.id].label}, à partir du niveau ${chapter.level}`
+              }
+            >
               <View style={[styles.chapterDisc, reached ? styles.chapterOn : styles.chapterOff]}>
                 <Image
                   source={DISTRICT_ICONS[chapter.id]}
@@ -99,6 +114,11 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
               <Text style={[styles.chapterName, !reached && styles.chapterNameOff]} numberOfLines={1}>
                 {reached ? DISTRICTS[chapter.id].label : `🔒 Niv ${chapter.level}`}
               </Text>
+              {/* La flèche « tu es ici ». Elle pointe VERS LE HAUT, vers le
+                  médaillon : posée sous l'intitulé, elle désigne la colonne
+                  entière sans se glisser entre le disque et son nom. Un seul
+                  quartier la porte, sinon elle ne désigne plus rien. */}
+              {current && <View style={styles.hereArrow} />}
             </View>
           );
         })}
@@ -108,7 +128,7 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
           dont le bouton est doré : rien d'autre sur cet écran ne doit
           ressembler à ce bouton-là. */}
       <Card style={styles.run} selected>
-        <Plaque title="La course sacrée" tone="gold" />
+        <Plaque title="La course sacrée" tone="frame" />
 
         <Banner source={ART.course} height={82} />
 
@@ -156,7 +176,12 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
             hint={`Lancer une course avec ${god.label}`}
           />
         )}
-        <Button label="Changer de divinité" onPress={onChangeGod} style={styles.change} />
+        <Plate
+          source={PLATES.divinite}
+          onPress={onChangeGod}
+          hint="Changer de divinité"
+          style={styles.change}
+        />
       </Card>
 
       <Soon
@@ -256,6 +281,20 @@ const styles = StyleSheet.create({
   // propre cadre, et les deux se chevaucheraient.
   chapterIcon: { width: 44, height: 44 },
   chapterName: { ...TYPE.tiny, fontSize: 9, color: COLORS.text, textAlign: 'center' },
+  // Un triangle, dessiné avec les bordures — la seule façon d'obtenir un
+  // angle en React Native, qui ne connaît que des rectangles (même procédé
+  // que le fronton du temple, dans `MenuScreen`).
+  hereArrow: {
+    marginTop: 3,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderBottomWidth: 7,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: COLORS.frameDeep,
+  },
   chapterNameOff: { color: COLORS.locked },
 
   run: { gap: SPACE.md },

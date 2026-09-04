@@ -97,4 +97,6 @@ export const PLATES = {
   match: require('../../../assets/ui/bouton-match.png') as ImageSourcePropType,
   /** « CONTINUER » — la reprise d'une course déjà commencée. */
   continuer: require('../../../assets/ui/bouton-continuer.png') as ImageSourcePropType,
+  /** « CHANGER DE DIVINITÉ » — le renvoi vers le panthéon. */
+  divinite: require('../../../assets/ui/bouton-divinite.png') as ImageSourcePropType,
 } as const;
