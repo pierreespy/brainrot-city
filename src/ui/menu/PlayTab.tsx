@@ -12,7 +12,7 @@
  * promesse. Le jour où le mode existera, seule la ligne `disabled` bougera.
  */
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Image, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { godById } from '../../entities/gods/roster';
 import { DISTRICTS, type DistrictId } from '../../world/districts';
@@ -44,6 +44,10 @@ const CHAPTERS: { id: DistrictId; level: number }[] = [
   { id: 'acropole', level: 30 },
 ];
 
+/** La largeur et la hauteur du bec qui relie la carte au quartier atteint. */
+const BEAK = 26;
+const BEAK_H = 14;
+
 export function PlayTab({ state, onPlay, onChangeGod }: Props) {
   const god = godById(state.selectedGod);
   const appearance = flatColorOf(state);
@@ -53,6 +57,12 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
   // chapitres sont rangés par niveau croissant, donc c'est le plus avancé des
   // atteints — jamais celui d'après, qui n'est pas encore une étape.
   const here = [...CHAPTERS].reverse().find((c) => rank.level >= c.level) ?? CHAPTERS[0];
+
+  // L'abscisse du milieu du quartier courant, MESURÉE plutôt que calculée.
+  // Les colonnes se partagent la largeur en `flex`, avec un écart entre
+  // elles : la déduire d'une fraction de l'écran la décalerait de quelques
+  // points, et un bec décalé se voit tout de suite.
+  const [beakX, setBeakX] = useState<number | null>(null);
 
   return (
     <ScrollView
@@ -95,6 +105,14 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
             <View
               key={chapter.id}
               style={styles.chapter}
+              onLayout={
+                current
+                  ? (event) => {
+                      const { x, width } = event.nativeEvent.layout;
+                      setBeakX(x + width / 2);
+                    }
+                  : undefined
+              }
               accessible
               accessibilityLabel={
                 reached
@@ -114,11 +132,6 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
               <Text style={[styles.chapterName, !reached && styles.chapterNameOff]} numberOfLines={1}>
                 {reached ? DISTRICTS[chapter.id].label : `🔒 Niv ${chapter.level}`}
               </Text>
-              {/* La flèche « tu es ici ». Elle pointe VERS LE HAUT, vers le
-                  médaillon : posée sous l'intitulé, elle désigne la colonne
-                  entière sans se glisser entre le disque et son nom. Un seul
-                  quartier la porte, sinon elle ne désigne plus rien. */}
-              {current && <View style={styles.hereArrow} />}
             </View>
           );
         })}
@@ -127,62 +140,76 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
       {/* La course. C'est la carte la plus haute, la plus large, et la seule
           dont le bouton est doré : rien d'autre sur cet écran ne doit
           ressembler à ce bouton-là. */}
-      <Card style={styles.run} selected>
-        <Plaque title="La course sacrée" tone="frame" />
-
-        <Banner source={ART.course} height={82} />
-
-        <View style={styles.runBody}>
-          <GodBadge color={appearance.color} accent={appearance.accent} size={58} />
-          <View style={styles.runText}>
-            <Text style={styles.runGod} numberOfLines={1}>
-              {god.label}
-            </Text>
-            <Text style={styles.runDomain} numberOfLines={1}>
-              {god.domain}
-            </Text>
-            <Text style={styles.runPitch}>
-              Traverse la cité, convertis les mortels, fais grossir ton cortège.
-            </Text>
+      <View style={styles.runWrap}>
+        {/* Le bec « tu es ici ». Il appartient au CADRE de la carte, dont il
+            reprend les deux teintes — le liseré d'or dehors, le parchemin
+            dedans — et il déborde vers le haut jusque sous le médaillon du
+            quartier atteint. C'est ce qui rattache la course au quartier :
+            une flèche flottante, elle, n'aurait désigné personne. */}
+        {beakX !== null && (
+          <View pointerEvents="none" style={[styles.beak, { left: beakX - BEAK / 2 }]}>
+            <View style={styles.beakEdge} />
+            <View style={styles.beakFace} />
           </View>
-        </View>
-
-        <View style={styles.rewards}>
-          <Text style={styles.rewardsLabel}>RÉCOMPENSE</Text>
-          <View style={styles.reward}>
-            <Coin size={14} />
-            <Text style={styles.rewardText}>1 or pour 3 fidèles</Text>
-          </View>
-        </View>
-
-        {/* La plaque « CONTINUER » ne s'affiche qu'à qui a DÉJÀ couru : son
-            mot est gravé dans l'image, et personne ne continue une course
-            qu'il n'a pas commencée. La première partie garde donc le bouton
-            d'or, qui dit « Jouer ». */}
-        {state.bestScore > 0 ? (
-          <Plate
-            testID="play"
-            source={PLATES.continuer}
-            onPress={onPlay}
-            hint={`Continuer avec ${god.label}`}
-          />
-        ) : (
-          <Button
-            testID="play"
-            label="Jouer"
-            variant="primary"
-            size="big"
-            onPress={onPlay}
-            hint={`Lancer une course avec ${god.label}`}
-          />
         )}
-        <Plate
-          source={PLATES.divinite}
-          onPress={onChangeGod}
-          hint="Changer de divinité"
-          style={styles.change}
-        />
-      </Card>
+
+        <Card style={styles.run} selected>
+          <Plaque title="La course sacrée" tone="frame" />
+
+          <Banner source={ART.course} height={82} />
+
+          <View style={styles.runBody}>
+            <GodBadge color={appearance.color} accent={appearance.accent} size={58} />
+            <View style={styles.runText}>
+              <Text style={styles.runGod} numberOfLines={1}>
+                {god.label}
+              </Text>
+              <Text style={styles.runDomain} numberOfLines={1}>
+                {god.domain}
+              </Text>
+              <Text style={styles.runPitch}>
+                Traverse la cité, convertis les mortels, fais grossir ton cortège.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.rewards}>
+            <Text style={styles.rewardsLabel}>RÉCOMPENSE</Text>
+            <View style={styles.reward}>
+              <Coin size={14} />
+              <Text style={styles.rewardText}>1 or pour 3 fidèles</Text>
+            </View>
+          </View>
+
+          {/* La plaque « CONTINUER » ne s'affiche qu'à qui a DÉJÀ couru : son
+              mot est gravé dans l'image, et personne ne continue une course
+              qu'il n'a pas commencée. La première partie garde donc le bouton
+              d'or, qui dit « Jouer ». */}
+          {state.bestScore > 0 ? (
+            <Plate
+              testID="play"
+              source={PLATES.continuer}
+              onPress={onPlay}
+              hint={`Continuer avec ${god.label}`}
+            />
+          ) : (
+            <Button
+              testID="play"
+              label="Jouer"
+              variant="primary"
+              size="big"
+              onPress={onPlay}
+              hint={`Lancer une course avec ${god.label}`}
+            />
+          )}
+          <Plate
+            source={PLATES.divinite}
+            onPress={onChangeGod}
+            hint="Changer de divinité"
+            style={styles.change}
+          />
+        </Card>
+      </View>
 
       <Soon
         icon="⚔️"
@@ -281,21 +308,43 @@ const styles = StyleSheet.create({
   // propre cadre, et les deux se chevaucheraient.
   chapterIcon: { width: 44, height: 44 },
   chapterName: { ...TYPE.tiny, fontSize: 9, color: COLORS.text, textAlign: 'center' },
-  // Un triangle, dessiné avec les bordures — la seule façon d'obtenir un
+  chapterNameOff: { color: COLORS.locked },
+
+  // Le bec sort de la carte : son enveloppe ne doit donc RIEN rogner, et
+  // c'est elle qui donne au bec son repère horizontal.
+  runWrap: { position: 'relative' },
+  // Deux triangles, dessinés avec les bordures — la seule façon d'obtenir un
   // angle en React Native, qui ne connaît que des rectangles (même procédé
-  // que le fronton du temple, dans `MenuScreen`).
-  hereArrow: {
-    marginTop: 3,
+  // que le fronton du temple, dans `MenuScreen`). Le premier porte l'or du
+  // liseré, le second le parchemin, et il descend assez bas pour recouvrir la
+  // bordure du haut : le bec s'ouvre alors sur la carte au lieu d'être posé
+  // dessus.
+  beak: { position: 'absolute', top: -BEAK_H, width: BEAK, height: BEAK_H + 3 },
+  beakEdge: {
+    position: 'absolute',
+    top: 0,
     width: 0,
     height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderBottomWidth: 7,
+    borderLeftWidth: BEAK / 2,
+    borderRightWidth: BEAK / 2,
+    borderBottomWidth: BEAK_H,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: COLORS.frameDeep,
+    borderBottomColor: COLORS.borderStrong,
   },
-  chapterNameOff: { color: COLORS.locked },
+  beakFace: {
+    position: 'absolute',
+    top: 5,
+    left: 4,
+    width: 0,
+    height: 0,
+    borderLeftWidth: BEAK / 2 - 4,
+    borderRightWidth: BEAK / 2 - 4,
+    borderBottomWidth: BEAK_H - 2,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: COLORS.panelRaised,
+  },
 
   run: { gap: SPACE.md },
   runBody: { flexDirection: 'row', alignItems: 'center', gap: SPACE.md, marginTop: SPACE.md },
