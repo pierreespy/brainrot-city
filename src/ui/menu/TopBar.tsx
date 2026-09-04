@@ -10,11 +10,12 @@
  * se trouve.
  */
 
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { godById } from '../../entities/gods/roster';
 import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
 import { CurrencyPill, GodBadge } from './parts';
+import { PORTRAITS } from './icons';
 import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
 
 export function TopBar({
@@ -29,15 +30,30 @@ export function TopBar({
   const god = godById(state.selectedGod);
   const appearance = flatColorOf(state);
   const rank = rankOf(state.bestScore);
+  const portrait = PORTRAITS[state.selectedGod];
 
   return (
     <View style={styles.root}>
       {/* Le portrait, son cadre d'or et la plaque de niveau qui déborde en
           bas : la signature d'un profil de joueur dans ce genre de jeu. */}
       <View style={styles.avatarWrap}>
-        <View style={styles.avatar}>
-          <GodBadge color={appearance.color} accent={appearance.accent} size={40} />
-        </View>
+        {/* Le portrait porte SON PROPRE anneau d'or, dessiné dans l'image :
+            posé dans le cadre du médaillon, il en ferait un second. D'où deux
+            habillages, selon qu'un dieu a son visage ou seulement ses deux
+            couleurs. */}
+        {portrait === undefined ? (
+          <View style={styles.avatar}>
+            <GodBadge color={appearance.color} accent={appearance.accent} size={40} />
+          </View>
+        ) : (
+          <Image
+            source={portrait}
+            resizeMode="contain"
+            style={styles.portrait}
+            accessible={false}
+            importantForAccessibility="no"
+          />
+        )}
         <View style={styles.levelPlate}>
           <Text style={styles.levelText}>Niv {rank.level}</Text>
         </View>
@@ -100,6 +116,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: COLORS.gold,
   },
+  // Le portrait remplace le cadre, il ne s'y ajoute pas : même diamètre que
+  // le médaillon de couleurs, pour que le bandeau garde sa hauteur quel que
+  // soit le dieu choisi.
+  portrait: { width: 54, height: 54 },
+
   // La plaque de niveau chevauche le bas du portrait : elle appartient au
   // médaillon, elle ne se lit pas comme une deuxième information.
   levelPlate: {

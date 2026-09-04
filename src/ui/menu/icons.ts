@@ -14,6 +14,8 @@
  */
 
 import type { ImageSourcePropType } from 'react-native';
+import type { GodId } from '../../entities/gods/roster';
+import type { DistrictId } from '../../world/districts';
 
 export const ICONS = {
   /** Le fronton du temple — l'onglet du panthéon. */
@@ -27,6 +29,40 @@ export const ICONS = {
   /** La couronne de laurier : la monnaie rare, celle des dieux. */
   laurier: require('../../../assets/ui/laurier.png') as ImageSourcePropType,
 } as const;
+
+/**
+ * Les médaillons des quartiers, sur la frise de l'onglet « Jouer ».
+ *
+ * ⚠️ Ils sont appariés par SUJET, pas par position : le port porte la vague,
+ * le bois sacré les pins, l'acropole le volcan, et l'agora les colonnes —
+ * c'est un quartier à colonnade (voir `districts.ts`). Le rang à l'écran, lui,
+ * suit le niveau qui ouvre chaque étape, et peut changer sans que ces couples
+ * bougent.
+ *
+ * ⚠️ La table est PARTIELLE : la Céramique et le Théâtre n'ont pas d'image, et
+ * n'apparaissent pas encore dans la frise. Un quartier sans médaillon retombe
+ * sur son émoji, il ne casse rien.
+ */
+export const DISTRICT_ICONS: Partial<Record<DistrictId, ImageSourcePropType>> = {
+  agora: require('../../../assets/ui/desert.png') as ImageSourcePropType,
+  port: require('../../../assets/ui/vague.png') as ImageSourcePropType,
+  boisSacre: require('../../../assets/ui/foret.png') as ImageSourcePropType,
+  acropole: require('../../../assets/ui/volcan.png') as ImageSourcePropType,
+};
+
+/**
+ * Le portrait d'une divinité, pour le médaillon du bandeau supérieur.
+ *
+ * ⚠️ La table est PARTIELLE, et c'est voulu : seul Zeus est dessiné. Les six
+ * autres gardent la pastille de leurs deux couleurs, qui a l'avantage d'être
+ * EXACTE — elle lit la parure équipée, donc elle montre ce que le joueur
+ * verra en jeu. Un portrait par dieu la remplacera quand les six existeront ;
+ * en attendant, mieux vaut un seul portrait vrai que sept pastilles pour un
+ * dieu qui, lui, a son visage.
+ */
+export const PORTRAITS: Partial<Record<GodId, ImageSourcePropType>> = {
+  zeus: require('../../../assets/ui/zeus.png') as ImageSourcePropType,
+};
 
 /**
  * Les plaques gravées : des boutons ENTIERS, intitulé compris.

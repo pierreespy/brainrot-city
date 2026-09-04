@@ -148,6 +148,61 @@ export function Button({
   );
 }
 
+/**
+ * La plaque gravée : un bouton dont l'intitulé est DANS l'image.
+ *
+ * ⚠️ Elle ne prend donc pas de `label`, mais un `hint` — le texte des pixels
+ * ne se lit pas à voix haute, et sans lui le bouton serait muet pour un
+ * lecteur d'écran. C'est aussi pourquoi chaque plaque est liée à une action
+ * précise dans `PLATES` : réutiliser « TROUVER MATCH » ailleurs mentirait.
+ *
+ * Le repli au toucher est le même que celui du `Button` de bois : la plaque
+ * s'enfonce de trois points. Sans cela, la seule différence entre les deux
+ * boutons de l'écran serait leur matière, et l'un aurait l'air mort.
+ */
+export function Plate({
+  source,
+  onPress,
+  hint,
+  disabled = false,
+  testID,
+  style,
+}: {
+  source: ImageSourcePropType;
+  onPress: () => void;
+  hint: string;
+  disabled?: boolean;
+  testID?: string;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={hint}
+      accessibilityState={{ disabled }}
+      style={({ pressed }) => [
+        styles.plate,
+        pressed && !disabled && styles.platePressed,
+        disabled && styles.plateDisabled,
+        style,
+      ]}
+    >
+      <Image
+        source={source}
+        // `contain` : la plaque est un objet dessiné, pas un fond. L'étirer à
+        // la largeur d'une carte lui déformerait le cadre et les lettres.
+        resizeMode="contain"
+        style={styles.plateFace}
+        accessible={false}
+        importantForAccessibility="no"
+      />
+    </Pressable>
+  );
+}
+
 /* --------------------------------------------------------------- monnaies */
 
 /**
@@ -411,6 +466,15 @@ const styles = StyleSheet.create({
   buttonLabel: { ...TYPE.banner, fontSize: 14, color: COLORS.onGold, textAlign: 'center' },
   buttonLabelBig: { fontSize: 19 },
   buttonPrice: { flexDirection: 'row', alignItems: 'center', gap: SPACE.xs, marginTop: 2 },
+
+  // La plaque ne porte ni fond ni bordure : son cadre est dessiné dans
+  // l'image. Lui en ajouter un poserait un second cadre autour du premier.
+  plate: { minHeight: TOUCH_MIN, alignItems: 'center', justifyContent: 'center' },
+  platePressed: { transform: [{ translateY: 3 }] },
+  // Éteinte, mais LISIBLE : le 0,45 des boutons de bois efface le relief
+  // gravé d'une plaque, et il n'en reste qu'une tache pâle.
+  plateDisabled: { opacity: 0.6 },
+  plateFace: { width: '100%', height: 58 },
 
   /* monnaies */
   pill: {

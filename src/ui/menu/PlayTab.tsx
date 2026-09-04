@@ -12,12 +12,14 @@
  * promesse. Le jour où le mode existera, seule la ligne `disabled` bougera.
  */
 
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { godById } from '../../entities/gods/roster';
-import { DISTRICTS } from '../../world/districts';
+import { DISTRICTS, type DistrictId } from '../../world/districts';
 import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
-import { Bar, Button, Card, Coin, GodBadge, Plaque } from './parts';
+import { Bar, Button, Card, Coin, GodBadge, Plaque, Plate } from './parts';
+import { DISTRICT_ICONS, PLATES } from './icons';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
 
 interface Props {
@@ -35,12 +37,12 @@ interface Props {
  * il marque une étape : le joueur voit la ville qu'il parcourt, et jusqu'où
  * il l'a menée.
  */
-const CHAPTERS = [
-  { id: 'agora', icon: '🏛️', level: 1 },
-  { id: 'port', icon: '⚓', level: 5 },
-  { id: 'boisSacre', icon: '🌲', level: 15 },
-  { id: 'acropole', icon: '🔥', level: 30 },
-] as const;
+const CHAPTERS: { id: DistrictId; level: number }[] = [
+  { id: 'agora', level: 1 },
+  { id: 'port', level: 5 },
+  { id: 'boisSacre', level: 15 },
+  { id: 'acropole', level: 30 },
+];
 
 export function PlayTab({ state, onPlay, onChangeGod }: Props) {
   const god = godById(state.selectedGod);
@@ -81,7 +83,13 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
           return (
             <View key={chapter.id} style={styles.chapter}>
               <View style={[styles.chapterDisc, reached ? styles.chapterOn : styles.chapterOff]}>
-                <Text style={styles.chapterIcon}>{chapter.icon}</Text>
+                <Image
+                  source={DISTRICT_ICONS[chapter.id]}
+                  resizeMode="contain"
+                  style={styles.chapterIcon}
+                  accessible={false}
+                  importantForAccessibility="no"
+                />
               </View>
               <Text style={[styles.chapterName, !reached && styles.chapterNameOff]} numberOfLines={1}>
                 {reached ? DISTRICTS[chapter.id].label : `🔒 Niv ${chapter.level}`}
@@ -120,7 +128,27 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
           </View>
         </View>
 
-        <Button testID="play" label="Jouer" variant="primary" size="big" onPress={onPlay} hint={`Lancer une course avec ${god.label}`} />
+        {/* La plaque « CONTINUER » ne s'affiche qu'à qui a DÉJÀ couru : son
+            mot est gravé dans l'image, et personne ne continue une course
+            qu'il n'a pas commencée. La première partie garde donc le bouton
+            d'or, qui dit « Jouer ». */}
+        {state.bestScore > 0 ? (
+          <Plate
+            testID="play"
+            source={PLATES.continuer}
+            onPress={onPlay}
+            hint={`Continuer avec ${god.label}`}
+          />
+        ) : (
+          <Button
+            testID="play"
+            label="Jouer"
+            variant="primary"
+            size="big"
+            onPress={onPlay}
+            hint={`Lancer une course avec ${god.label}`}
+          />
+        )}
         <Button label="Changer de divinité" onPress={onChangeGod} style={styles.change} />
       </Card>
 
@@ -128,7 +156,18 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
         icon="⚔️"
         title="Arène en ligne"
         text="Affronter un autre joueur, en direct. Le mode n'est pas encore écrit."
-      />
+      >
+        {/* La plaque de l'arène, ÉTEINTE. Elle annonce l'appel du mode sans
+            le promettre : la pastille « bientôt » reste juste au-dessus, et
+            le bouton refuse le doigt plutôt que de mener nulle part. */}
+        <Plate
+          testID="find-match"
+          source={PLATES.match}
+          onPress={() => undefined}
+          disabled
+          hint="L'arène en ligne n'est pas encore jouable"
+        />
+      </Soon>
       <Soon
         icon="⏳"
         title="Défi de la semaine"
@@ -139,7 +178,18 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
 }
 
 /** Une carte de mode annoncé mais pas encore jouable. Éteinte, et honnête. */
-function Soon({ icon, title, text }: { icon: string; title: string; text: string }) {
+function Soon({
+  icon,
+  title,
+  text,
+  children,
+}: {
+  icon: string;
+  title: string;
+  text: string;
+  /** L'appel du mode, s'il en a un — toujours éteint, comme la carte. */
+  children?: ReactNode;
+}) {
   return (
     <Card style={styles.soon}>
       <View style={styles.soonHead}>
@@ -150,6 +200,7 @@ function Soon({ icon, title, text }: { icon: string; title: string; text: string
         <Text style={styles.soonTag}>BIENTÔT</Text>
       </View>
       <Text style={styles.soonText}>{text}</Text>
+      {children}
     </Card>
   );
 }
@@ -178,7 +229,9 @@ const styles = StyleSheet.create({
   },
   chapterOn: { backgroundColor: COLORS.panelRaised, borderColor: COLORS.gold },
   chapterOff: { backgroundColor: COLORS.panelSunken, borderColor: COLORS.frame, opacity: 0.7 },
-  chapterIcon: { fontSize: 24 },
+  // Le médaillon remplit son disque, moins le liseré : il porte déjà son
+  // propre cadre, et les deux se chevaucheraient.
+  chapterIcon: { width: 44, height: 44 },
   chapterName: { ...TYPE.tiny, fontSize: 9, color: COLORS.text, textAlign: 'center' },
   chapterNameOff: { color: COLORS.locked },
 
