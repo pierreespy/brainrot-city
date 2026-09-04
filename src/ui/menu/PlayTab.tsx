@@ -25,8 +25,6 @@ import { COLORS, RADIUS, SPACE, TYPE } from './theme';
 interface Props {
   state: Progression;
   onPlay: () => void;
-  /** Emmène au panthéon : changer de divinité se fait là-bas, pas ici. */
-  onChangeGod: () => void;
 }
 
 /**
@@ -48,7 +46,7 @@ const CHAPTERS: { id: DistrictId; level: number }[] = [
 const BEAK = 26;
 const BEAK_H = 14;
 
-export function PlayTab({ state, onPlay, onChangeGod }: Props) {
+export function PlayTab({ state, onPlay }: Props) {
   const god = godById(state.selectedGod);
   const appearance = flatColorOf(state);
   const rank = rankOf(state.bestScore);
@@ -86,11 +84,25 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
           sans la lire. L'image est étirée, ce qu'elle supporte — elle n'a pas
           de sujet, juste des coins ferrés. */}
       <ImageBackground source={ART.ligue} style={styles.league} imageStyle={styles.leagueFrame}>
+        {/* ⚠️ Le blason a sa largeur reproduite à droite, en spatule vide.
+            Sans elle, centrer la LIGNE centre le blason ET le titre comme un
+            seul bloc — or l'œil lit le titre, pas le bloc, et un blason posé
+            à gauche sans contrepoids laisse le titre paraître décalé vers la
+            droite alors que la ligne, elle, est exactement centrée. La
+            spatule rend au titre la largeur qui lui revient : celle du
+            cadre, moins le blason des deux côtés. */}
         <View style={styles.leagueHead}>
-          <Text style={styles.leagueCrest}>🦅</Text>
-          <Text style={styles.leagueName} numberOfLines={1}>
+          <Text style={styles.leagueCrest} accessible={false} importantForAccessibility="no">
+            🦅
+          </Text>
+          {/* `numberOfLines={2}` : un niveau à trois chiffres ne tient plus
+              sur une ligne, et le laisser passer plutôt que le tronquer. Le
+              cadre n'a qu'un `minHeight` : une seconde ligne, rare, l'étire
+              au lieu de déborder. */}
+          <Text style={styles.leagueName} numberOfLines={2}>
             LIGUE OLYMPIENNE : NIVEAU {rank.level}
           </Text>
+          <View style={styles.leagueCrestSpacer} />
         </View>
         {/* ⚠️ Des TROPHÉES, pas des fidèles. Le rang se calcule bien sur le
             meilleur cortège (voir `rank.ts`), mais ce qui monte d'un palier à
@@ -182,9 +194,6 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
               <Text style={styles.runDomain} numberOfLines={1}>
                 {god.domain}
               </Text>
-              <Text style={styles.runPitch}>
-                Traverse la cité, convertis les mortels, fais grossir ton cortège.
-              </Text>
             </View>
           </View>
 
@@ -217,12 +226,6 @@ export function PlayTab({ state, onPlay, onChangeGod }: Props) {
               hint={`Lancer une course avec ${god.label}`}
             />
           )}
-          <Plate
-            source={PLATES.divinite}
-            onPress={onChangeGod}
-            hint="Changer de divinité"
-            style={styles.change}
-          />
         </Card>
       </View>
 
@@ -320,11 +323,24 @@ const styles = StyleSheet.create({
   leagueHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACE.sm,
+    gap: SPACE.xs,
   },
-  leagueCrest: { fontSize: 26 },
-  leagueName: { ...TYPE.label, fontSize: 12, color: COLORS.text },
+  // Largeur jumelle : le blason à gauche, la spatule à droite. C'est cette
+  // paire qui centre le TITRE, pas la ligne entière (voir plus haut).
+  leagueCrest: { fontSize: 20, width: 20, textAlign: 'center' },
+  leagueCrestSpacer: { width: 20 },
+  // ⚠️ `letterSpacing` retombe à 0.6 : celui de `TYPE.label` (1,4) est taillé
+  // pour un intitulé de section, court. Sur les vingt-sept lettres de ce
+  // titre-ci, il ajoute à lui seul près de 40 points et pousse le rang à
+  // deux chiffres hors de sa ligne.
+  leagueName: {
+    ...TYPE.label,
+    fontSize: 12,
+    letterSpacing: 0.6,
+    color: COLORS.text,
+    flex: 1,
+    textAlign: 'center',
+  },
   leagueSub: { ...TYPE.body, fontSize: 12, color: COLORS.muted, textAlign: 'center' },
 
   chapters: { flexDirection: 'row', justifyContent: 'space-between', gap: SPACE.sm },
@@ -386,7 +402,6 @@ const styles = StyleSheet.create({
   runText: { flex: 1, minWidth: 0 },
   runGod: { ...TYPE.title, color: COLORS.text },
   runDomain: { ...TYPE.body, fontSize: 12, color: COLORS.muted },
-  runPitch: { ...TYPE.body, fontSize: 13, color: COLORS.text, marginTop: SPACE.xs, lineHeight: 18 },
 
   rewards: {
     flexDirection: 'row',
@@ -400,7 +415,6 @@ const styles = StyleSheet.create({
   rewardsLabel: { ...TYPE.label, fontSize: 9, color: COLORS.muted },
   reward: { flexDirection: 'row', alignItems: 'center', gap: SPACE.xs },
   rewardText: { ...TYPE.body, fontSize: 12, color: COLORS.text },
-  change: { marginTop: -SPACE.xs },
 
   soon: { opacity: 0.85, gap: SPACE.xs },
   soonHead: { flexDirection: 'row', alignItems: 'center', gap: SPACE.sm },

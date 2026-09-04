@@ -221,7 +221,7 @@ export function MenuScreen({
             </Page>
 
             <Page width={pageWidth}>
-              <PlayTab state={state} onPlay={onPlay} onChangeGod={() => goTo('olympe')} />
+              <PlayTab state={state} onPlay={onPlay} />
             </Page>
 
             <Page width={pageWidth}>
