@@ -10,12 +10,12 @@
  * se trouve.
  */
 
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { godById } from '../../entities/gods/roster';
 import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
 import { CurrencyPill, GodBadge } from './parts';
-import { PORTRAITS } from './icons';
+import { ART, PORTRAITS } from './icons';
 import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
 
 export function TopBar({
@@ -34,75 +34,117 @@ export function TopBar({
 
   return (
     <View style={styles.root}>
-      {/* Le portrait, son cadre d'or et la plaque de niveau qui déborde en
-          bas : la signature d'un profil de joueur dans ce genre de jeu. */}
-      <View style={styles.avatarWrap}>
-        {/* Le portrait porte SON PROPRE anneau d'or, dessiné dans l'image :
-            posé dans le cadre du médaillon, il en ferait un second. D'où deux
-            habillages, selon qu'un dieu a son visage ou seulement ses deux
-            couleurs. */}
-        {portrait === undefined ? (
-          <View style={styles.avatar}>
-            <GodBadge color={appearance.color} accent={appearance.accent} size={40} />
-          </View>
-        ) : (
-          <Image
-            source={portrait}
-            resizeMode="contain"
-            style={styles.portrait}
-            accessible={false}
-            importantForAccessibility="no"
-          />
-        )}
-        <View style={styles.levelPlate}>
-          <Text style={styles.levelText}>Niv {rank.level}</Text>
-        </View>
-        {/* Le nom appartient au portrait, et se lit SOUS lui. Posé dans le
-            rang, il disputait sa largeur aux deux bourses, et se retrouvait
-            coupé à la première lettre dès que les sommes s'allongeaient. */}
-        <Text style={styles.name} numberOfLines={1}>
-          {god.label}
-        </Text>
-      </View>
+      {/* ⚠️ Le MÊME cadre dessiné que la carte de la course sacrée et que le
+          bandeau de ligue (`ART.ligue`) : le portrait, les deux bourses et le
+          bouton des réglages tiennent DEDANS, comme sur la maquette. Il est
+          étiré, ce que ce dessin supporte — il n'a pas de sujet, juste des
+          coins ferrés.
 
-      <View style={styles.purse}>
-        <CurrencyPill
-          testID="gold"
-          tone="gold"
-          value={state.gold}
-          hint="Ouvrir la boutique, rayon or"
-          onAdd={onOpenShop}
-        />
-        <CurrencyPill
-          testID="laurels"
-          tone="laurel"
-          value={state.laurels}
-          hint="Ouvrir la boutique, rayon lauriers"
-          onAdd={onOpenShop}
-        />
-      </View>
-
-      <Pressable
-        testID="settings"
-        onPress={onOpenSettings}
-        accessibilityRole="button"
-        accessibilityLabel="Paramètres"
-        hitSlop={6}
-        style={({ pressed }) => [styles.burger, pressed && styles.burgerPressed]}
+          ⚠️ Le conteneur du cadre n'a AUCUNE marge intérieure : elle est
+          descendue dans `bar`. Le dessin de fond est un enfant hors flux tiré
+          aux quatre bords, et sa largeur « 100 % » ne se mesure pas sur la
+          même boîte partout — le web la prend marge comprise, Yoga la prend
+          marge déduite. Une marge ici donnerait un cadre plein écran sur le
+          web et un cadre rentré vers la gauche sur le téléphone. Et
+          `resizeMode` est en PROP autant qu'en style : le style seul
+          n'atteint pas l'image sur iOS. */}
+      <ImageBackground
+        source={ART.ligue}
+        style={styles.frame}
+        imageStyle={styles.frameSkin}
+        resizeMode="stretch"
       >
-        <Text style={styles.burgerLines}>≡</Text>
-      </Pressable>
+        <View style={styles.bar}>
+          {/* Le portrait, son cadre d'or et la plaque de niveau qui déborde en
+              bas : la signature d'un profil de joueur dans ce genre de jeu. */}
+          <View style={styles.avatarWrap}>
+            {/* Le portrait porte SON PROPRE anneau d'or, dessiné dans l'image :
+                posé dans le cadre du médaillon, il en ferait un second. D'où deux
+                habillages, selon qu'un dieu a son visage ou seulement ses deux
+                couleurs. */}
+            {portrait === undefined ? (
+              <View style={styles.avatar}>
+                <GodBadge color={appearance.color} accent={appearance.accent} size={40} />
+              </View>
+            ) : (
+              <Image
+                source={portrait}
+                resizeMode="contain"
+                style={styles.portrait}
+                accessible={false}
+                importantForAccessibility="no"
+              />
+            )}
+            <View style={styles.levelPlate}>
+              <Text style={styles.levelText}>Niv {rank.level}</Text>
+            </View>
+            {/* Le nom appartient au portrait, et se lit SOUS lui. Posé dans le
+                rang, il disputait sa largeur aux deux bourses, et se retrouvait
+                coupé à la première lettre dès que les sommes s'allongeaient. */}
+            <Text style={styles.name} numberOfLines={1}>
+              {god.label}
+            </Text>
+          </View>
+
+          <View style={styles.purse}>
+            <CurrencyPill
+              testID="gold"
+              tone="gold"
+              value={state.gold}
+              hint="Ouvrir la boutique, rayon or"
+              onAdd={onOpenShop}
+            />
+            <CurrencyPill
+              testID="laurels"
+              tone="laurel"
+              value={state.laurels}
+              hint="Ouvrir la boutique, rayon lauriers"
+              onAdd={onOpenShop}
+            />
+          </View>
+
+          <Pressable
+            testID="settings"
+            onPress={onOpenSettings}
+            accessibilityRole="button"
+            accessibilityLabel="Paramètres"
+            hitSlop={6}
+            style={({ pressed }) => [styles.burger, pressed && styles.burgerPressed]}
+          >
+            <Text style={styles.burgerLines}>≡</Text>
+          </Pressable>
+        </View>
+      </ImageBackground>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
+  root: { paddingHorizontal: SPACE.md, paddingBottom: SPACE.md },
+
+  // ⚠️ SANS marge intérieure — elle appartient à `bar`, un cran plus bas
+  // (voir le commentaire du rendu) : le dessin de fond se mesure sur ce
+  // conteneur-ci, et lui donner une marge le rétrécirait sur téléphone.
+  frame: { justifyContent: 'center' },
+  // Sans `width`/`height`, l'image garderait sa taille NATIVE — 512 points de
+  // large — et sortirait du cadre par la droite ; `stretch` est répété ici
+  // parce que le style n'atteint pas l'image sur iOS et la prop ne l'atteint
+  // pas sur le web.
+  frameSkin: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'stretch',
+    borderRadius: RADIUS.sm,
+  },
+  // Les ferrures d'angle du dessin mordent sur un seizième de sa largeur :
+  // la ligne se tient assez loin des bords pour que ni le portrait ni le
+  // bouton des réglages ne les affleure.
+  bar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACE.sm,
-    paddingHorizontal: SPACE.md,
-    paddingBottom: SPACE.md,
+    paddingHorizontal: SPACE.lg,
+    paddingVertical: SPACE.md,
   },
 
   avatarWrap: { alignItems: 'center', width: 88 },
