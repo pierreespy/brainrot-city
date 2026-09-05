@@ -22,11 +22,17 @@ import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
  * La hauteur du cadre qui passe AU-DESSUS de l'écran, en points.
  *
  * Le dessin est un cadre fermé, avec un haut et un bas ; posé entier, il
- * faisait une bande trop haute pour ce qu'elle porte. On le monte donc de
- * cette hauteur-là et on rogne ce qui dépasse : il ne reste que le bas et
- * les deux montants, et la bande se réduit à sa ligne d'informations.
+ * faisait une bande trop haute pour ce qu'elle porte. On le monte donc et on
+ * rogne ce qui dépasse : il ne reste que le bas et les deux montants.
+ *
+ * ⚠️ Cette valeur est MESURÉE, pas choisie : la ferrure haute du dessin
+ * occupe un SIXIÈME de sa hauteur (`ligue.png`, 512 × 119), et le cadre est
+ * étiré sur la hauteur du bandeau plus celle-ci. Rogner ce sixième-là fait
+ * disparaître le haut du cadre et RIEN de plus — au-delà, c'est l'intérieur
+ * qu'on entame, et les informations du joueur se retrouvent hors du cadre au
+ * lieu d'être dedans.
  */
-const CROP = 52;
+const CROP = 24;
 
 export function TopBar({
   state,
@@ -83,7 +89,7 @@ export function TopBar({
                 couleurs. */}
             {portrait === undefined ? (
               <View style={styles.avatar}>
-                <GodBadge color={appearance.color} accent={appearance.accent} size={40} />
+                <GodBadge color={appearance.color} accent={appearance.accent} size={36} />
               </View>
             ) : (
               <Image
@@ -158,20 +164,24 @@ const styles = StyleSheet.create({
   // Les ferrures d'angle du dessin mordent sur un seizième de sa largeur :
   // la ligne se tient assez loin des bords pour que ni le portrait ni le
   // bouton des réglages ne les affleure.
+  // ⚠️ La marge BASSE n'est pas décorative : la ferrure basse du dessin mord
+  // elle aussi sur un sixième de la hauteur du cadre, soit une vingtaine de
+  // points ici. En deçà, le nom du dieu et la plaque de niveau viennent se
+  // poser DESSUS au lieu de se lire dans le cadre.
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACE.sm,
     paddingHorizontal: SPACE.md,
     paddingTop: SPACE.xs,
-    paddingBottom: SPACE.sm,
+    paddingBottom: SPACE.xl,
   },
 
   avatarWrap: { alignItems: 'center', width: 88 },
   avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.panelRaised,
@@ -181,7 +191,7 @@ const styles = StyleSheet.create({
   // Le portrait remplace le cadre, il ne s'y ajoute pas : même diamètre que
   // le médaillon de couleurs, pour que le bandeau garde sa hauteur quel que
   // soit le dieu choisi.
-  portrait: { width: 54, height: 54 },
+  portrait: { width: 48, height: 48 },
 
   // La plaque de niveau chevauche le bas du portrait : elle appartient au
   // médaillon, elle ne se lit pas comme une deuxième information.
