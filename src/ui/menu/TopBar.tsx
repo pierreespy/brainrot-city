@@ -18,6 +18,16 @@ import { CurrencyPill, GodBadge } from './parts';
 import { ART, PORTRAITS } from './icons';
 import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
 
+/**
+ * La hauteur du cadre qui passe AU-DESSUS de l'écran, en points.
+ *
+ * Le dessin est un cadre fermé, avec un haut et un bas ; posé entier, il
+ * faisait une bande trop haute pour ce qu'elle porte. On le monte donc de
+ * cette hauteur-là et on rogne ce qui dépasse : il ne reste que le bas et
+ * les deux montants, et la bande se réduit à sa ligne d'informations.
+ */
+const CROP = 52;
+
 export function TopBar({
   state,
   onOpenSettings,
@@ -40,8 +50,17 @@ export function TopBar({
           étiré, ce que ce dessin supporte — il n'a pas de sujet, juste des
           coins ferrés.
 
-          ⚠️ Le conteneur du cadre n'a AUCUNE marge intérieure : elle est
-          descendue dans `bar`. Le dessin de fond est un enfant hors flux tiré
+          ⚠️ Il est ROGNÉ PAR LE HAUT : une marge haute négative de `CROP`
+          points le fait sortir de l'écran, et l'enveloppe qui coupe
+          (`overflow: 'hidden'`) en efface la partie qui dépasse. La marge
+          intérieure haute de la même valeur rend au contenu la place que la
+          marge négative lui prend — sans elle, c'est le portrait qui serait
+          coupé, pas le dessin. Et il court d'un bord à l'autre : aucune
+          marge horizontale, le cadre EST la bande supérieure.
+
+          ⚠️ Le conteneur du cadre n'a AUCUNE marge intérieure horizontale :
+          elle est descendue dans `bar` (la seule qu'il porte est celle du
+          haut, qui compense le rognage). Le dessin de fond est un enfant hors flux tiré
           aux quatre bords, et sa largeur « 100 % » ne se mesure pas sur la
           même boîte partout — le web la prend marge comprise, Yoga la prend
           marge déduite. Une marge ici donnerait un cadre plein écran sur le
@@ -120,22 +139,22 @@ export function TopBar({
 }
 
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: SPACE.md, paddingBottom: SPACE.md },
+  // ⚠️ `overflow: 'hidden'` : c'est cette enveloppe-ci qui coupe le haut du
+  // cadre monté hors de l'écran. Aucune marge horizontale — la bande va d'un
+  // bord à l'autre.
+  root: { overflow: 'hidden', paddingBottom: SPACE.sm },
 
-  // ⚠️ SANS marge intérieure — elle appartient à `bar`, un cran plus bas
-  // (voir le commentaire du rendu) : le dessin de fond se mesure sur ce
-  // conteneur-ci, et lui donner une marge le rétrécirait sur téléphone.
-  frame: { justifyContent: 'center' },
+  // ⚠️ SANS marge intérieure horizontale — elle appartient à `bar`, un cran
+  // plus bas (voir le commentaire du rendu) : le dessin de fond se mesure sur
+  // ce conteneur-ci, et une marge latérale le rétrécirait sur téléphone.
+  frame: { marginTop: -CROP, paddingTop: CROP, justifyContent: 'flex-end' },
   // Sans `width`/`height`, l'image garderait sa taille NATIVE — 512 points de
   // large — et sortirait du cadre par la droite ; `stretch` est répété ici
   // parce que le style n'atteint pas l'image sur iOS et la prop ne l'atteint
   // pas sur le web.
-  frameSkin: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'stretch',
-    borderRadius: RADIUS.sm,
-  },
+  // Pas de coins arrondis : ils se liraient au milieu de l'écran, là où le
+  // dessin est coupé.
+  frameSkin: { width: '100%', height: '100%', resizeMode: 'stretch' },
   // Les ferrures d'angle du dessin mordent sur un seizième de sa largeur :
   // la ligne se tient assez loin des bords pour que ni le portrait ni le
   // bouton des réglages ne les affleure.
@@ -143,8 +162,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACE.sm,
-    paddingHorizontal: SPACE.lg,
-    paddingVertical: SPACE.md,
+    paddingHorizontal: SPACE.md,
+    paddingTop: SPACE.xs,
+    paddingBottom: SPACE.sm,
   },
 
   avatarWrap: { alignItems: 'center', width: 88 },
