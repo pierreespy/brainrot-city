@@ -10,13 +10,19 @@
  * c'est ce qui permet d'appuyer sur « + » sans se demander sur quel onglet on
  * se trouve.
  *
+ * ⚠️ Il occupe TOUT le haut de l'écran, de son bord supérieur au décor : il
+ * porte lui-même la marge de la barre d'état (l'écran ne la réserve plus, voir
+ * `MenuScreen`), et il ne laisse RIEN sous lui. C'est ce qui colle le bas du
+ * cadre au haut du papier peint, sans bande claire entre les deux.
+ *
  * ⚠️ TOUT tient sur UNE SEULE ligne, et c'est ce qui garde la bande basse :
  * le nom se lit À CÔTÉ du portrait, pas dessous, et la plaque de niveau
- * DÉBORDE sous la bande au lieu de l'épaissir. Le médaillon est donc posé
- * hors flux par-dessus le cadre — voir `avatar` plus bas.
+ * DÉBORDE sur le décor au lieu d'épaissir la bande.
  */
 
+import { useState } from 'react';
 import { Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { godById } from '../../entities/gods/roster';
 import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
@@ -36,20 +42,13 @@ const AVATAR = 56;
 const AVATAR_SLOT = SPACE.md + AVATAR + SPACE.sm;
 
 /**
- * La hauteur du cadre qui passe AU-DESSUS de l'écran, en points.
+ * La hauteur de la ligne tant qu'elle n'est pas mesurée, en points.
  *
- * Le dessin est un cadre fermé, avec un haut et un bas ; posé entier, il
- * faisait une bande trop haute pour ce qu'elle porte. On le monte donc et on
- * rogne ce qui dépasse : il ne reste que le bas et les deux montants.
- *
- * ⚠️ Cette valeur est MESURÉE, pas choisie : la ferrure haute du dessin
- * occupe un SIXIÈME de sa hauteur (`ligue.png`, 512 × 119), et le cadre est
- * étiré sur la hauteur de la ligne PLUS celle-ci. Rogner ce sixième-là fait
- * disparaître le haut du cadre et RIEN de plus — au-delà, c'est l'intérieur
- * qu'on entame, et les informations du joueur se retrouvent hors du cadre au
- * lieu d'être dedans.
+ * Elle ne sert qu'à la première image, avant que `onLayout` ne réponde : sans
+ * elle, le cadre se poserait entier le temps d'une image, et l'on verrait son
+ * haut sauter.
  */
-const CROP = 12;
+const BAR_GUESS = 58;
 
 export function TopBar({
   state,
@@ -65,6 +64,31 @@ export function TopBar({
   const rank = rankOf(state.bestScore);
   const portrait = PORTRAITS[state.selectedGod];
 
+  // Le bandeau monte SOUS la barre d'état : c'est lui qui en porte la marge,
+  // et le cadre couvre donc le haut de l'écran jusqu'à son bord.
+  const insets = useSafeAreaInsets();
+
+  // La hauteur de la ligne, MESURÉE : elle dépend de la police et de la
+  // taille de texte du système, et le rognage se calcule dessus.
+  const [barHeight, setBarHeight] = useState(0);
+
+  /**
+   * La hauteur du cadre qui passe AU-DESSUS de l'écran, en points.
+   *
+   * Le dessin est un cadre fermé, avec un haut et un bas ; posé entier, il
+   * ferait une bande bien trop haute pour ce qu'elle porte. On le monte donc
+   * et on rogne ce qui dépasse : il ne reste que le bas et les deux montants.
+   *
+   * ⚠️ Le facteur est MESURÉ sur le dessin, pas choisi : la ferrure haute de
+   * `ligue.png` (512 × 119) occupe un SIXIÈME de sa hauteur, et le cadre est
+   * étiré sur la partie visible PLUS ce rognage. Rogner exactement ce
+   * sixième-là — soit un cinquième du visible — fait disparaître le haut du
+   * cadre et RIEN de plus : au-delà, on entame l'intérieur et les
+   * informations du joueur se retrouvent hors du cadre.
+   */
+  const visible = insets.top + (barHeight || BAR_GUESS);
+  const crop = Math.round(visible / 5);
+
   return (
     <View style={styles.root}>
       {/* ⚠️ Le MÊME cadre dessiné que la carte de la course sacrée et que le
@@ -72,13 +96,12 @@ export function TopBar({
           le bouton des réglages tiennent DEDANS. Il est étiré, ce que ce
           dessin supporte — il n'a pas de sujet, juste des coins ferrés.
 
-          ⚠️ Il est ROGNÉ PAR LE HAUT : une marge haute négative de `CROP`
-          points le fait sortir de l'écran, et l'enveloppe qui coupe
-          (`overflow: 'hidden'`) en efface la partie qui dépasse. La marge
-          intérieure haute de la même valeur rend à la ligne la place que la
-          marge négative lui prend — sans elle, c'est le contenu qui serait
-          coupé, pas le dessin. Et il court d'un bord à l'autre : aucune marge
-          horizontale, le cadre EST la bande supérieure.
+          ⚠️ Il est ROGNÉ PAR LE HAUT : une marge haute négative le fait sortir
+          de l'écran, et l'enveloppe qui coupe (`overflow: 'hidden'`) en efface
+          la partie qui dépasse. La marge intérieure haute rend à la ligne la
+          place que la marge négative lui prend — sans elle, c'est le contenu
+          qui serait coupé, pas le dessin — et elle y ajoute la barre d'état,
+          que le cadre recouvre.
 
           ⚠️ C'est cette enveloppe-ci qui coupe, PAS le bandeau entier : le
           médaillon, lui, doit pouvoir déborder dessous.
@@ -94,11 +117,14 @@ export function TopBar({
       <View style={styles.clip}>
         <ImageBackground
           source={ART.ligue}
-          style={styles.frame}
+          style={[styles.frame, { marginTop: -crop, paddingTop: crop + insets.top }]}
           imageStyle={styles.frameSkin}
           resizeMode="stretch"
         >
-          <View style={styles.bar}>
+          <View
+            style={styles.bar}
+            onLayout={(event) => setBarHeight(event.nativeEvent.layout.height)}
+          >
             {/* Le nom sur sa languette, à hauteur des bourses : c'est la
                 première chose que l'on lit, et elle appartient au portrait
                 posé juste à sa gauche. */}
@@ -140,10 +166,10 @@ export function TopBar({
       </View>
 
       {/* ⚠️ Le médaillon est HORS FLUX, et posé APRÈS le cadre : il se dessine
-          donc par-dessus, et il déborde sous la bande — c'est ce débordement
+          donc par-dessus, et il déborde sur le décor — c'est ce débordement
           qui fait lire le portrait comme épinglé sur le bandeau plutôt que
           rangé dedans. La ligne, elle, lui garde sa place avec `AVATAR_SLOT`. */}
-      <View style={styles.avatarWrap} pointerEvents="none">
+      <View style={[styles.avatarWrap, { top: insets.top }]} pointerEvents="none">
         {/* Le portrait porte SON PROPRE anneau d'or, dessiné dans l'image :
             posé dans le cadre du médaillon, il en ferait un second. D'où deux
             habillages, selon qu'un dieu a son visage ou seulement ses deux
@@ -175,13 +201,13 @@ const styles = StyleSheet.create({
   // ⚠️ Le bandeau NE COUPE PAS : c'est `clip` qui s'en charge, un cran plus
   // bas.
   //
-  // ⚠️ Et il n'a AUCUNE marge basse : le bas du cadre doit toucher le haut du
-  // décor. Une marge ici laissait une bande de fond clair entre les deux, et
-  // c'est elle qu'on voyait comme un « vide blanc ».
+  // ⚠️ Et il n'a AUCUNE marge, ni haute ni basse : le haut du cadre part du
+  // bord de l'écran, son bas touche le haut du décor. Une marge ici laissait
+  // une bande de fond clair entre les deux — le « vide blanc ».
   //
-  // ⚠️ `zIndex` : la plaque de niveau déborde MAINTENANT sur le décor, qui
-  // est un frère dessiné APRÈS le bandeau. Sans ce relief, elle passerait
-  // dessous et serait tout simplement invisible.
+  // ⚠️ `zIndex` : la plaque de niveau déborde SUR le décor, qui est un frère
+  // dessiné APRÈS le bandeau. Sans ce relief, elle passerait dessous et
+  // serait tout simplement invisible.
   root: { position: 'relative', zIndex: 2 },
 
   clip: { overflow: 'hidden' },
@@ -189,7 +215,9 @@ const styles = StyleSheet.create({
   // ⚠️ SANS marge intérieure horizontale — elle appartient à `bar`, un cran
   // plus bas (voir le commentaire du rendu) : le dessin de fond se mesure sur
   // ce conteneur-ci, et une marge latérale le rétrécirait sur téléphone.
-  frame: { marginTop: -CROP, paddingTop: CROP, justifyContent: 'flex-end' },
+  // Les marges verticales, elles, sont calculées au rendu : elles dépendent
+  // de la barre d'état et de la hauteur mesurée de la ligne.
+  frame: { justifyContent: 'flex-end' },
   // Sans `width`/`height`, l'image garderait sa taille NATIVE — 512 points de
   // large — et sortirait du cadre par la droite ; `stretch` est répété ici
   // parce que le style n'atteint pas l'image sur iOS et la prop ne l'atteint
@@ -210,9 +238,9 @@ const styles = StyleSheet.create({
     paddingBottom: SPACE.md + SPACE.xs,
   },
 
-  // Le médaillon monte plus haut que la ligne et descend plus bas : `top`
-  // le remonte d'autant que la bande est mince.
-  avatarWrap: { position: 'absolute', left: SPACE.md, top: 0, alignItems: 'center' },
+  // Le médaillon descend plus bas que la bande : il commence sous la barre
+  // d'état (`top`, posé au rendu) et sa plaque de niveau tombe sur le décor.
+  avatarWrap: { position: 'absolute', left: SPACE.md, alignItems: 'center' },
   avatar: {
     width: AVATAR,
     height: AVATAR,

@@ -206,7 +206,11 @@ export function MenuScreen({
     <View style={styles.root}>
       {/* Le décor, et le brouillard clair qui le fait passer derrière le
           parchemin. Les deux sont FIXES : seule l'image du ruban glisse. */}
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      {/* ⚠️ Le haut n'est PLUS réservé ici : c'est le bandeau qui porte la
+          marge de la barre d'état (voir `TopBar`). Réservée à ce niveau, elle
+          laissait une bande de fond clair au-dessus du cadre, et une seconde
+          entre son bas et le décor. */}
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         <TopBar
           state={state}
           onOpenSettings={() => setSettingsOpen(true)}
