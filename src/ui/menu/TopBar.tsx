@@ -173,9 +173,16 @@ export function TopBar({
 
 const styles = StyleSheet.create({
   // ⚠️ Le bandeau NE COUPE PAS : c'est `clip` qui s'en charge, un cran plus
-  // bas. La marge basse est la place où le médaillon déborde ; sans elle, il
-  // recouvrirait la première carte de l'onglet.
-  root: { position: 'relative', paddingBottom: SPACE.lg },
+  // bas.
+  //
+  // ⚠️ Et il n'a AUCUNE marge basse : le bas du cadre doit toucher le haut du
+  // décor. Une marge ici laissait une bande de fond clair entre les deux, et
+  // c'est elle qu'on voyait comme un « vide blanc ».
+  //
+  // ⚠️ `zIndex` : la plaque de niveau déborde MAINTENANT sur le décor, qui
+  // est un frère dessiné APRÈS le bandeau. Sans ce relief, elle passerait
+  // dessous et serait tout simplement invisible.
+  root: { position: 'relative', zIndex: 2 },
 
   clip: { overflow: 'hidden' },
 
